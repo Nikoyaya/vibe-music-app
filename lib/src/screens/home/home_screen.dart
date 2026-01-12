@@ -574,7 +574,7 @@ class _SongListPageState extends State<SongListPage> {
                       begin: Alignment.bottomCenter,
                       end: Alignment.topCenter,
                       colors: [
-                        Colors.black.withValues(alpha: 0.8),
+                        Colors.black.withOpacity(0.8),
                         Colors.transparent,
                       ],
                     ),
@@ -620,6 +620,7 @@ class _SongListPageState extends State<SongListPage> {
   // 构建推荐歌单
   Widget _buildRecommendedPlaylists() {
     final screenWidth = MediaQuery.of(context).size.width;
+    final isSmallScreen = screenWidth < 375; // 针对小屏设备进行特殊处理
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
       child: Column(
@@ -639,86 +640,103 @@ class _SongListPageState extends State<SongListPage> {
             ],
           ),
           const SizedBox(height: 12.0),
-          GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: screenWidth > 600 ? 4 : 3,
-              crossAxisSpacing: 12.0,
-              mainAxisSpacing: 12.0,
-              childAspectRatio: 0.7,
+          SizedBox(
+            height: 450, // 设置固定高度，避免垂直溢出
+            child: GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: isSmallScreen ? 2 : (screenWidth > 600 ? 3 : 2),
+                crossAxisSpacing: 6.0,
+                mainAxisSpacing: 6.0,
+                childAspectRatio: 0.75,
+              ),
+              itemCount: _recommendedPlaylists.length,
+              itemBuilder: (context, index) {
+                final playlist = _recommendedPlaylists[index];
+                return Container(
+                  constraints: const BoxConstraints(maxHeight: 160),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Stack(
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(8.0),
+                            child: Image.network(
+                              playlist.imageUrl,
+                              width: double.infinity,
+                              height: 100,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return Container(
+                                  width: double.infinity,
+                                  //height: 100,
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .primary
+                                      .withOpacity(0.2),
+                                  child: const Icon(
+                                    Icons.music_note,
+                                    size: 30,
+                                    color: Colors.grey,
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                          Positioned(
+                            bottom: 2.0,
+                            right: 6.0,
+                            child: Container(
+                              width: 28,
+                              height: 28,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Colors.purple.withOpacity(0.8),
+                              ),
+                              child: const Icon(
+                                Icons.play_arrow,
+                                color: Colors.white,
+                                size: 18,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4.0),
+                      SizedBox(
+                        height: 50,
+                        child: Text(
+                          playlist.title,
+                          style: isSmallScreen
+                              ? Theme.of(context)
+                                  .textTheme
+                                  .bodySmall
+                                  ?.copyWith(fontSize: 12)
+                              : Theme.of(context)
+                                  .textTheme
+                                  .bodyMedium
+                                  ?.copyWith(fontSize: 14),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      const SizedBox(height: 2.0),
+                      Text(
+                        playlist.playCount,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              fontSize: isSmallScreen ? 10 : 12,
+                            ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                );
+              },
             ),
-            itemCount: _recommendedPlaylists.length,
-            itemBuilder: (context, index) {
-              final playlist = _recommendedPlaylists[index];
-              return Container(
-                constraints: BoxConstraints(maxHeight: 240),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Stack(
-                      children: [
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(8.0),
-                          child: Image.network(
-                            playlist.imageUrl,
-                            width: double.infinity,
-                            height: 120,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) {
-                              return Container(
-                                width: double.infinity,
-                                height: 120,
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .primary
-                                    .withOpacity(0.2),
-                                child: const Icon(
-                                  Icons.music_note,
-                                  size: 40,
-                                  color: Colors.grey,
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-                        Positioned(
-                          bottom: 8.0,
-                          right: 8.0,
-                          child: Container(
-                            width: 32,
-                            height: 32,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: Colors.purple.withOpacity(0.8),
-                            ),
-                            child: const Icon(
-                              Icons.play_arrow,
-                              color: Colors.white,
-                              size: 20,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8.0),
-                    Text(
-                      playlist.title,
-                      style: Theme.of(context).textTheme.bodyMedium,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 4.0),
-                    Text(
-                      playlist.playCount,
-                      style: Theme.of(context).textTheme.bodySmall,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              );
-            },
           ),
         ],
       ),
@@ -764,130 +782,137 @@ class _SongListPageState extends State<SongListPage> {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: ListTile(
-                      leading: ClipRRect(
-                        borderRadius: BorderRadius.circular(8.0),
-                        child: coverUrl != null
-                            ? Image.network(
-                                coverUrl,
-                                width: isSmallScreen ? 40 : 48,
-                                height: isSmallScreen ? 40 : 48,
-                                fit: BoxFit.cover,
-                              )
-                            : Container(
-                                width: isSmallScreen ? 40 : 48,
-                                height: isSmallScreen ? 40 : 48,
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .primary
-                                    .withValues(alpha: 0.2),
-                                child: Icon(
-                                  Icons.music_note,
-                                  size: isSmallScreen ? 20 : 24,
-                                ),
+                    child: Row(
+                      children: [
+                        // 使用Container代替ListTile的leading，避免宽度问题
+                        Container(
+                          margin: const EdgeInsets.only(right: 12.0),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(8.0),
+                            child: coverUrl != null
+                                ? Image.network(
+                                    coverUrl,
+                                    width: isSmallScreen ? 40 : 48,
+                                    height: isSmallScreen ? 40 : 48,
+                                    fit: BoxFit.cover,
+                                  )
+                                : Container(
+                                    width: isSmallScreen ? 40 : 48,
+                                    height: isSmallScreen ? 40 : 48,
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .primary
+                                        .withOpacity(0.2),
+                                    child: Icon(
+                                      Icons.music_note,
+                                      size: isSmallScreen ? 20 : 24,
+                                    ),
+                                  ),
+                          ),
+                        ),
+                        // 使用Expanded来确保文本部分适应剩余空间
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                song.songName ?? 'Unknown Song',
+                                style: isSmallScreen
+                                    ? Theme.of(context).textTheme.titleSmall
+                                    : Theme.of(context).textTheme.titleMedium,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                               ),
-                      ),
-                      title: Text(
-                        song.songName ?? 'Unknown Song',
-                        style: isSmallScreen
-                            ? Theme.of(context).textTheme.titleSmall
-                            : Theme.of(context).textTheme.titleMedium,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      subtitle: Text(
-                        song.artistName ?? 'Unknown Artist',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .onSurface
-                                  .withValues(alpha: 0.7),
-                            ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          IconButton(
-                            icon: Icon(
-                              musicProvider.isSongFavorited(song)
-                                  ? Icons.favorite
-                                  : Icons.favorite_border,
-                              color: musicProvider.isSongFavorited(song)
-                                  ? Theme.of(context).colorScheme.primary
-                                  : null,
-                            ),
-                            onPressed: () async {
-                              final authProvider = Provider.of<AuthProvider>(
-                                  context,
-                                  listen: false);
-                              if (!authProvider.isAuthenticated) {
-                                // 提示用户登录
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text('请先登录')),
-                                );
-                                // 导航到登录页面
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (context) =>
-                                          const LoginScreen()),
-                                );
-                                return;
-                              }
+                              Text(
+                                song.artistName ?? 'Unknown Artist',
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodyMedium
+                                    ?.copyWith(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurface
+                                          .withOpacity(0.7),
+                                    ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ),
+                        ),
+                        // 操作按钮
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon: Icon(
+                                musicProvider.isSongFavorited(song)
+                                    ? Icons.favorite
+                                    : Icons.favorite_border,
+                                color: musicProvider.isSongFavorited(song)
+                                    ? Theme.of(context).colorScheme.primary
+                                    : null,
+                              ),
+                              onPressed: () async {
+                                final authProvider = Provider.of<AuthProvider>(
+                                    context,
+                                    listen: false);
+                                if (!authProvider.isAuthenticated) {
+                                  // 提示用户登录
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text('请先登录')),
+                                  );
+                                  // 导航到登录页面
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (context) =>
+                                            const LoginScreen()),
+                                  );
+                                  return;
+                                }
 
-                              bool success;
-                              if (musicProvider.isSongFavorited(song)) {
-                                success = await musicProvider
-                                    .removeFromFavorites(song);
-                                if (success && mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(content: Text('已取消收藏')),
+                                bool success;
+                                if (musicProvider.isSongFavorited(song)) {
+                                  success = await musicProvider
+                                      .removeFromFavorites(song);
+                                  if (success && mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(content: Text('已取消收藏')),
+                                    );
+                                  }
+                                } else {
+                                  success =
+                                      await musicProvider.addToFavorites(song);
+                                  if (success && mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(content: Text('已添加到收藏')),
+                                    );
+                                  }
+                                }
+                              },
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.play_arrow),
+                              onPressed: () async {
+                                // 先播放歌曲，等待播放开始后再导航
+                                await musicProvider
+                                    .playSong(song, playlist: [song]);
+                                // 导航到播放器页面
+                                if (mounted) {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (context) =>
+                                            const PlayerScreen()),
                                   );
                                 }
-                              } else {
-                                success =
-                                    await musicProvider.addToFavorites(song);
-                                if (success && mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(content: Text('已添加到收藏')),
-                                  );
-                                }
-                              }
-                            },
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.play_arrow),
-                            onPressed: () async {
-                              // 先播放歌曲，等待播放开始后再导航
-                              await musicProvider
-                                  .playSong(song, playlist: [song]);
-                              // 导航到播放器页面
-                              if (mounted) {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (context) =>
-                                          const PlayerScreen()),
-                                );
-                              }
-                            },
-                          ),
-                        ],
-                      ),
-                      onTap: () async {
-                        // 先播放歌曲，等待播放开始后再导航
-                        await musicProvider.playSong(song, playlist: [song]);
-                        // 导航到播放器页面
-                        if (mounted) {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => const PlayerScreen()),
-                          );
-                        }
-                      },
+                              },
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
                   );
                 },

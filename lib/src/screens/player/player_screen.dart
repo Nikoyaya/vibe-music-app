@@ -218,118 +218,119 @@ class _PlayerScreenState extends State<PlayerScreen> {
                           ),
                           const SizedBox(height: 24),
                           // Controls
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              // Shuffle
-                              IconButton(
-                                icon: Icon(
-                                  Icons.shuffle,
-                                  color: musicProvider.isShuffle
-                                      ? Theme.of(context).colorScheme.primary
-                                      : Theme.of(context)
-                                          .colorScheme
-                                          .onSurfaceVariant,
-                                ),
-                                onPressed: () => musicProvider.toggleShuffle(),
-                              ),
-                              const SizedBox(width: 16),
-                              // Previous
-                              IconButton(
-                                icon: const Icon(Icons.skip_previous, size: 40),
-                                onPressed: () => musicProvider.previous(),
-                              ),
-                              const SizedBox(width: 16),
-                              // Play/Pause
-                              FloatingActionButton.large(
-                                onPressed: () {
-                                  if (musicProvider.playerState ==
-                                      AppPlayerState.playing) {
-                                    musicProvider.pause();
-                                  } else {
-                                    musicProvider.play();
-                                  }
-                                },
-                                child: Icon(
-                                  musicProvider.playerState ==
-                                          AppPlayerState.playing
-                                      ? Icons.pause
-                                      : Icons.play_arrow,
-                                  size: 40,
-                                ),
-                              ),
-                              const SizedBox(width: 16),
-                              // Next
-                              IconButton(
-                                icon: const Icon(Icons.skip_next, size: 40),
-                                onPressed: () => musicProvider.next(),
-                              ),
-                              const SizedBox(width: 16),
-                              // Volume Control
-                              Column(
-                                children: [
-                                  // Volume Icon Button
-                                  IconButton(
-                                    icon: Icon(
-                                      _currentVolume > 0.5
-                                          ? Icons.volume_up
-                                          : _currentVolume > 0
-                                              ? Icons.volume_down
-                                              : Icons.volume_off,
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .onSurfaceVariant,
-                                    ),
-                                    onPressed: () {
-                                      setState(() {
-                                        _showVolumeIndicator =
-                                            !_showVolumeIndicator;
-                                      });
-                                    },
+                          Container(
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 16.0),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                // Shuffle
+                                IconButton(
+                                  icon: Icon(
+                                    Icons.shuffle,
+                                    color: musicProvider.isShuffle
+                                        ? Theme.of(context).colorScheme.primary
+                                        : Theme.of(context)
+                                            .colorScheme
+                                            .onSurfaceVariant,
                                   ),
-                                  // Vertical Volume Slider
-                                  if (_showVolumeIndicator)
-                                    SizedBox(
-                                      height: 100,
-                                      width: 40,
-                                      child: RotatedBox(
-                                        quarterTurns: 3, // 旋转270度，使水平Slider变为垂直
-                                        child: Slider(
-                                          value: _currentVolume,
-                                          min: 0.0,
-                                          max: 1.0,
-                                          activeColor: Theme.of(context)
-                                              .colorScheme
-                                              .primary,
-                                          onChanged: (value) {
-                                            setState(() {
-                                              _currentVolume = value;
-                                              musicProvider.setVolume(value);
-                                            });
-                                          },
-                                        ),
-                                      ),
-                                    ),
-                                ],
-                              ),
-                              const SizedBox(width: 16),
-                              // Repeat
-                              IconButton(
-                                icon: Icon(
-                                  musicProvider.repeatMode == RepeatMode.one
-                                      ? Icons.repeat_one
-                                      : Icons.repeat,
-                                  color: musicProvider.repeatMode !=
-                                          RepeatMode.none
-                                      ? Theme.of(context).colorScheme.primary
-                                      : Theme.of(context)
-                                          .colorScheme
-                                          .onSurfaceVariant,
+                                  onPressed: () =>
+                                      musicProvider.toggleShuffle(),
                                 ),
-                                onPressed: () => musicProvider.toggleRepeat(),
-                              ),
-                            ],
+                                const SizedBox(width: 4),
+                                // Previous
+                                IconButton(
+                                  icon:
+                                      const Icon(Icons.skip_previous, size: 32),
+                                  onPressed: () => musicProvider.previous(),
+                                ),
+                                const SizedBox(width: 12),
+                                // Play/Pause
+                                FloatingActionButton(
+                                  onPressed: () {
+                                    if (musicProvider.playerState ==
+                                        AppPlayerState.playing) {
+                                      musicProvider.pause();
+                                    } else {
+                                      musicProvider.play();
+                                    }
+                                  },
+                                  child: Icon(
+                                    musicProvider.playerState ==
+                                            AppPlayerState.playing
+                                        ? Icons.pause
+                                        : Icons.play_arrow,
+                                    size: 36,
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                // Next
+                                IconButton(
+                                  icon: const Icon(Icons.skip_next, size: 32),
+                                  onPressed: () => musicProvider.next(),
+                                ),
+                                const SizedBox(width: 4),
+                                // Volume Control - 只显示按钮，点击弹出音量控制
+                                IconButton(
+                                  icon: Icon(
+                                    _currentVolume > 0.5
+                                        ? Icons.volume_up
+                                        : _currentVolume > 0
+                                            ? Icons.volume_down
+                                            : Icons.volume_off,
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurfaceVariant,
+                                  ),
+                                  onPressed: () {
+                                    setState(() {
+                                      _showVolumeIndicator =
+                                          !_showVolumeIndicator;
+                                    });
+                                  },
+                                ),
+                                const SizedBox(width: 4),
+                                // Repeat
+                                IconButton(
+                                  icon: Icon(
+                                    musicProvider.repeatMode == RepeatMode.one
+                                        ? Icons.repeat_one
+                                        : Icons.repeat,
+                                    color: musicProvider.repeatMode !=
+                                            RepeatMode.none
+                                        ? Theme.of(context).colorScheme.primary
+                                        : Theme.of(context)
+                                            .colorScheme
+                                            .onSurfaceVariant,
+                                  ),
+                                  onPressed: () => musicProvider.toggleRepeat(),
+                                ),
+                              ],
+                            ),
                           ),
+                          // Volume Control - 显示在单独的行，避免水平溢出
+                          if (_showVolumeIndicator)
+                            Container(
+                              padding: const EdgeInsets.only(top: 8.0),
+                              child: SizedBox(
+                                width: 150,
+                                height: 40,
+                                child: Slider(
+                                  value: _currentVolume,
+                                  min: 0.0,
+                                  max: 1.0,
+                                  activeColor:
+                                      Theme.of(context).colorScheme.primary,
+                                  onChanged: (value) {
+                                    setState(() {
+                                      _currentVolume = value;
+                                      musicProvider.setVolume(value);
+                                    });
+                                  },
+                                ),
+                              ),
+                            ),
                         ],
                       ),
                     ),
