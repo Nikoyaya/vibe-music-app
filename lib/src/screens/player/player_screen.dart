@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:vibe_music_app/src/providers/music_provider.dart';
+import 'package:vibe_music_app/src/providers/auth_provider.dart';
+import 'package:vibe_music_app/src/screens/auth/login_screen.dart';
 
 class PlayerScreen extends StatefulWidget {
   const PlayerScreen({super.key});
@@ -30,6 +32,54 @@ class _PlayerScreenState extends State<PlayerScreen> {
       appBar: AppBar(
         title: const Text('Now Playing'),
         actions: [
+          IconButton(
+            icon: Icon(
+              musicProvider.currentSong != null &&
+                      musicProvider.isSongFavorited(musicProvider.currentSong!)
+                  ? Icons.favorite
+                  : Icons.favorite_border,
+              color: musicProvider.currentSong != null &&
+                      musicProvider.isSongFavorited(musicProvider.currentSong!)
+                  ? Theme.of(context).colorScheme.primary
+                  : null,
+            ),
+            onPressed: () async {
+              if (musicProvider.currentSong == null) return;
+
+              final authProvider =
+                  Provider.of<AuthProvider>(context, listen: false);
+              if (!authProvider.isAuthenticated) {
+                // 提示用户登录
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('请先登录')),
+                );
+                // 导航到登录页面
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const LoginScreen()),
+                );
+                return;
+              }
+
+              bool success;
+              final song = musicProvider.currentSong!;
+              if (musicProvider.isSongFavorited(song)) {
+                success = await musicProvider.removeFromFavorites(song);
+                if (success) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('已取消收藏')),
+                  );
+                }
+              } else {
+                success = await musicProvider.addToFavorites(song);
+                if (success) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('已添加到收藏')),
+                  );
+                }
+              }
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.queue_music),
             onPressed: () {
@@ -379,17 +429,73 @@ class _PlayerScreenState extends State<PlayerScreen> {
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        trailing: Text(
-                          '${(() {
-                            final duration =
-                                int.tryParse(song.duration ?? '0') ?? 0;
-                            return '${duration ~/ 60}:${(duration % 60).toString().padLeft(2, '0')}';
-                          })()}',
-                          style: TextStyle(
-                            color:
-                                Theme.of(context).colorScheme.onSurfaceVariant,
-                            fontSize: 12,
-                          ),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon: Icon(
+                                musicProvider.isSongFavorited(song)
+                                    ? Icons.favorite
+                                    : Icons.favorite_border,
+                                color: musicProvider.isSongFavorited(song)
+                                    ? Theme.of(context).colorScheme.primary
+                                    : null,
+                                size: 18,
+                              ),
+                              onPressed: () async {
+                                final authProvider = Provider.of<AuthProvider>(
+                                    context,
+                                    listen: false);
+                                if (!authProvider.isAuthenticated) {
+                                  // 提示用户登录
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text('请先登录')),
+                                  );
+                                  // 导航到登录页面
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (context) =>
+                                            const LoginScreen()),
+                                  );
+                                  return;
+                                }
+
+                                bool success;
+                                if (musicProvider.isSongFavorited(song)) {
+                                  success = await musicProvider
+                                      .removeFromFavorites(song);
+                                  if (success) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(content: Text('已取消收藏')),
+                                    );
+                                  }
+                                } else {
+                                  success =
+                                      await musicProvider.addToFavorites(song);
+                                  if (success) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(content: Text('已添加到收藏')),
+                                    );
+                                  }
+                                }
+                              },
+                              padding: EdgeInsets.zero,
+                            ),
+                            Text(
+                              (() {
+                                final duration =
+                                    int.tryParse(song.duration ?? '0') ?? 0;
+                                return '${duration ~/ 60}:${(duration % 60).toString().padLeft(2, '0')}';
+                              })(),
+                              style: TextStyle(
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onSurfaceVariant,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
                         ),
                         onTap: () {
                           musicProvider.playSong(song);

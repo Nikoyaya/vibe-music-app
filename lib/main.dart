@@ -25,6 +25,7 @@ class VibeMusicApp extends StatelessWidget {
         title: 'Vibe Music',
         theme: AppTheme.lightTheme,
         darkTheme: AppTheme.darkTheme,
+        themeMode: ThemeMode.dark, // 默认使用深色主题
         initialRoute: AppRoutes.home, // 改为从主页开始
         routes: AppRoutes.routes,
         debugShowCheckedModeBanner: false,

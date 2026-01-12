@@ -208,16 +208,34 @@ class ApiService {
   // Song endpoints
   Future<Response> getAllSongs(int page, int size,
       {String? artistName, String? songName}) async {
-    final params = <String, String>{};
-    if (artistName != null) params['artistName'] = artistName;
-    if (songName != null) params['songName'] = songName;
-    params['page'] = page.toString();
-    params['size'] = size.toString();
-
-    return await _request('POST', '/song/getAllSongs', queryParams: params);
+    return await _request('POST', '/song/getAllSongs', body: {
+      'pageNum': page,
+      'pageSize': size,
+      'artistName': artistName,
+      'songName': songName,
+    });
   }
 
   Future<Response> getRecommendedSongs() async {
     return await _request('GET', '/song/getRecommendedSongs');
+  }
+
+  Future<Response> getUserFavoriteSongs(int page, int size) async {
+    return await _request('POST', '/song/getUserFavoriteSongs', body: {
+      'page': page,
+      'size': size,
+    });
+  }
+
+  Future<Response> addFavoriteSong(int songId) async {
+    return await _request('POST', '/song/addFavoriteSong', body: {
+      'songId': songId,
+    });
+  }
+
+  Future<Response> removeFavoriteSong(int songId) async {
+    return await _request('POST', '/song/removeFavoriteSong', body: {
+      'songId': songId,
+    });
   }
 }

@@ -22,6 +22,7 @@ class MusicProvider with ChangeNotifier {
   bool _isShuffle = false;
   RepeatMode _repeatMode = RepeatMode.none;
   double _volume = 1.0;
+  Set<int> _favoriteSongIds = {}; // Local state to track favorite song IDs
 
   AppPlayerState get playerState => _playerState;
   Duration get duration => _duration;
@@ -239,8 +240,8 @@ class MusicProvider with ChangeNotifier {
         final data =
             response.data is Map ? response.data : jsonDecode(response.data);
         if (data['code'] == 200 && data['data'] != null) {
-          final List<dynamic> records = data['data']['records'] ?? [];
-          return records.map((item) => Song.fromJson(item)).toList();
+          final List<dynamic> items = data['data']['items'] ?? [];
+          return items.map((item) => Song.fromJson(item)).toList();
         }
       }
     } catch (e) {
@@ -264,6 +265,77 @@ class MusicProvider with ChangeNotifier {
       debugPrint('Error loading recommended songs: $e');
     }
     return [];
+  }
+
+  // Load user favorite songs
+  Future<List<Song>> loadUserFavoriteSongs(
+      {int page = 1, int size = 20}) async {
+    try {
+      final response = await ApiService().getAllSongs(page, size);
+      if (response.statusCode == 200) {
+        final data =
+            response.data is Map ? response.data : jsonDecode(response.data);
+        if (data['code'] == 200 && data['data'] != null) {
+          final List<dynamic> items = data['data']['items'] ?? [];
+          return items.map((item) => Song.fromJson(item)).toList();
+        }
+      }
+    } catch (e) {
+      debugPrint('Error loading user favorite songs: $e');
+    }
+    return [];
+  }
+
+  // Check if song is favorited
+  bool isSongFavorited(Song song) {
+    if (song.id == null) return false;
+    return _favoriteSongIds.contains(song.id);
+  }
+
+  // Add song to favorites
+  Future<bool> addToFavorites(Song song) async {
+    if (song.id == null) return false;
+
+    try {
+      // Call API to add favorite song
+      final response = await ApiService().addFavoriteSong(song.id!);
+      if (response.statusCode == 200) {
+        final data =
+            response.data is Map ? response.data : jsonDecode(response.data);
+        if (data['code'] == 200) {
+          // Update local state
+          _favoriteSongIds.add(song.id!);
+          notifyListeners();
+          return true;
+        }
+      }
+    } catch (e) {
+      debugPrint('Error adding song to favorites: $e');
+    }
+    return false;
+  }
+
+  // Remove song from favorites
+  Future<bool> removeFromFavorites(Song song) async {
+    if (song.id == null) return false;
+
+    try {
+      // Call API to remove favorite song
+      final response = await ApiService().removeFavoriteSong(song.id!);
+      if (response.statusCode == 200) {
+        final data =
+            response.data is Map ? response.data : jsonDecode(response.data);
+        if (data['code'] == 200) {
+          // Update local state
+          _favoriteSongIds.remove(song.id!);
+          notifyListeners();
+          return true;
+        }
+      }
+    } catch (e) {
+      debugPrint('Error removing song from favorites: $e');
+    }
+    return false;
   }
 
   @override
