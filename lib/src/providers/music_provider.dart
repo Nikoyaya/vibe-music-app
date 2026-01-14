@@ -21,7 +21,7 @@ class MusicProvider with ChangeNotifier {
   int _currentIndex = 0;
   bool _isShuffle = false;
   RepeatMode _repeatMode = RepeatMode.none;
-  double _volume = 1.0;
+  double _volume = 0.5; // 默认音量设置为50%
   Set<int> _favoriteSongIds = {}; // Local state to track favorite song IDs
 
   AppPlayerState get playerState => _playerState;

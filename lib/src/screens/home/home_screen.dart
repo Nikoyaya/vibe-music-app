@@ -491,7 +491,7 @@ class _SongListPageState extends State<SongListPage> {
               color:
                   Theme.of(context).colorScheme.surface.withValues(alpha: 0.8),
               child: AppBar(
-                title: const Text('Glass Music Player'),
+                title: const Text('Vibe Music Player'),
                 actions: [
                   IconButton(
                     icon: const Icon(Icons.search),
@@ -640,103 +640,97 @@ class _SongListPageState extends State<SongListPage> {
             ],
           ),
           const SizedBox(height: 12.0),
-          SizedBox(
-            height: 450, // 设置固定高度，避免垂直溢出
-            child: GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: isSmallScreen ? 2 : (screenWidth > 600 ? 3 : 2),
-                crossAxisSpacing: 6.0,
-                mainAxisSpacing: 6.0,
-                childAspectRatio: 0.75,
-              ),
-              itemCount: _recommendedPlaylists.length,
-              itemBuilder: (context, index) {
-                final playlist = _recommendedPlaylists[index];
-                return Container(
-                  constraints: const BoxConstraints(maxHeight: 160),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: isSmallScreen ? 2 : (screenWidth > 600 ? 3 : 2),
+              crossAxisSpacing: 2.0,
+              mainAxisSpacing: 2.0,
+              childAspectRatio: 1.1,
+            ),
+            itemCount: _recommendedPlaylists.length,
+            itemBuilder: (context, index) {
+              final playlist = _recommendedPlaylists[index];
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Stack(
                     children: [
-                      Stack(
-                        children: [
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(8.0),
-                            child: Image.network(
-                              playlist.imageUrl,
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(8.0),
+                        child: Image.network(
+                          playlist.imageUrl,
+                          width: double.infinity,
+                          height: 100,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Container(
                               width: double.infinity,
                               height: 100,
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) {
-                                return Container(
-                                  width: double.infinity,
-                                  //height: 100,
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .primary
-                                      .withOpacity(0.2),
-                                  child: const Icon(
-                                    Icons.music_note,
-                                    size: 30,
-                                    color: Colors.grey,
-                                  ),
-                                );
-                              },
-                            ),
-                          ),
-                          Positioned(
-                            bottom: 2.0,
-                            right: 6.0,
-                            child: Container(
-                              width: 28,
-                              height: 28,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: Colors.purple.withOpacity(0.8),
-                              ),
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .primary
+                                  .withOpacity(0.2),
                               child: const Icon(
-                                Icons.play_arrow,
-                                color: Colors.white,
-                                size: 18,
+                                Icons.music_note,
+                                size: 30,
+                                color: Colors.grey,
                               ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 4.0),
-                      SizedBox(
-                        height: 50,
-                        child: Text(
-                          playlist.title,
-                          style: isSmallScreen
-                              ? Theme.of(context)
-                                  .textTheme
-                                  .bodySmall
-                                  ?.copyWith(fontSize: 12)
-                              : Theme.of(context)
-                                  .textTheme
-                                  .bodyMedium
-                                  ?.copyWith(fontSize: 14),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
+                            );
+                          },
                         ),
                       ),
-                      const SizedBox(height: 2.0),
-                      Text(
-                        playlist.playCount,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              fontSize: isSmallScreen ? 10 : 12,
-                            ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                      Positioned(
+                        bottom: 2.0,
+                        right: 6.0,
+                        child: Container(
+                          width: 28,
+                          height: 28,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.purple.withOpacity(0.8),
+                          ),
+                          child: const Icon(
+                            Icons.play_arrow,
+                            color: Colors.white,
+                            size: 18,
+                          ),
+                        ),
                       ),
                     ],
                   ),
-                );
-              },
-            ),
+                  const SizedBox(height: 4.0),
+                  SizedBox(
+                    height: 50,
+                    child: Text(
+                      playlist.title,
+                      style: isSmallScreen
+                          ? Theme.of(context)
+                              .textTheme
+                              .bodySmall
+                              ?.copyWith(fontSize: 12)
+                          : Theme.of(context)
+                              .textTheme
+                              .bodyMedium
+                              ?.copyWith(fontSize: 14),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  const SizedBox(height: 2.0),
+                  Text(
+                    playlist.playCount,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          fontSize: isSmallScreen ? 10 : 12,
+                        ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              );
+            },
           ),
         ],
       ),
@@ -896,9 +890,9 @@ class _SongListPageState extends State<SongListPage> {
                             IconButton(
                               icon: const Icon(Icons.play_arrow),
                               onPressed: () async {
-                                // 先播放歌曲，等待播放开始后再导航
-                                await musicProvider
-                                    .playSong(song, playlist: [song]);
+                                // 将整个热门歌曲列表添加到播放列表
+                                await musicProvider.playSong(song,
+                                    playlist: songs);
                                 // 导航到播放器页面
                                 if (mounted) {
                                   Navigator.push(
