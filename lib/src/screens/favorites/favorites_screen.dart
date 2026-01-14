@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'dart:developer'; // For debugPrint
 import 'package:provider/provider.dart';
 import 'package:vibe_music_app/src/providers/auth_provider.dart';
 import 'package:vibe_music_app/src/providers/music_provider.dart';
 import 'package:vibe_music_app/src/screens/auth/login_screen.dart';
 import 'package:vibe_music_app/src/screens/player/player_screen.dart';
 import 'package:vibe_music_app/src/models/song_model.dart';
+import 'package:vibe_music_app/src/utils/app_logger.dart';
 
 class FavoritesScreen extends StatefulWidget {
   const FavoritesScreen({super.key});
@@ -104,7 +104,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
       setState(() {
         _isLoadingMore = false;
       });
-      debugPrint('Error loading favorite songs: $error');
+      AppLogger().e('Error loading favorite songs: $error');
     });
   }
 

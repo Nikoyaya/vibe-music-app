@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'dart:typed_data';
+import 'package:vibe_music_app/src/utils/app_logger.dart';
 
 class ApiService {
   static final String baseUrl =
@@ -43,6 +44,10 @@ class ApiService {
     headers: {
       'Content-Type': 'application/json',
     },
+    validateStatus: (status) {
+      // 允许处理所有状态码，包括500等服务器错误
+      return status != null;
+    },
   ));
 
   void setToken(String? token) {
@@ -63,15 +68,15 @@ class ApiService {
     );
 
     // Log request details
-    print('\n=== API Request ===');
-    print('URL: $baseUrl$endpoint');
-    print('Method: $method');
-    print('Headers: ${_dio.options.headers}');
+    AppLogger().i('\n=== API Request ===');
+    AppLogger().i('URL: $baseUrl$endpoint');
+    AppLogger().i('Method: $method');
+    AppLogger().i('Headers: ${_dio.options.headers}');
     if (queryParams != null) {
-      print('Query Params: $queryParams');
+      AppLogger().i('Query Params: $queryParams');
     }
     if (body != null) {
-      print('Request Body: $body');
+      AppLogger().i('Request Body: $body');
     }
 
     try {
@@ -89,17 +94,17 @@ class ApiService {
       }
 
       // Log response details
-      print('\n=== API Response ===');
-      print('Status Code: ${response.statusCode}');
-      print('Response Data: ${response.data}');
-      print('=================\n');
+      AppLogger().i('\n=== API Response ===');
+      AppLogger().i('Status Code: ${response.statusCode}');
+      AppLogger().i('Response Data: ${response.data}');
+      AppLogger().i('=================\n');
 
       return response;
     } catch (e) {
       // Log error details
-      print('\n=== API Error ===');
-      print('Error: $e');
-      print('=================\n');
+      AppLogger().e('\n=== API Error ===');
+      AppLogger().e('Error: $e');
+      AppLogger().e('=================\n');
       rethrow;
     }
   }
@@ -159,10 +164,10 @@ class ApiService {
   }
 
   Future<Response> updateUserAvatar(Uint8List avatarBytes) async {
-    print('\n=== Avatar Update Request ===');
-    print('Avatar Bytes Length: ${avatarBytes.length} bytes');
-    print('Headers: ${_dio.options.headers}');
-    print('=================\n');
+    AppLogger().i('\n=== Avatar Update Request ===');
+    AppLogger().i('Avatar Bytes Length: ${avatarBytes.length} bytes');
+    AppLogger().i('Headers: ${_dio.options.headers}');
+    AppLogger().i('=================\n');
 
     try {
       // Create FormData with the bytes directly
@@ -174,8 +179,8 @@ class ApiService {
       });
 
       // Log form data details
-      print('Form Data Fields: ${formData.fields}');
-      print('Form Files Count: ${formData.files.length}');
+      AppLogger().i('Form Data Fields: ${formData.fields}');
+      AppLogger().i('Form Files Count: ${formData.files.length}');
 
       // 更新头像的接口不需要Bearer前缀，临时移除它
       final originalAuthorization = _dio.options.headers['Authorization'];
@@ -203,17 +208,17 @@ class ApiService {
       }
 
       // Log response details
-      print('\n=== Avatar Update Response ===');
-      print('Status Code: ${response.statusCode}');
-      print('Response Data: ${response.data}');
-      print('=================\n');
+      AppLogger().i('\n=== Avatar Update Response ===');
+      AppLogger().i('Status Code: ${response.statusCode}');
+      AppLogger().i('Response Data: ${response.data}');
+      AppLogger().i('=================\n');
 
       return response;
     } catch (e) {
       // Log error details
-      print('\n=== Avatar Update Error ===');
-      print('Error: $e');
-      print('=================\n');
+      AppLogger().e('\n=== Avatar Update Error ===');
+      AppLogger().e('Error: $e');
+      AppLogger().e('=================\n');
       rethrow;
     }
   }

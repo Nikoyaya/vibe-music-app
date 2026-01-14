@@ -10,6 +10,7 @@ import 'package:vibe_music_app/src/screens/search/search_screen.dart';
 import 'package:vibe_music_app/src/screens/auth/login_screen.dart';
 import 'package:vibe_music_app/src/screens/favorites/favorites_screen.dart';
 import 'package:vibe_music_app/src/models/song_model.dart';
+import 'package:vibe_music_app/src/utils/app_logger.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -1294,7 +1295,7 @@ class _ProfilePageState extends State<ProfilePage> {
         }
       }
     } catch (e) {
-      debugPrint('Error picking image: $e');
+      AppLogger().e('Error picking image: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Error picking image')),

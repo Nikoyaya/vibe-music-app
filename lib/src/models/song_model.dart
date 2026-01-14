@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:vibe_music_app/src/utils/app_logger.dart';
 
 part 'song_model.freezed.dart';
 
@@ -57,9 +58,9 @@ class Song with _$Song {
               processedAudioUrl.substring(0, processedAudioUrl.length - 1);
         }
 
-        debugPrint('Processed audio URL: $processedAudioUrl');
+        AppLogger().i('Processed audio URL: $processedAudioUrl');
       } catch (e) {
-        debugPrint('Error processing audio URL: $e');
+        AppLogger().e('Error processing audio URL: $e');
         // 如果解析失败，尝试手动修复明显问题
         processedAudioUrl = audioUrl
             .replaceAll(RegExp(r'\s+'), '%20') // 将空格替换为%20

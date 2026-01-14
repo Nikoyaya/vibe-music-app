@@ -1,9 +1,10 @@
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vibe_music_app/src/services/api_service.dart';
 import 'package:vibe_music_app/src/models/user_model.dart';
+import 'package:vibe_music_app/src/utils/app_logger.dart';
+import 'package:vibe_music_app/src/utils/sp_util.dart';
 
 enum AuthStatus {
   unknown,
@@ -33,12 +34,11 @@ class AuthProvider with ChangeNotifier {
   }
 
   Future<void> _loadAuthData() async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('token');
-    final tokenExpiry = prefs.getString('tokenExpiry');
-    final refreshToken = prefs.getString('refreshToken');
-    final refreshTokenExpiry = prefs.getString('refreshTokenExpiry');
-    final userJson = prefs.getString('user');
+    final token = SpUtil.get<String>('token');
+    final tokenExpiry = SpUtil.get<String>('tokenExpiry');
+    final refreshToken = SpUtil.get<String>('refreshToken');
+    final refreshTokenExpiry = SpUtil.get<String>('refreshTokenExpiry');
+    final userJson = SpUtil.get<String>('user');
 
     if (token != null && userJson != null) {
       _token = token;
@@ -72,13 +72,12 @@ class AuthProvider with ChangeNotifier {
             response.data is Map ? response.data : jsonDecode(response.data);
         if (data['code'] == 200 && data['data'] != null) {
           _user = User.fromJson(data['data']);
-          final prefs = await SharedPreferences.getInstance();
-          await prefs.setString('user', jsonEncode(_user!.toJson()));
+          await SpUtil.put('user', jsonEncode(_user!.toJson()));
           notifyListeners();
         }
       }
     } catch (e) {
-      print('Failed to fetch user info: $e');
+      AppLogger().e('Failed to fetch user info: $e');
     }
   }
 
@@ -99,9 +98,8 @@ class AuthProvider with ChangeNotifier {
           _tokenExpiry = DateTime.parse(data['data']['accessTokenExpireTime']);
           ApiService().setToken(_token);
 
-          final prefs = await SharedPreferences.getInstance();
-          await prefs.setString('token', _token!);
-          await prefs.setString('tokenExpiry', _tokenExpiry!.toIso8601String());
+          await SpUtil.put('token', _token!);
+          await SpUtil.put('tokenExpiry', _tokenExpiry!.toIso8601String());
 
           _status = AuthStatus.authenticated;
           notifyListeners();
@@ -109,7 +107,7 @@ class AuthProvider with ChangeNotifier {
         }
       }
     } catch (e) {
-      print('Refresh token failed: $e');
+      AppLogger().e('Refresh token failed: $e');
     }
 
     await logout();
@@ -123,22 +121,24 @@ class AuthProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      print('🔍 开始登录: isAdmin=$isAdmin, usernameOrEmail=$usernameOrEmail');
+      AppLogger()
+          .d('🔍 开始登录: isAdmin=$isAdmin, usernameOrEmail=$usernameOrEmail');
 
       final response = isAdmin
           ? await ApiService().adminLogin(usernameOrEmail, password)
           : await ApiService().login(usernameOrEmail, password);
 
-      print('📊 登录响应状态码: ${response.statusCode}');
-      print('📋 登录响应体: ${response.data}');
+      AppLogger().d('📊 登录响应状态码: ${response.statusCode}');
+      AppLogger().d('📋 登录响应体: ${response.data}');
 
       if (response.statusCode == 200) {
         final data =
             response.data is Map ? response.data : jsonDecode(response.data);
-        print('🔍 解析后的数据 - code: ${data['code']}, message: ${data['message']}');
+        AppLogger().d(
+            '🔍 解析后的数据 - code: ${data['code']}, message: ${data['message']}');
 
         if (data['code'] == 200 && data['data'] != null) {
-          print('✅ 登录成功，开始处理Token和用户数据...');
+          AppLogger().d('✅ 登录成功，开始处理Token和用户数据...');
 
           _token = data['data']['accessToken'];
           _refreshToken = data['data']['refreshToken'];
@@ -146,53 +146,52 @@ class AuthProvider with ChangeNotifier {
           _refreshTokenExpiry =
               DateTime.parse(data['data']['refreshTokenExpireTime']);
 
-          print(
+          AppLogger().d(
               '🔑 Token信息 - accessToken: ${_token != null ? "存在" : "null"}, refreshToken: ${_refreshToken != null ? "存在" : "null"}');
 
           // 使用基础信息创建用户，详细用户信息通过_fetchUserInfo获取
           _user = User();
 
-          print('👤 用户基本信息创建成功: ${_user?.username}');
+          AppLogger().d('👤 用户基本信息创建成功: ${_user?.username}');
 
           // 先设置Token，再获取完整的用户信息（因为getUserInfo需要认证）
           ApiService().setToken(_token);
           await _fetchUserInfo();
 
-          final prefs = await SharedPreferences.getInstance();
-          await prefs.setString('token', _token!);
-          await prefs.setString('tokenExpiry', _tokenExpiry!.toIso8601String());
+          await SpUtil.put('token', _token!);
+          await SpUtil.put('tokenExpiry', _tokenExpiry!.toIso8601String());
           if (_refreshToken != null) {
-            await prefs.setString('refreshToken', _refreshToken!);
-            await prefs.setString(
+            await SpUtil.put('refreshToken', _refreshToken!);
+            await SpUtil.put(
                 'refreshTokenExpiry', _refreshTokenExpiry!.toIso8601String());
           }
-          await prefs.setString('user', jsonEncode(_user!.toJson()));
+          await SpUtil.put('user', jsonEncode(_user!.toJson()));
 
           // 验证保存状态
-          _logSharedPreferencesState(prefs);
+          _logSpUtilState();
 
           _status = AuthStatus.authenticated;
           notifyListeners();
-          print('🎉 登录流程完成，状态更新为已认证');
+          AppLogger().d('🎉 登录流程完成，状态更新为已认证');
           return true;
         } else {
           _errorMessage =
               'Server response: code=${data['code']}, message=${data['message']}';
-          print('❌ 登录失败: $_errorMessage');
+          AppLogger().e('❌ 登录失败: $_errorMessage');
           _status = AuthStatus.unauthenticated;
           notifyListeners();
           return false;
         }
       } else {
         _errorMessage = 'Network error: ${response.statusCode}';
-        print('❌ 网络错误: $_errorMessage');
+        AppLogger().e('❌ 网络错误: $_errorMessage');
         _status = AuthStatus.unauthenticated;
         notifyListeners();
         return false;
       }
     } catch (e) {
       _errorMessage = 'Connection error: $e';
-      print('❌ 连接错误: $_errorMessage');
+      AppLogger().e('❌ 连接错误: $_errorMessage');
       _status = AuthStatus.unauthenticated;
       notifyListeners();
       return false;
@@ -267,10 +266,9 @@ class AuthProvider with ChangeNotifier {
     _status = AuthStatus.unauthenticated;
     ApiService().setToken(null);
 
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('token');
-    await prefs.remove('refreshToken');
-    await prefs.remove('user');
+    await SpUtil.remove('token');
+    await SpUtil.remove('refreshToken');
+    await SpUtil.remove('user');
 
     notifyListeners();
   }
@@ -289,15 +287,14 @@ class AuthProvider with ChangeNotifier {
             // 后端未返回用户数据，重新获取最新用户信息
             await _fetchUserInfo();
           }
-          final prefs = await SharedPreferences.getInstance();
-          await prefs.setString('user', jsonEncode(_user!.toJson()));
+          await SpUtil.put('user', jsonEncode(_user!.toJson()));
           notifyListeners();
           return true;
         }
       }
       return false;
     } catch (e) {
-      print('Failed to update user info: $e');
+      AppLogger().e('Failed to update user info: $e');
       return false;
     }
   }
@@ -305,13 +302,14 @@ class AuthProvider with ChangeNotifier {
   Future<bool> updateUserAvatar(Uint8List avatarBytes) async {
     // 检查用户是否已经登录
     if (!isAuthenticated || _user == null) {
-      print('Error: User not authenticated');
+      AppLogger().e('Error: User not authenticated');
       return false;
     }
 
     try {
       final response = await ApiService().updateUserAvatar(avatarBytes);
-      print('Avatar update response: ${response.statusCode}, ${response.data}');
+      AppLogger().d(
+          'Avatar update response: ${response.statusCode}, ${response.data}');
 
       if (response.statusCode == 200) {
         final data = response.data;
@@ -320,14 +318,15 @@ class AuthProvider with ChangeNotifier {
           await _fetchUserInfo();
           return true;
         } else {
-          print('Error: Invalid response data format');
+          AppLogger().e('Error: Invalid response data format');
         }
       } else {
-        print('Error: Server returned status code ${response.statusCode}');
+        AppLogger()
+            .e('Error: Server returned status code ${response.statusCode}');
       }
       return false;
     } catch (e) {
-      print('Failed to update user avatar: $e');
+      AppLogger().e('Failed to update user avatar: $e');
       return false;
     }
   }
@@ -337,13 +336,16 @@ class AuthProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> _logSharedPreferencesState(SharedPreferences prefs) async {
-    print('🔐 SharedPreferences 存储状态:');
-    print('  token: ${prefs.getString('token') != null ? "✓ 已保存" : "✗ 未保存"}');
-    print('  tokenExpiry: ${prefs.getString('tokenExpiry')}');
-    print(
-        '  refreshToken: ${prefs.getString('refreshToken') != null ? "✓ 已保存" : "✗ 未保存"}');
-    print('  refreshTokenExpiry: ${prefs.getString('refreshTokenExpiry')}');
-    print('  user: ${prefs.getString('user') != null ? "✓ 已保存" : "✗ 未保存"}');
+  Future<void> _logSpUtilState() async {
+    AppLogger().d('🔐 SpUtil 存储状态:');
+    AppLogger().d(
+        '  token: ${SpUtil.get<String>('token') != null ? "✓ 已保存" : "✗ 未保存"}');
+    AppLogger().d('  tokenExpiry: ${SpUtil.get<String>('tokenExpiry')}');
+    AppLogger().d(
+        '  refreshToken: ${SpUtil.get<String>('refreshToken') != null ? "✓ 已保存" : "✗ 未保存"}');
+    AppLogger()
+        .d('  refreshTokenExpiry: ${SpUtil.get<String>('refreshTokenExpiry')}');
+    AppLogger()
+        .d('  user: ${SpUtil.get<String>('user') != null ? "✓ 已保存" : "✗ 未保存"}');
   }
 }

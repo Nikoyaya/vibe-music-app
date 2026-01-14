@@ -1,8 +1,9 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:audioplayers/audioplayers.dart' as audioplayers;
+import 'package:just_audio/just_audio.dart';
 import 'package:vibe_music_app/src/services/api_service.dart';
 import 'package:vibe_music_app/src/models/song_model.dart';
+import 'package:vibe_music_app/src/utils/app_logger.dart';
 
 enum AppPlayerState {
   stopped,
@@ -13,7 +14,7 @@ enum AppPlayerState {
 }
 
 class MusicProvider with ChangeNotifier {
-  final audioplayers.AudioPlayer _audioPlayer = audioplayers.AudioPlayer();
+  final AudioPlayer _audioPlayer = AudioPlayer();
   AppPlayerState _playerState = AppPlayerState.stopped;
   Duration _duration = Duration.zero;
   Duration _position = Duration.zero;
@@ -42,28 +43,43 @@ class MusicProvider with ChangeNotifier {
   }
 
   void _initAudioPlayer() {
-    _audioPlayer.onDurationChanged.listen((d) {
-      _duration = d;
-      notifyListeners();
+    // Listen for duration changes
+    _audioPlayer.durationStream.listen((d) {
+      if (d != null) {
+        _duration = d;
+        notifyListeners();
+      }
     });
 
-    _audioPlayer.onPositionChanged.listen((p) {
+    // Listen for position changes
+    _audioPlayer.positionStream.listen((p) {
       _position = p;
       notifyListeners();
     });
 
-    _audioPlayer.onPlayerStateChanged.listen((state) {
-      if (state == audioplayers.PlayerState.playing) {
-        _playerState = AppPlayerState.playing;
-      } else if (state == audioplayers.PlayerState.paused) {
-        _playerState = AppPlayerState.paused;
-      } else if (state == audioplayers.PlayerState.completed) {
-        _onSongComplete();
-      } else if (state == audioplayers.PlayerState.stopped) {
-        _playerState = AppPlayerState.stopped;
+    // Listen for player state changes
+    _audioPlayer.playerStateStream.listen((state) {
+      switch (state.processingState) {
+        case ProcessingState.idle:
+        case ProcessingState.loading:
+          _playerState = AppPlayerState.loading;
+          break;
+        case ProcessingState.buffering:
+          _playerState = AppPlayerState.loading;
+          break;
+        case ProcessingState.ready:
+          _playerState =
+              state.playing ? AppPlayerState.playing : AppPlayerState.paused;
+          break;
+        case ProcessingState.completed:
+          _onSongComplete();
+          break;
       }
       notifyListeners();
     });
+
+    // Set default loop mode
+    _audioPlayer.setLoopMode(LoopMode.off);
   }
 
   void _onSongComplete() {
@@ -83,16 +99,17 @@ class MusicProvider with ChangeNotifier {
     // 检查songUrl是否存在
     if (song.songUrl == null || song.songUrl!.isEmpty) {
       _playerState = AppPlayerState.stopped;
-      debugPrint('Error: Song URL is null or empty for song: ${song.songName}');
-      debugPrint('song.songUrl: ${song.songUrl}');
+      AppLogger()
+          .e('Error: Song URL is null or empty for song: ${song.songName}');
+      AppLogger().e('song.songUrl: ${song.songUrl}');
       return;
     }
 
-    debugPrint('Attempting to play song: ${song.songName}');
-    debugPrint('Artist: ${song.artistName}');
-    debugPrint('Song URL: ${song.songUrl}');
-    debugPrint('URL length: ${song.songUrl!.length}');
-    debugPrint('URL validity: ${Uri.tryParse(song.songUrl!)?.isAbsolute}');
+    AppLogger().d('Attempting to play song: ${song.songName}');
+    AppLogger().d('Artist: ${song.artistName}');
+    AppLogger().d('Song URL: ${song.songUrl}');
+    AppLogger().d('URL length: ${song.songUrl!.length}');
+    AppLogger().d('URL validity: ${Uri.tryParse(song.songUrl!)?.isAbsolute}');
 
     _playerState = AppPlayerState.loading;
     notifyListeners();
@@ -110,18 +127,21 @@ class MusicProvider with ChangeNotifier {
     }
 
     try {
-      // 先停止当前播放
+      // 重置播放器
       await _audioPlayer.stop();
-      // 播放新歌曲
-      debugPrint('About to play audio from URL');
-      await _audioPlayer.play(audioplayers.UrlSource(song.songUrl!));
+      // 设置音频源
+      AppLogger().d('About to play audio from URL');
+      await _audioPlayer.setUrl(song.songUrl!);
+      // 播放歌曲
+      await _audioPlayer.play();
       _playerState = AppPlayerState.playing;
-      debugPrint('Successfully started playing song: ${song.songName}');
-      debugPrint('Audio player state after play: ${_audioPlayer.state}');
+      AppLogger().d('Successfully started playing song: ${song.songName}');
+      AppLogger()
+          .d('Audio player state after play: ${_audioPlayer.playerState}');
       notifyListeners();
     } catch (e, stackTrace) {
-      debugPrint('Error playing song ${song.songName}: $e');
-      debugPrint('Stack trace: $stackTrace');
+      AppLogger().e('Error playing song ${song.songName}: $e');
+      AppLogger().e('Stack trace: $stackTrace');
       _playerState = AppPlayerState.stopped;
       notifyListeners();
     }
@@ -129,19 +149,16 @@ class MusicProvider with ChangeNotifier {
 
   Future<void> play() async {
     if (currentSong == null || currentSong!.songUrl == null) {
-      debugPrint('Error: No valid song URL');
+      AppLogger().e('Error: No valid song URL');
       return;
     }
 
     try {
-      if (_playerState == AppPlayerState.paused) {
-        await _audioPlayer.resume();
-      } else {
-        await _audioPlayer.stop();
-        await _audioPlayer.play(audioplayers.UrlSource(currentSong!.songUrl!));
-      }
+      await _audioPlayer.play();
+      _playerState = AppPlayerState.playing;
+      notifyListeners();
     } catch (e) {
-      debugPrint('Error playing song: $e');
+      AppLogger().e('Error playing song: $e');
       _playerState = AppPlayerState.stopped;
       notifyListeners();
     }
@@ -149,6 +166,8 @@ class MusicProvider with ChangeNotifier {
 
   Future<void> pause() async {
     await _audioPlayer.pause();
+    _playerState = AppPlayerState.paused;
+    notifyListeners();
   }
 
   Future<void> stop() async {
@@ -189,12 +208,15 @@ class MusicProvider with ChangeNotifier {
     switch (_repeatMode) {
       case RepeatMode.none:
         _repeatMode = RepeatMode.all;
+        _audioPlayer.setLoopMode(LoopMode.all);
         break;
       case RepeatMode.all:
         _repeatMode = RepeatMode.one;
+        _audioPlayer.setLoopMode(LoopMode.one);
         break;
       case RepeatMode.one:
         _repeatMode = RepeatMode.none;
+        _audioPlayer.setLoopMode(LoopMode.off);
         break;
     }
     notifyListeners();
@@ -236,16 +258,31 @@ class MusicProvider with ChangeNotifier {
     try {
       final response = await ApiService()
           .getAllSongs(page, size, artistName: artistName, songName: songName);
-      if (response.statusCode == 200) {
-        final data =
-            response.data is Map ? response.data : jsonDecode(response.data);
-        if (data['code'] == 200 && data['data'] != null) {
+
+      AppLogger().d('Load songs response status: ${response.statusCode}');
+      AppLogger().d('Load songs response data: ${response.data}');
+
+      // 处理所有状态码，不仅仅是200
+      final data =
+          response.data is Map ? response.data : jsonDecode(response.data);
+
+      if (data['code'] == 200 && data['data'] != null) {
+        // 检查返回的数据结构是否符合预期
+        if (data['data']['items'] != null) {
           final List<dynamic> items = data['data']['items'] ?? [];
           return items.map((item) => Song.fromJson(item)).toList();
+        } else if (data['data']['records'] != null) {
+          // 兼容可能的records字段
+          final List<dynamic> items = data['data']['records'] ?? [];
+          return items.map((item) => Song.fromJson(item)).toList();
         }
+      } else {
+        // 处理业务错误
+        AppLogger().e('API returned error code: ${data['code']}');
+        AppLogger().e('API error message: ${data['message']}');
       }
     } catch (e) {
-      debugPrint('Error loading songs: $e');
+      AppLogger().e('Error loading songs: $e');
     }
     return [];
   }
@@ -262,7 +299,7 @@ class MusicProvider with ChangeNotifier {
         }
       }
     } catch (e) {
-      debugPrint('Error loading recommended songs: $e');
+      AppLogger().e('Error loading recommended songs: $e');
     }
     return [];
   }
@@ -281,7 +318,7 @@ class MusicProvider with ChangeNotifier {
         }
       }
     } catch (e) {
-      debugPrint('Error loading user favorite songs: $e');
+      AppLogger().e('Error loading user favorite songs: $e');
     }
     return [];
   }
@@ -310,7 +347,7 @@ class MusicProvider with ChangeNotifier {
         }
       }
     } catch (e) {
-      debugPrint('Error adding song to favorites: $e');
+      AppLogger().e('Error adding song to favorites: $e');
     }
     return false;
   }
@@ -333,7 +370,7 @@ class MusicProvider with ChangeNotifier {
         }
       }
     } catch (e) {
-      debugPrint('Error removing song from favorites: $e');
+      AppLogger().e('Error removing song from favorites: $e');
     }
     return false;
   }
