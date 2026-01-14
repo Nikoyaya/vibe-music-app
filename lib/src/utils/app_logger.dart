@@ -43,7 +43,7 @@ class AppLogger {
     // 防止重复初始化
     if (_isInitialized) {
       if (kDebugMode) {
-        _logger.w('Warning: AppLogger has already been initialized');
+        _logger.w('警告: AppLogger已经被初始化');
       }
       return;
     }

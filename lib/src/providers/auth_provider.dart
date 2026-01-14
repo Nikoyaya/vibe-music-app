@@ -77,7 +77,7 @@ class AuthProvider with ChangeNotifier {
         }
       }
     } catch (e) {
-      AppLogger().e('Failed to fetch user info: $e');
+      AppLogger().e('获取用户信息失败: $e');
     }
   }
 
@@ -107,7 +107,7 @@ class AuthProvider with ChangeNotifier {
         }
       }
     } catch (e) {
-      AppLogger().e('Refresh token failed: $e');
+      AppLogger().e('刷新Token失败: $e');
     }
 
     await logout();
@@ -176,21 +176,21 @@ class AuthProvider with ChangeNotifier {
           return true;
         } else {
           _errorMessage =
-              'Server response: code=${data['code']}, message=${data['message']}';
+              '服务器响应: code=${data['code']}, message=${data['message']}';
           AppLogger().e('❌ 登录失败: $_errorMessage');
           _status = AuthStatus.unauthenticated;
           notifyListeners();
           return false;
         }
       } else {
-        _errorMessage = 'Network error: ${response.statusCode}';
+        _errorMessage = '网络错误: ${response.statusCode}';
         AppLogger().e('❌ 网络错误: $_errorMessage');
         _status = AuthStatus.unauthenticated;
         notifyListeners();
         return false;
       }
     } catch (e) {
-      _errorMessage = 'Connection error: $e';
+      _errorMessage = '连接错误: $e';
       AppLogger().e('❌ 连接错误: $_errorMessage');
       _status = AuthStatus.unauthenticated;
       notifyListeners();
@@ -294,7 +294,7 @@ class AuthProvider with ChangeNotifier {
       }
       return false;
     } catch (e) {
-      AppLogger().e('Failed to update user info: $e');
+      AppLogger().e('更新用户信息失败: $e');
       return false;
     }
   }
@@ -302,14 +302,13 @@ class AuthProvider with ChangeNotifier {
   Future<bool> updateUserAvatar(Uint8List avatarBytes) async {
     // 检查用户是否已经登录
     if (!isAuthenticated || _user == null) {
-      AppLogger().e('Error: User not authenticated');
+      AppLogger().e('错误: 用户未登录');
       return false;
     }
 
     try {
       final response = await ApiService().updateUserAvatar(avatarBytes);
-      AppLogger().d(
-          'Avatar update response: ${response.statusCode}, ${response.data}');
+      AppLogger().d('头像更新响应: ${response.statusCode}, ${response.data}');
 
       if (response.statusCode == 200) {
         final data = response.data;
@@ -318,15 +317,14 @@ class AuthProvider with ChangeNotifier {
           await _fetchUserInfo();
           return true;
         } else {
-          AppLogger().e('Error: Invalid response data format');
+          AppLogger().e('错误: 无效的响应数据格式');
         }
       } else {
-        AppLogger()
-            .e('Error: Server returned status code ${response.statusCode}');
+        AppLogger().e('错误: 服务器返回状态码 ${response.statusCode}');
       }
       return false;
     } catch (e) {
-      AppLogger().e('Failed to update user avatar: $e');
+      AppLogger().e('更新用户头像失败: $e');
       return false;
     }
   }

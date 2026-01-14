@@ -3,20 +3,35 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'dart:typed_data';
 import 'package:vibe_music_app/src/utils/app_logger.dart';
 
+/// API服务类
+/// 提供统一的网络请求封装，支持请求日志、token管理和URL替换
 class ApiService {
+  /// 基础URL
   static final String baseUrl =
       dotenv.env['BASE_URL'] ?? 'http://127.0.0.1:8080';
+
+  /// API超时时间（毫秒）
   static final int timeout =
       int.tryParse(dotenv.env['API_TIMEOUT'] ?? '30000') ?? 30000;
+
+  /// 是否为手机环境
   static final bool isPhone =
       (dotenv.env['IS_PHONE'] ?? 'false').toLowerCase() == 'true';
+
+  /// 基础IP地址
   static final String baseIp = dotenv.env['BASE_IP'] ?? 'http://192.168.31.76';
 
+  /// 单例实例
   static final ApiService _instance = ApiService._internal();
+
+  /// 获取单例实例
   factory ApiService() => _instance;
+
+  /// 私有构造函数
   ApiService._internal();
 
-  // Helper method to recursively replace URLs in response data
+  /// 递归替换响应数据中的URL
+  /// [data]: 响应数据，可以是字符串、Map或List
   dynamic _replaceUrls(dynamic data) {
     if (data is String) {
       // If it's a string, replace the URL
@@ -36,7 +51,10 @@ class ApiService {
     return data;
   }
 
+  /// 当前认证Token
   String? _token;
+
+  /// Dio实例
   final Dio _dio = Dio(BaseOptions(
     baseUrl: baseUrl,
     connectTimeout: Duration(milliseconds: timeout),
@@ -50,6 +68,8 @@ class ApiService {
     },
   ));
 
+  /// 设置认证Token
+  /// [token]: 认证Token，如果为null或空字符串则移除认证头
   void setToken(String? token) {
     _token = token;
     if (_token != null && _token!.isNotEmpty) {
@@ -60,6 +80,11 @@ class ApiService {
     }
   }
 
+  /// 通用API请求方法
+  /// [method]: HTTP方法(GET, POST, PUT, DELETE等)
+  /// [endpoint]: API端点路径
+  /// [body]: 请求体数据
+  /// [queryParams]: 查询参数
   Future<Response> _request(String method, String endpoint,
       {Map<String, dynamic>? body, Map<String, dynamic>? queryParams}) async {
     final options = Options(
@@ -68,15 +93,15 @@ class ApiService {
     );
 
     // Log request details
-    AppLogger().i('\n=== API Request ===');
+    AppLogger().i('\n=== API请求 ===');
     AppLogger().i('URL: $baseUrl$endpoint');
-    AppLogger().i('Method: $method');
-    AppLogger().i('Headers: ${_dio.options.headers}');
+    AppLogger().i('方法: $method');
+    AppLogger().i('请求头: ${_dio.options.headers}');
     if (queryParams != null) {
-      AppLogger().i('Query Params: $queryParams');
+      AppLogger().i('查询参数: $queryParams');
     }
     if (body != null) {
-      AppLogger().i('Request Body: $body');
+      AppLogger().i('请求体: $body');
     }
 
     try {
@@ -94,27 +119,31 @@ class ApiService {
       }
 
       // Log response details
-      AppLogger().i('\n=== API Response ===');
-      AppLogger().i('Status Code: ${response.statusCode}');
-      AppLogger().i('Response Data: ${response.data}');
+      AppLogger().i('\n=== API响应 ===');
+      AppLogger().i('状态码: ${response.statusCode}');
+      AppLogger().i('响应数据: ${response.data}');
       AppLogger().i('=================\n');
 
       return response;
     } catch (e) {
       // Log error details
-      AppLogger().e('\n=== API Error ===');
-      AppLogger().e('Error: $e');
+      AppLogger().e('\n=== API错误 ===');
+      AppLogger().e('错误: $e');
       AppLogger().e('=================\n');
       rethrow;
     }
   }
 
-  // User endpoints
+  /// 发送验证码
+  /// [email]: 接收验证码的邮箱
   Future<Response> sendVerificationCode(String email) async {
     return await _request('GET', '/user/sendVerificationCode',
         queryParams: {'email': email});
   }
 
+  /// 验证验证码
+  /// [email]: 邮箱地址
+  /// [code]: 验证码
   Future<Response> verifyVerificationCode(String email, String code) async {
     return await _request('POST', '/user/verifyVerificationCode', body: {
       'email': email,
@@ -122,6 +151,9 @@ class ApiService {
     });
   }
 
+  /// 用户登录
+  /// [email]: 邮箱地址
+  /// [password]: 密码
   Future<Response> login(String email, String password) async {
     return await _request('POST', '/user/login', body: {
       'email': email,
@@ -164,9 +196,9 @@ class ApiService {
   }
 
   Future<Response> updateUserAvatar(Uint8List avatarBytes) async {
-    AppLogger().i('\n=== Avatar Update Request ===');
-    AppLogger().i('Avatar Bytes Length: ${avatarBytes.length} bytes');
-    AppLogger().i('Headers: ${_dio.options.headers}');
+    AppLogger().i('\n=== 头像更新请求 ===');
+    AppLogger().i('头像字节长度: ${avatarBytes.length} 字节');
+    AppLogger().i('请求头: ${_dio.options.headers}');
     AppLogger().i('=================\n');
 
     try {
@@ -179,8 +211,8 @@ class ApiService {
       });
 
       // Log form data details
-      AppLogger().i('Form Data Fields: ${formData.fields}');
-      AppLogger().i('Form Files Count: ${formData.files.length}');
+      AppLogger().i('表单数据字段: ${formData.fields}');
+      AppLogger().i('表单文件数量: ${formData.files.length}');
 
       // 更新头像的接口不需要Bearer前缀，临时移除它
       final originalAuthorization = _dio.options.headers['Authorization'];
@@ -208,16 +240,16 @@ class ApiService {
       }
 
       // Log response details
-      AppLogger().i('\n=== Avatar Update Response ===');
-      AppLogger().i('Status Code: ${response.statusCode}');
-      AppLogger().i('Response Data: ${response.data}');
+      AppLogger().i('\n=== 头像更新响应 ===');
+      AppLogger().i('状态码: ${response.statusCode}');
+      AppLogger().i('响应数据: ${response.data}');
       AppLogger().i('=================\n');
 
       return response;
     } catch (e) {
       // Log error details
-      AppLogger().e('\n=== Avatar Update Error ===');
-      AppLogger().e('Error: $e');
+      AppLogger().e('\n=== 头像更新错误 ===');
+      AppLogger().e('错误: $e');
       AppLogger().e('=================\n');
       rethrow;
     }

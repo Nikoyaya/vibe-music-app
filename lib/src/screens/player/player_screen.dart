@@ -4,6 +4,8 @@ import 'package:vibe_music_app/src/providers/music_provider.dart';
 import 'package:vibe_music_app/src/providers/auth_provider.dart';
 import 'package:vibe_music_app/src/screens/auth/login_screen.dart';
 
+/// 播放器屏幕
+/// 用于播放音乐和控制播放状态
 class PlayerScreen extends StatefulWidget {
   const PlayerScreen({super.key});
 
@@ -12,8 +14,13 @@ class PlayerScreen extends StatefulWidget {
 }
 
 class _PlayerScreenState extends State<PlayerScreen> {
+  /// 是否展开歌曲详情
   bool _isExpanded = false;
+
+  /// 是否显示音量指示器
   bool _showVolumeIndicator = false;
+
+  /// 当前音量值
   double _currentVolume = 0.5; // 初始音量
 
   @override
@@ -30,7 +37,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Now Playing'),
+        title: const Text('正在播放'),
         actions: [
           IconButton(
             icon: Icon(

@@ -4,22 +4,39 @@ import 'package:vibe_music_app/src/utils/app_logger.dart';
 
 part 'song_model.freezed.dart';
 
+/// 歌曲模型类
+/// 用于表示音乐信息，包括基本属性和URL处理
 @freezed
 class Song with _$Song {
+  /// 歌曲构造函数
+  /// [参数说明]:
+  /// - [id]: 歌曲ID
+  /// - [songName]: 歌曲名称
+  /// - [artistName]: 歌手名称
+  /// - [albumName]: 专辑名称
+  /// - [coverUrl]: 封面图片URL
+  /// - [songUrl]: 音频文件URL
+  /// - [duration]: 歌曲时长
+  /// - [playCount]: 播放次数
+  /// - [likeCount]: 点赞次数
+  /// - [createTime]: 创建/发布时间
+  /// - [likeStatus]: 点赞状态(0:未点赞, 1:已点赞)
   const factory Song({
-    @JsonKey(name: 'songId') int? id,
+    int? id,
     String? songName,
     String? artistName,
-    @JsonKey(name: 'album') String? albumName,
+    String? albumName,
     String? coverUrl,
-    @JsonKey(name: 'audioUrl') String? songUrl,
+    String? songUrl,
     String? duration,
     int? playCount,
     int? likeCount,
-    @JsonKey(name: 'releaseTime') DateTime? createTime,
+    DateTime? createTime,
     int? likeStatus,
   }) = _Song;
 
+  /// 从JSON字符串解析为Song对象
+  /// [json]: JSON格式的歌曲数据
   factory Song.fromJson(Map<String, dynamic> json) {
     // 处理歌曲基本信息，保留原始空格
     final songName = json['songName']?.toString().trim();
@@ -58,9 +75,9 @@ class Song with _$Song {
               processedAudioUrl.substring(0, processedAudioUrl.length - 1);
         }
 
-        AppLogger().i('Processed audio URL: $processedAudioUrl');
+        AppLogger().i('处理后的音频URL: $processedAudioUrl');
       } catch (e) {
-        AppLogger().e('Error processing audio URL: $e');
+        AppLogger().e('处理音频URL失败: $e');
         // 如果解析失败，尝试手动修复明显问题
         processedAudioUrl = audioUrl
             .replaceAll(RegExp(r'\s+'), '%20') // 将空格替换为%20
@@ -86,8 +103,17 @@ class Song with _$Song {
   }
 }
 
+/// 分页结果模型类
+/// 用于封装API返回的分页数据
 @freezed
 class PageResult<T> with _$PageResult<T> {
+  /// 分页结果构造函数
+  /// [参数说明]:
+  /// - [records]: 数据列表
+  /// - [total]: 总记录数
+  /// - [size]: 每页大小
+  /// - [current]: 当前页码
+  /// - [pages]: 总页数
   const factory PageResult({
     required List<T> records,
     required int total,
@@ -96,6 +122,9 @@ class PageResult<T> with _$PageResult<T> {
     required int pages,
   }) = _PageResult<T>;
 
+  /// 从JSON字符串解析为PageResult对象
+  /// [json]: JSON格式的分页数据
+  /// [fromJsonT]: 转换内部数据类型的函数
   factory PageResult.fromJson(
       Map<String, dynamic> json, T Function(Map<String, dynamic>) fromJsonT) {
     return PageResult(
@@ -109,8 +138,17 @@ class PageResult<T> with _$PageResult<T> {
   }
 }
 
+/// 歌曲列表响应模型类
+/// 用于封装歌曲列表的API响应数据
 @freezed
 class SongListResponse with _$SongListResponse {
+  /// 歌曲列表响应构造函数
+  /// [参数说明]:
+  /// - [songs]: 歌曲列表
+  /// - [total]: 总歌曲数
+  /// - [page]: 当前页码
+  /// - [size]: 每页大小
+  /// - [pages]: 总页数
   const factory SongListResponse({
     required List<Song> songs,
     required int total,
@@ -119,6 +157,8 @@ class SongListResponse with _$SongListResponse {
     required int pages,
   }) = _SongListResponse;
 
+  /// 从JSON字符串解析为SongListResponse对象
+  /// [json]: JSON格式的歌曲列表响应数据
   factory SongListResponse.fromJson(Map<String, dynamic> json) {
     final data = json['data'] ?? {};
     return SongListResponse(

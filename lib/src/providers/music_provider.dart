@@ -99,17 +99,16 @@ class MusicProvider with ChangeNotifier {
     // 检查songUrl是否存在
     if (song.songUrl == null || song.songUrl!.isEmpty) {
       _playerState = AppPlayerState.stopped;
-      AppLogger()
-          .e('Error: Song URL is null or empty for song: ${song.songName}');
-      AppLogger().e('song.songUrl: ${song.songUrl}');
+      AppLogger().e('错误: 歌曲URL为空或不存在，歌曲名称: ${song.songName}');
+      AppLogger().e('歌曲URL: ${song.songUrl}');
       return;
     }
 
-    AppLogger().d('Attempting to play song: ${song.songName}');
-    AppLogger().d('Artist: ${song.artistName}');
-    AppLogger().d('Song URL: ${song.songUrl}');
-    AppLogger().d('URL length: ${song.songUrl!.length}');
-    AppLogger().d('URL validity: ${Uri.tryParse(song.songUrl!)?.isAbsolute}');
+    AppLogger().d('尝试播放歌曲: ${song.songName}');
+    AppLogger().d('歌手: ${song.artistName}');
+    AppLogger().d('歌曲URL: ${song.songUrl}');
+    AppLogger().d('URL长度: ${song.songUrl!.length}');
+    AppLogger().d('URL有效性: ${Uri.tryParse(song.songUrl!)?.isAbsolute}');
 
     _playerState = AppPlayerState.loading;
     notifyListeners();
@@ -130,18 +129,17 @@ class MusicProvider with ChangeNotifier {
       // 重置播放器
       await _audioPlayer.stop();
       // 设置音频源
-      AppLogger().d('About to play audio from URL');
+      AppLogger().d('准备从URL播放音频');
       await _audioPlayer.setUrl(song.songUrl!);
       // 播放歌曲
       await _audioPlayer.play();
       _playerState = AppPlayerState.playing;
-      AppLogger().d('Successfully started playing song: ${song.songName}');
-      AppLogger()
-          .d('Audio player state after play: ${_audioPlayer.playerState}');
+      AppLogger().d('成功开始播放歌曲: ${song.songName}');
+      AppLogger().d('播放后音频播放器状态: ${_audioPlayer.playerState}');
       notifyListeners();
     } catch (e, stackTrace) {
-      AppLogger().e('Error playing song ${song.songName}: $e');
-      AppLogger().e('Stack trace: $stackTrace');
+      AppLogger().e('播放歌曲 ${song.songName} 失败: $e');
+      AppLogger().e('堆栈跟踪: $stackTrace');
       _playerState = AppPlayerState.stopped;
       notifyListeners();
     }
@@ -149,7 +147,7 @@ class MusicProvider with ChangeNotifier {
 
   Future<void> play() async {
     if (currentSong == null || currentSong!.songUrl == null) {
-      AppLogger().e('Error: No valid song URL');
+      AppLogger().e('错误: 没有有效的歌曲URL');
       return;
     }
 
@@ -158,7 +156,7 @@ class MusicProvider with ChangeNotifier {
       _playerState = AppPlayerState.playing;
       notifyListeners();
     } catch (e) {
-      AppLogger().e('Error playing song: $e');
+      AppLogger().e('播放歌曲失败: $e');
       _playerState = AppPlayerState.stopped;
       notifyListeners();
     }
@@ -259,8 +257,8 @@ class MusicProvider with ChangeNotifier {
       final response = await ApiService()
           .getAllSongs(page, size, artistName: artistName, songName: songName);
 
-      AppLogger().d('Load songs response status: ${response.statusCode}');
-      AppLogger().d('Load songs response data: ${response.data}');
+      AppLogger().d('加载歌曲响应状态: ${response.statusCode}');
+      AppLogger().d('加载歌曲响应数据: ${response.data}');
 
       // 处理所有状态码，不仅仅是200
       final data =
@@ -278,11 +276,11 @@ class MusicProvider with ChangeNotifier {
         }
       } else {
         // 处理业务错误
-        AppLogger().e('API returned error code: ${data['code']}');
-        AppLogger().e('API error message: ${data['message']}');
+        AppLogger().e('API返回错误代码: ${data['code']}');
+        AppLogger().e('API错误信息: ${data['message']}');
       }
     } catch (e) {
-      AppLogger().e('Error loading songs: $e');
+      AppLogger().e('加载歌曲失败: $e');
     }
     return [];
   }
@@ -299,7 +297,7 @@ class MusicProvider with ChangeNotifier {
         }
       }
     } catch (e) {
-      AppLogger().e('Error loading recommended songs: $e');
+      AppLogger().e('加载推荐歌曲失败: $e');
     }
     return [];
   }
@@ -318,7 +316,7 @@ class MusicProvider with ChangeNotifier {
         }
       }
     } catch (e) {
-      AppLogger().e('Error loading user favorite songs: $e');
+      AppLogger().e('加载用户收藏歌曲失败: $e');
     }
     return [];
   }
@@ -347,7 +345,7 @@ class MusicProvider with ChangeNotifier {
         }
       }
     } catch (e) {
-      AppLogger().e('Error adding song to favorites: $e');
+      AppLogger().e('添加歌曲到收藏失败: $e');
     }
     return false;
   }

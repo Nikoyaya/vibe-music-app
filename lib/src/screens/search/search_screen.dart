@@ -4,6 +4,8 @@ import 'package:vibe_music_app/src/providers/music_provider.dart';
 import 'package:vibe_music_app/src/screens/player/player_screen.dart';
 import 'package:vibe_music_app/src/models/song_model.dart';
 
+/// 搜索屏幕
+/// 用于搜索歌曲
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
 
@@ -12,12 +14,25 @@ class SearchScreen extends StatefulWidget {
 }
 
 class _SearchScreenState extends State<SearchScreen> {
+  /// 搜索输入控制器
   final TextEditingController _searchController = TextEditingController();
+
+  /// 搜索关键词
   String _searchKeyword = '';
+
+  /// 是否正在搜索
   bool _isSearching = false;
+
+  /// 搜索结果列表
   List<Song> _searchResults = [];
+
+  /// 当前页码
   int _currentPage = 1;
+
+  /// 每页大小
   final int _pageSize = 20;
+
+  /// 滚动控制器，用于实现下拉加载更多
   final ScrollController _scrollController = ScrollController();
 
   @override
@@ -27,6 +42,8 @@ class _SearchScreenState extends State<SearchScreen> {
     super.dispose();
   }
 
+  /// 搜索歌曲
+  /// [loadMore]: 是否加载更多数据
   Future<void> _searchSongs({bool loadMore = false}) async {
     if (_searchKeyword.isEmpty) return;
 

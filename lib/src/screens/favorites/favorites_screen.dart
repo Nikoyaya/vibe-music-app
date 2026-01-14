@@ -7,6 +7,8 @@ import 'package:vibe_music_app/src/screens/player/player_screen.dart';
 import 'package:vibe_music_app/src/models/song_model.dart';
 import 'package:vibe_music_app/src/utils/app_logger.dart';
 
+/// 收藏歌曲屏幕
+/// 显示用户收藏的歌曲列表
 class FavoritesScreen extends StatefulWidget {
   const FavoritesScreen({super.key});
 
@@ -15,11 +17,22 @@ class FavoritesScreen extends StatefulWidget {
 }
 
 class _FavoritesScreenState extends State<FavoritesScreen> {
-  List<Song> _allSongs = []; // Store all loaded songs
+  /// 所有加载的歌曲列表
+  List<Song> _allSongs = [];
+
+  /// 当前页码
   int _currentPage = 1;
+
+  /// 每页大小
   final int _pageSize = 20;
-  bool _isLoadingMore = false; // Whether we're currently loading more songs
-  bool _hasMoreSongs = true; // Whether there are more songs to load
+
+  /// 是否正在加载更多歌曲
+  bool _isLoadingMore = false;
+
+  /// 是否还有更多歌曲可以加载
+  bool _hasMoreSongs = true;
+
+  /// 滚动控制器，用于实现下拉加载更多
   final ScrollController _scrollController = ScrollController();
 
   @override
@@ -27,7 +40,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
     super.initState();
     _loadFavoriteSongs();
 
-    // Add scroll listener to load more songs when scrolling near the bottom
+    // 添加滚动监听器，当滚动到底部时加载更多歌曲
     _scrollController.addListener(() {
       if (_scrollController.position.pixels ==
           _scrollController.position.maxScrollExtent) {
@@ -51,6 +64,8 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
     }
   }
 
+  /// 加载收藏歌曲
+  /// 重置页码和歌曲列表，然后调用_fetchFavoriteSongs获取数据
   void _loadFavoriteSongs() {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     if (authProvider.isAuthenticated) {
@@ -63,12 +78,16 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
     }
   }
 
+  /// 加载更多歌曲
+  /// 当没有正在加载更多且还有更多歌曲时，调用_fetchFavoriteSongs获取数据
   void _loadMoreSongs() {
     if (!_isLoadingMore && _hasMoreSongs) {
       _fetchFavoriteSongs();
     }
   }
 
+  /// 获取收藏歌曲数据
+  /// 从服务器获取用户收藏的歌曲列表
   void _fetchFavoriteSongs() {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     if (!authProvider.isAuthenticated) return;

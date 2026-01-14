@@ -13,6 +13,8 @@ import 'package:vibe_music_app/src/models/song_model.dart';
 import 'package:vibe_music_app/src/utils/app_logger.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 
+/// 主页屏幕
+/// 包含底部导航栏和多个子页面
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -21,19 +23,21 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  /// 当前选中的页面索引
   int _currentPage = 0;
 
+  /// 底部导航栏对应的页面列表
   final List<Widget> _pages = [
-    const SongListPage(),
-    const SearchScreen(),
-    const FavoritesScreen(),
-    const ProfilePage(),
+    const SongListPage(), // 歌曲列表页面
+    const SearchScreen(), // 搜索页面
+    const FavoritesScreen(), // 收藏页面
+    const ProfilePage(), // 个人中心页面
   ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _pages[_currentPage],
+      body: _pages[_currentPage], // 显示当前选中的页面
       bottomNavigationBar: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
