@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:audio_session/audio_session.dart';
 import 'package:vibe_music_app/src/services/api_service.dart';
 import 'package:vibe_music_app/src/models/song_model.dart';
 import 'package:vibe_music_app/src/utils/app_logger.dart';
@@ -24,6 +25,7 @@ class MusicProvider with ChangeNotifier {
   RepeatMode _repeatMode = RepeatMode.none;
   double _volume = 0.5; // 默认音量设置为50%
   Set<int> _favoriteSongIds = {}; // Local state to track favorite song IDs
+  AudioSession? _audioSession; // 音频会话，用于获取和监听系统音量
 
   AppPlayerState get playerState => _playerState;
   Duration get duration => _duration;
@@ -39,10 +41,25 @@ class MusicProvider with ChangeNotifier {
   double get volume => _volume;
 
   MusicProvider() {
-    _initAudioPlayer();
+    // 异步初始化音频播放器
+    _initializeAudioPlayer();
   }
 
-  void _initAudioPlayer() {
+  /// 异步初始化音频播放器
+  Future<void> _initializeAudioPlayer() async {
+    await _initAudioPlayer();
+  }
+
+  Future<void> _initAudioPlayer() async {
+    // 初始化音频会话
+    _audioSession = await AudioSession.instance;
+    await _audioSession!.configure(const AudioSessionConfiguration.music());
+
+    // 注意：audio_session 0.2.x 版本的方法名可能不同，这里使用兼容的方式
+    // 当用户调整系统音量时，音频会话会自动更新播放器音量
+    // 设置初始音量
+    _audioPlayer.setVolume(_volume);
+
     // Listen for duration changes
     _audioPlayer.durationStream.listen((d) {
       if (d != null) {

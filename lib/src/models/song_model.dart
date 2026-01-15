@@ -16,7 +16,7 @@ class Song with _$Song {
   /// - [albumName]: 专辑名称
   /// - [coverUrl]: 封面图片URL
   /// - [songUrl]: 音频文件URL
-  /// - [duration]: 歌曲时长
+  /// - [duration]: 歌曲时长，支持多种格式
   /// - [playCount]: 播放次数
   /// - [likeCount]: 点赞次数
   /// - [createTime]: 创建/发布时间
@@ -34,6 +34,8 @@ class Song with _$Song {
     DateTime? createTime,
     int? likeStatus,
   }) = _Song;
+
+  const Song._();
 
   /// 从JSON字符串解析为Song对象
   /// [json]: JSON格式的歌曲数据
@@ -100,6 +102,55 @@ class Song with _$Song {
           : null,
       likeStatus: json['likeStatus'],
     );
+  }
+
+  /// 格式化歌曲时长
+  /// 支持多种格式：秒数(123)、分:秒(2:03)、时:分:秒(1:02:03)
+  /// 返回格式化后的时长字符串，格式为：分:秒(02:03) 或 时:分:秒(01:02:03)
+  String get formattedDuration {
+    final durationStr = duration ?? '';
+    if (durationStr.isEmpty) return '0:00';
+
+    // 处理秒数格式（如：123）
+    if (RegExp(r'^\d+$').hasMatch(durationStr)) {
+      final seconds = int.tryParse(durationStr) ?? 0;
+      return _formatSeconds(seconds);
+    }
+
+    // 处理分:秒格式（如：2:03 或 12:34）
+    final mmSsMatch = RegExp(r'^(\d+):(\d+)$').firstMatch(durationStr);
+    if (mmSsMatch != null) {
+      final minutes = int.tryParse(mmSsMatch.group(1) ?? '0') ?? 0;
+      final seconds = int.tryParse(mmSsMatch.group(2) ?? '0') ?? 0;
+      return _formatSeconds(minutes * 60 + seconds);
+    }
+
+    // 处理时:分:秒格式（如：1:02:03 或 01:12:34）
+    final hhMmSsMatch = RegExp(r'^(\d+):(\d+):(\d+)$').firstMatch(durationStr);
+    if (hhMmSsMatch != null) {
+      final hours = int.tryParse(hhMmSsMatch.group(1) ?? '0') ?? 0;
+      final minutes = int.tryParse(hhMmSsMatch.group(2) ?? '0') ?? 0;
+      final seconds = int.tryParse(hhMmSsMatch.group(3) ?? '0') ?? 0;
+      return _formatSeconds(hours * 3600 + minutes * 60 + seconds);
+    }
+
+    // 无法识别的格式，返回默认值
+    return '0:00';
+  }
+
+  /// 将秒数格式化为时分秒格式
+  String _formatSeconds(int totalSeconds) {
+    if (totalSeconds < 0) return '0:00';
+
+    final hours = totalSeconds ~/ 3600;
+    final minutes = (totalSeconds % 3600) ~/ 60;
+    final seconds = totalSeconds % 60;
+
+    if (hours > 0) {
+      return '$hours:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+    } else {
+      return '$minutes:${seconds.toString().padLeft(2, '0')}';
+    }
   }
 }
 

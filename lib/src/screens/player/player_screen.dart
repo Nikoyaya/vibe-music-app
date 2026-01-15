@@ -491,11 +491,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
                               padding: EdgeInsets.zero,
                             ),
                             Text(
-                              (() {
-                                final duration =
-                                    int.tryParse(song.duration ?? '0') ?? 0;
-                                return '${duration ~/ 60}:${(duration % 60).toString().padLeft(2, '0')}';
-                              })(),
+                              song.formattedDuration,
                               style: TextStyle(
                                 color: Theme.of(context)
                                     .colorScheme
