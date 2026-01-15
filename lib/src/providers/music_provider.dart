@@ -77,8 +77,10 @@ class MusicProvider with ChangeNotifier {
 
     // Listen for duration changes
     _audioPlayer.durationStream.listen((d) {
+      AppLogger().d('durationStream 收到数据: $d');
       if (d != null) {
         _duration = d;
+        AppLogger().d('更新时长为: ${d.inMinutes}:${d.inSeconds % 60}');
         _durationStreamController.add(d);
         // Only notify listeners when duration changes significantly
         notifyListeners();

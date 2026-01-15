@@ -222,7 +222,14 @@ class _PlayerScreenState extends State<PlayerScreen> {
                                     return Column(
                                       children: [
                                         Slider(
-                                          value: position.inSeconds.toDouble(),
+                                          value: position.inSeconds
+                                              .toDouble()
+                                              .clamp(
+                                                  0.0,
+                                                  duration.inSeconds
+                                                      .toDouble()
+                                                      .clamp(1.0,
+                                                          double.infinity)),
                                           max: duration.inSeconds
                                               .toDouble()
                                               .clamp(1.0, double.infinity),
