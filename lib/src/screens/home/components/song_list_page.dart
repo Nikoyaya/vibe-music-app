@@ -1,0 +1,595 @@
+import 'package:flutter/material.dart';
+import 'dart:ui';
+import 'package:provider/provider.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:vibe_music_app/src/providers/auth_provider.dart';
+import 'package:vibe_music_app/src/providers/music_provider.dart';
+import 'package:vibe_music_app/src/screens/player/player_screen.dart';
+import 'package:vibe_music_app/src/screens/search/search_screen.dart';
+import 'package:vibe_music_app/src/screens/auth/login_screen.dart';
+import 'package:vibe_music_app/src/models/song_model.dart';
+import 'package:carousel_slider/carousel_slider.dart';
+
+class SongListPage extends StatefulWidget {
+  const SongListPage({super.key});
+
+  @override
+  State<SongListPage> createState() => _SongListPageState();
+}
+
+enum SongListType {
+  recommended,
+  favorite,
+}
+
+// 模拟轮播图数据
+class CarouselItem {
+  final String imageUrl;
+  final String title;
+  final String description;
+
+  CarouselItem({
+    required this.imageUrl,
+    required this.title,
+    required this.description,
+  });
+}
+
+// 模拟歌单数据
+class PlaylistItem {
+  final String imageUrl;
+  final String title;
+  final String playCount;
+
+  PlaylistItem({
+    required this.imageUrl,
+    required this.title,
+    required this.playCount,
+  });
+}
+
+class _SongListPageState extends State<SongListPage> {
+  late Future<List<Song>> _futureSongs;
+  final SongListType _currentType = SongListType.recommended;
+
+  // 轮播图数据
+  final List<CarouselItem> _carouselItems = [
+    CarouselItem(
+      imageUrl: 'https://picsum.photos/id/1015/800/400',
+      title: '一周欧美上新',
+      description: '编辑精选最新欧美热歌，每周更新',
+    ),
+    CarouselItem(
+      imageUrl: 'https://picsum.photos/id/1019/800/400',
+      title: '经典华语歌曲',
+      description: '华语音乐黄金时代，永恒的经典',
+    ),
+    CarouselItem(
+      imageUrl: 'https://picsum.photos/id/1025/800/400',
+      title: '日韩流行音乐',
+      description: '最新日韩流行歌曲，引领潮流',
+    ),
+  ];
+
+  // 推荐歌单数据
+  final List<PlaylistItem> _recommendedPlaylists = [
+    PlaylistItem(
+      imageUrl: 'https://picsum.photos/id/1/300/300',
+      title: '[1963-至今] 日本经典动漫音乐大盘点',
+      playCount: '3164.1万',
+    ),
+    PlaylistItem(
+      imageUrl: 'https://picsum.photos/id/2/300/300',
+      title: '武侠影视金曲100首 | 每个人心中的江湖梦',
+      playCount: '3218.0万',
+    ),
+    PlaylistItem(
+      imageUrl: 'https://picsum.photos/id/3/300/300',
+      title: '华语青春 | 90后校园岁月的流行歌曲',
+      playCount: '3233.7万',
+    ),
+    PlaylistItem(
+      imageUrl: 'https://picsum.photos/id/4/300/300',
+      title: '经典粤语合集【无损音质】',
+      playCount: '9184.6万',
+    ),
+    PlaylistItem(
+      imageUrl: 'https://picsum.photos/id/5/300/300',
+      title: '世界古典钢琴音乐珍藏',
+      playCount: '4021.7万',
+    ),
+    PlaylistItem(
+      imageUrl: 'https://picsum.photos/id/6/300/300',
+      title: '一周日语上新 | アニメソング',
+      playCount: '9841.9万',
+    ),
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    // 在initState中只加载一次歌曲数据
+    _loadSongs();
+  }
+
+  void _loadSongs() {
+    final musicProvider = Provider.of<MusicProvider>(context, listen: false);
+    if (_currentType == SongListType.recommended) {
+      _futureSongs = musicProvider.loadRecommendedSongs();
+    } else {
+      _futureSongs = musicProvider.loadUserFavoriteSongs();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmallScreen = screenWidth < 380;
+
+    return Scaffold(
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(60),
+        child: ClipRRect(
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
+            child: Container(
+              color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.8),
+              child: AppBar(
+                title: const Text('Vibe Music Player'),
+                actions: [
+                  IconButton(
+                    icon: const Icon(Icons.search),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const SearchScreen()),
+                      );
+                    },
+                  ),
+
+                ],
+                backgroundColor: Colors.transparent,
+                foregroundColor: Theme.of(context).colorScheme.onSurface,
+                shadowColor: Colors.transparent,
+                elevation: 0,
+              ),
+            ),
+          ),
+        ),
+      ),
+      body: ListView(
+        padding: EdgeInsets.zero,
+        children: [
+          // 轮播图
+          _buildCarousel(),
+
+          // 推荐歌单
+          _buildRecommendedPlaylists(),
+
+          // 热门歌曲
+          _buildPopularSongs(isSmallScreen),
+        ],
+      ),
+    );
+  }
+
+  // 构建轮播图
+  Widget _buildCarousel() {
+    return Padding(
+      padding: const EdgeInsets.all(12.0),
+      child: CarouselSlider(
+        options: CarouselOptions(
+          height: 180.0,
+          autoPlay: true,
+          autoPlayInterval: const Duration(seconds: 5),
+          enlargeCenterPage: true,
+          aspectRatio: 16 / 9,
+          viewportFraction: 0.9,
+          clipBehavior: Clip.hardEdge,
+        ),
+        items: _carouselItems.map((item) {
+          return Builder(
+            builder: (BuildContext context) {
+              return Container(
+                width: MediaQuery.of(context).size.width,
+                margin: const EdgeInsets.symmetric(horizontal: 5.0),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12.0),
+                  image: DecorationImage(
+                    image: CachedNetworkImageProvider(item.imageUrl),
+                    fit: BoxFit.cover,
+                  ),
+                ),
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12.0),
+                    gradient: LinearGradient(
+                      begin: Alignment.bottomCenter,
+                      end: Alignment.topCenter,
+                      colors: [
+                        Colors.black.withValues(alpha: 0.8),
+                        Colors.transparent,
+                      ],
+                    ),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          item.description,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          item.title,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            },
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  // 构建推荐歌单
+  Widget _buildRecommendedPlaylists() {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmallScreen = screenWidth < 375; // 针对小屏设备进行特殊处理
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                '推荐歌单',
+                style: Theme.of(context).textTheme.headlineMedium,
+              ),
+              const TextButton(
+                onPressed: null,
+                child: Text('查看更多 >'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12.0),
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: isSmallScreen ? 2 : (screenWidth > 600 ? 3 : 2),
+              crossAxisSpacing: 2.0,
+              mainAxisSpacing: 2.0,
+              childAspectRatio: 1.1,
+            ),
+            itemCount: _recommendedPlaylists.length,
+            itemBuilder: (context, index) {
+              final playlist = _recommendedPlaylists[index];
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Stack(
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(8.0),
+                        child: CachedNetworkImage(
+                          imageUrl: playlist.imageUrl,
+                          width: double.infinity,
+                          height: 100,
+                          fit: BoxFit.cover,
+                          errorWidget: (context, url, error) => Container(
+                            width: double.infinity,
+                            height: 100,
+                            color: Theme.of(context)
+                                .colorScheme
+                                .primary
+                                .withValues(alpha: 0.2),
+                            child: const Icon(
+                              Icons.music_note,
+                              size: 30,
+                              color: Colors.grey,
+                            ),
+                          ),
+                          placeholder: (context, url) => Container(
+                            width: double.infinity,
+                            height: 100,
+                            color: Theme.of(context)
+                                .colorScheme
+                                .surfaceContainerHighest,
+                            child: const Center(
+                              child: CircularProgressIndicator(),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const Positioned(
+                        bottom: 2.0,
+                        right: 6.0,
+                        child: _PlaylistPlayButton(),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4.0),
+                  SizedBox(
+                    height: 50,
+                    child: Text(
+                      playlist.title,
+                      style: isSmallScreen
+                          ? Theme.of(context)
+                              .textTheme
+                              .bodySmall
+                              ?.copyWith(fontSize: 12)
+                          : Theme.of(context)
+                              .textTheme
+                              .bodyMedium
+                              ?.copyWith(fontSize: 14),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  const SizedBox(height: 2.0),
+                  Text(
+                    playlist.playCount,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          fontSize: isSmallScreen ? 10 : 12,
+                        ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  // 构建热门歌曲
+  Widget _buildPopularSongs(bool isSmallScreen) {
+    return Padding(
+      padding: const EdgeInsets.all(12.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '热门歌曲',
+            style: Theme.of(context).textTheme.headlineMedium,
+          ),
+          const SizedBox(height: 12.0),
+          FutureBuilder<List<Song>>(
+            future: _futureSongs,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
+
+              if (snapshot.hasError) {
+                return Center(child: Text('Error: ${snapshot.error}'));
+              }
+
+              final songs = snapshot.data ?? [];
+
+              return ListView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: songs.length,
+                padding: EdgeInsets.zero,
+                itemBuilder: (context, index) {
+                  final song = songs[index];
+                  final coverUrl = song.coverUrl;
+                  return Card(
+                    margin: EdgeInsets.symmetric(vertical: isSmallScreen ? 4 : 6),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      children: [
+                        // 使用Container代替ListTile的leading，避免宽度问题
+                        Container(
+                          margin: const EdgeInsets.only(right: 12.0),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(8.0),
+                            child: coverUrl != null
+                                ? CachedNetworkImage(
+                                    imageUrl: coverUrl,
+                                    width: isSmallScreen ? 40 : 48,
+                                    height: isSmallScreen ? 40 : 48,
+                                    fit: BoxFit.cover,
+                                    placeholder: (context, url) => Container(
+                                      width: isSmallScreen ? 40 : 48,
+                                      height: isSmallScreen ? 40 : 48,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .surfaceContainerHighest,
+                                      child: const Center(
+                                        child: CircularProgressIndicator(),
+                                      ),
+                                    ),
+                                    errorWidget: (context, url, error) => Container(
+                                      width: isSmallScreen ? 40 : 48,
+                                      height: isSmallScreen ? 40 : 48,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .primary
+                                          .withValues(alpha: 0.2),
+                                      child: Icon(
+                                        Icons.music_note,
+                                        size: isSmallScreen ? 20 : 24,
+                                      ),
+                                    ),
+                                  )
+                                : Container(
+                                    width: isSmallScreen ? 40 : 48,
+                                    height: isSmallScreen ? 40 : 48,
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .primary
+                                        .withValues(alpha: 0.2),
+                                    child: Icon(
+                                      Icons.music_note,
+                                      size: isSmallScreen ? 20 : 24,
+                                    ),
+                                  ),
+                          ),
+                        ),
+                        // 使用Expanded来确保文本部分适应剩余空间
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                song.songName ?? 'Unknown Song',
+                                style: isSmallScreen
+                                    ? Theme.of(context).textTheme.titleSmall
+                                    : Theme.of(context).textTheme.titleMedium,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              Text(
+                                song.artistName ?? 'Unknown Artist',
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodyMedium
+                                    ?.copyWith(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurface
+                                          .withValues(alpha: 0.7),
+                                    ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ),
+                        ),
+                        // 操作按钮
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            // 使用Consumer只监听收藏状态变化
+                            Consumer<MusicProvider>(
+                              builder: (context, musicProvider, child) {
+                                return IconButton(
+                                  icon: Icon(
+                                    musicProvider.isSongFavorited(song)
+                                        ? Icons.favorite
+                                        : Icons.favorite_border,
+                                    color: musicProvider.isSongFavorited(song)
+                                        ? Theme.of(context).colorScheme.primary
+                                        : null,
+                                  ),
+                                  onPressed: () async {
+                                    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+                                    if (!authProvider.isAuthenticated) {
+                                      // 提示用户登录
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(content: Text('请先登录')),
+                                      );
+                                      // 导航到登录页面
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                            builder: (context) => const LoginScreen()),
+                                      );
+                                      return;
+                                    }
+
+                                    bool success;
+                                    if (musicProvider.isSongFavorited(song)) {
+                                      success = await musicProvider.removeFromFavorites(song);
+                                      if (success && mounted) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          const SnackBar(content: Text('已取消收藏')),
+                                        );
+                                      }
+                                    } else {
+                                      success = await musicProvider.addToFavorites(song);
+                                      if (success && mounted) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          const SnackBar(content: Text('已添加到收藏')),
+                                        );
+                                      }
+                                    }
+                                  },
+                                );
+                              },
+                            ),
+                            Consumer<MusicProvider>(
+                              builder: (context, musicProvider, child) {
+                                return IconButton(
+                                  icon: const Icon(Icons.play_arrow),
+                                  onPressed: () async {
+                                    // 将整个热门歌曲列表添加到播放列表
+                                    await musicProvider.playSong(song, playlist: songs);
+                                    // 导航到播放器页面
+                                    if (mounted) {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                            builder: (context) => const PlayerScreen()),
+                                      );
+                                    }
+                                  },
+                                );
+                              },
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// 歌单播放按钮Widget
+class _PlaylistPlayButton extends StatelessWidget {
+  const _PlaylistPlayButton();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 28,
+      height: 28,
+      decoration: const BoxDecoration(
+        shape: BoxShape.circle,
+        color: Color.fromRGBO(128, 0, 128, 0.8),
+      ),
+      child: const Icon(
+        Icons.play_arrow,
+        color: Colors.white,
+        size: 18,
+      ),
+    );
+  }
+}
