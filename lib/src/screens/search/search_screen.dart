@@ -84,7 +84,7 @@ class _SearchScreenState extends State<SearchScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Search'),
+        title: Text('Search'),
       ),
       body: Column(
         children: [
@@ -95,9 +95,9 @@ class _SearchScreenState extends State<SearchScreen> {
               controller: _searchController,
               decoration: InputDecoration(
                 hintText: 'Search songs, artists...',
-                prefixIcon: const Icon(Icons.search),
+                prefixIcon: Icon(Icons.search),
                 suffixIcon: IconButton(
-                  icon: const Icon(Icons.clear),
+                  icon: Icon(Icons.clear),
                   onPressed: () {
                     _searchController.clear();
                     setState(() {
@@ -129,8 +129,8 @@ class _SearchScreenState extends State<SearchScreen> {
               height: 48,
               child: ElevatedButton.icon(
                 onPressed: _searchSongs,
-                icon: const Icon(Icons.search),
-                label: const Text('Search'),
+                icon: Icon(Icons.search),
+                label: Text('Search'),
               ),
             ),
           ),
@@ -171,12 +171,12 @@ class _SearchScreenState extends State<SearchScreen> {
                                   ? NetworkImage(coverUrl)
                                   : null,
                               child: coverUrl == null
-                                  ? const Icon(Icons.music_note)
+                                  ? Icon(Icons.music_note)
                                   : null,
                             ),
                             title: Text(song.songName ?? 'Unknown Song'),
                             subtitle: Text(song.artistName ?? 'Unknown Artist'),
-                            trailing: const Icon(Icons.play_arrow),
+                            trailing: Icon(Icons.play_arrow),
                             onTap: () {
                               final musicProvider = Provider.of<MusicProvider>(
                                   context,

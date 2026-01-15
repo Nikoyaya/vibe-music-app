@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:ui';
 import 'package:provider/provider.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:vibe_music_app/src/providers/auth_provider.dart';
 import 'package:vibe_music_app/src/providers/music_provider.dart';
@@ -42,16 +43,16 @@ class _HomeScreenState extends State<HomeScreen> {
         mainAxisSize: MainAxisSize.min,
         children: [
           // 正在播放音乐的小悬浮组件
-          _buildCurrentlyPlayingBar(),
+          const CurrentlyPlayingBar(),
           // 底部导航栏
           SafeArea(
             child: ClipRRect(
-              borderRadius:
+              borderRadius: 
                   const BorderRadius.vertical(top: Radius.circular(20)),
               child: BackdropFilter(
                 filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
                 child: Container(
-                  color: Theme.of(context).colorScheme.surface.withOpacity(0.8),
+                  color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.8),
                   child: NavigationBar(
                     selectedIndex: _currentPage,
                     onDestinationSelected: (index) {
@@ -59,7 +60,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         _currentPage = index;
                       });
                     },
-                    destinations: const [
+                    destinations: [
                       NavigationDestination(
                           icon: Icon(Icons.music_note), label: 'Songs'),
                       NavigationDestination(
@@ -80,8 +81,14 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
+}
 
-  Widget _buildCurrentlyPlayingBar() {
+/// 当前播放音乐的底部控件
+class CurrentlyPlayingBar extends StatelessWidget {
+  const CurrentlyPlayingBar({super.key});
+
+  @override
+  Widget build(BuildContext context) {
     return Consumer<MusicProvider>(
       builder: (context, musicProvider, child) {
         if (musicProvider.currentSong == null ||
@@ -90,280 +97,296 @@ class _HomeScreenState extends State<HomeScreen> {
         }
 
         final song = musicProvider.currentSong!;
-        final duration = musicProvider.duration;
-        final position = musicProvider.position;
-        final progress = duration.inSeconds > 0
-            ? position.inSeconds / duration.inSeconds
-            : 0.0;
-
+        
         return Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.all(Radius.circular(20)),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.2),
-                  blurRadius: 16,
-                  offset: const Offset(0, -6),
-                ),
-              ],
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.all(Radius.circular(20)),
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 20.0, sigmaY: 20.0),
-                child: Container(
-                  color:
-                      Theme.of(context).colorScheme.surface.withOpacity(0.85),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // 进度条
-                      GestureDetector(
-                        onTapDown: (TapDownDetails details) {
-                          final RenderBox box =
-                              context.findRenderObject() as RenderBox;
-                          final tapPosition =
-                              box.globalToLocal(details.globalPosition);
-                          final progressWidth = box.size.width - 32;
-                          final tapProgress = tapPosition.dx / progressWidth;
-                          final newPosition = Duration(
-                            seconds: (tapProgress * duration.inSeconds).toInt(),
-                          );
-                          musicProvider.seekTo(newPosition);
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          height: 6,
-                          child: Container(
-                            width: double.infinity,
-                            height: 6,
-                            decoration: BoxDecoration(
-                              color:
-                                  Theme.of(context).colorScheme.outlineVariant,
-                              borderRadius: BorderRadius.circular(3),
-                            ),
-                            child: Stack(
-                              children: [
-                                ClipRRect(
-                                  borderRadius: BorderRadius.circular(3),
-                                  child: LinearProgressIndicator(
-                                    value: progress,
-                                    backgroundColor: Colors.transparent,
-                                    color:
-                                        Theme.of(context).colorScheme.primary,
-                                    minHeight: 6,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.all(Radius.circular(20)),
+            boxShadow: [
+              BoxShadow(
+                color: Color.fromRGBO(0, 0, 0, 0.2),
+                blurRadius: 16,
+                offset: Offset(0, -6),
+              ),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.all(Radius.circular(20)),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 20.0, sigmaY: 20.0),
+              child: Container(
+                color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.85),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // 进度条 - 使用StreamBuilder监听进度变化
+                    StreamBuilder<Duration>(
+                      stream: musicProvider.positionStream,
+                      builder: (context, positionSnapshot) {
+                        return StreamBuilder<Duration>(
+                          stream: musicProvider.durationStream,
+                          builder: (context, durationSnapshot) {
+                            final position = positionSnapshot.data ?? Duration.zero;
+                            final duration = durationSnapshot.data ?? Duration.zero;
+                            final progress = duration.inSeconds > 0
+                                ? position.inSeconds / duration.inSeconds
+                                : 0.0;
+                            
+                            return GestureDetector(
+                              onTapDown: (TapDownDetails details) {
+                                final RenderBox box = 
+                                    context.findRenderObject() as RenderBox;
+                                final tapPosition = 
+                                    box.globalToLocal(details.globalPosition);
+                                final progressWidth = box.size.width - 32;
+                                final tapProgress = tapPosition.dx / progressWidth;
+                                final newPosition = Duration(
+                                  seconds: (tapProgress * duration.inSeconds).toInt(),
+                                );
+                                musicProvider.seekTo(newPosition);
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 16),
+                                height: 6,
+                                child: Container(
+                                  width: double.infinity,
+                                  height: 6,
+                                  decoration: BoxDecoration(
+                                    color: 
+                                        Theme.of(context).colorScheme.outlineVariant,
+                                    borderRadius: BorderRadius.circular(3),
                                   ),
-                                ),
-                                // 进度指示器
-                                Positioned(
-                                  left: progress *
-                                          (MediaQuery.of(context).size.width -
-                                              32) -
-                                      6,
-                                  top: -3,
-                                  child: Container(
-                                    width: 12,
-                                    height: 12,
-                                    decoration: BoxDecoration(
-                                      color:
-                                          Theme.of(context).colorScheme.primary,
-                                      shape: BoxShape.circle,
-                                      border: Border.all(
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .surface,
-                                        width: 2,
-                                      ),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Colors.black.withOpacity(0.2),
-                                          blurRadius: 4,
-                                          offset: const Offset(0, 1),
+                                  child: Stack(
+                                    children: [
+                                      ClipRRect(
+                                        borderRadius: BorderRadius.circular(3),
+                                        child: LinearProgressIndicator(
+                                          value: progress,
+                                          backgroundColor: Colors.transparent,
+                                          color: 
+                                              Theme.of(context).colorScheme.primary,
+                                          minHeight: 6,
                                         ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-
-                      // 歌曲信息和控制按钮
-                      GestureDetector(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => const PlayerScreen()),
-                          );
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 10),
-                          child: Row(
-                            children: [
-                              // 歌曲封面
-                              Hero(
-                                tag: 'currentSong',
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(10),
-                                  child: song.coverUrl != null
-                                      ? Image.network(
-                                          song.coverUrl!,
-                                          width: 56,
-                                          height: 56,
-                                          fit: BoxFit.cover,
-                                          loadingBuilder: (context, child,
-                                              loadingProgress) {
-                                            if (loadingProgress == null)
-                                              return child;
-                                            return Container(
-                                              width: 56,
-                                              height: 56,
+                                      ),
+                                      // 进度指示器
+                                      Positioned(
+                                        left: progress *
+                                                (MediaQuery.of(context).size.width -
+                                                    32) -
+                                            6,
+                                        top: -3,
+                                        child: Container(
+                                          width: 12,
+                                          height: 12,
+                                          decoration: BoxDecoration(
+                                            color: Theme.of(context).colorScheme.primary,
+                                            shape: BoxShape.circle,
+                                            border: Border.all(
                                               color: Theme.of(context)
                                                   .colorScheme
-                                                  .primaryContainer,
-                                              child: const Icon(
-                                                  Icons.music_note,
-                                                  size: 28),
-                                            );
-                                          },
-                                        )
-                                      : Container(
-                                          width: 56,
-                                          height: 56,
-                                          decoration: BoxDecoration(
+                                                  .surface,
+                                              width: 2,
+                                            ),
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: Color.fromRGBO(0, 0, 0, 0.2),
+                                                blurRadius: 4,
+                                                offset: Offset(0, 1),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        );
+                      },
+                    ),
+
+                    // 歌曲信息和控制按钮
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => const PlayerScreen()),
+                        );
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 10),
+                        child: Row(
+                          children: [
+                            // 歌曲封面
+                            Hero(
+                              tag: 'currentSong',
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(10),
+                                child: song.coverUrl != null
+                                    ? Image.network(
+                                        song.coverUrl!,
+                                        width: 56,
+                                        height: 56,
+                                        fit: BoxFit.cover,
+                                        loadingBuilder: (context, child,
+                                            loadingProgress) {
+                                          if (loadingProgress == null)
+                                            return child;
+                                          return Container(
+                                            width: 56,
+                                            height: 56,
                                             color: Theme.of(context)
                                                 .colorScheme
                                                 .primaryContainer,
-                                            borderRadius:
-                                                BorderRadius.circular(10),
-                                          ),
-                                          child: const Icon(Icons.music_note,
-                                              size: 28, color: Colors.white),
+                                            child:  Icon(
+                                                Icons.music_note,
+                                                size: 28),
+                                          );
+                                        },
+                                      )
+                                    : Container(
+                                        width: 56,
+                                        height: 56,
+                                        decoration: BoxDecoration(
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .primaryContainer,
+                                          borderRadius: 
+                                              BorderRadius.circular(10),
                                         ),
-                                ),
+                                        child: const Icon(Icons.music_note,
+                                            size: 28, color: Colors.white),
+                                      ),
                               ),
-                              const SizedBox(width: 14),
+                            ),
+                            const SizedBox(width: 14),
 
-                              // 歌曲信息
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Text(
-                                      song.songName ?? 'Unknown Song',
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .bodyMedium
-                                          ?.copyWith(
-                                            fontWeight: FontWeight.w500,
-                                            color: Theme.of(context)
-                                                .colorScheme
-                                                .onSurface,
-                                          ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                    const SizedBox(height: 3),
-                                    Text(
-                                      song.artistName ?? 'Unknown Artist',
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .bodySmall
-                                          ?.copyWith(
-                                            color: Theme.of(context)
-                                                .colorScheme
-                                                .onSurfaceVariant,
-                                            fontWeight: FontWeight.w400,
-                                          ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ],
-                                ),
+                            // 歌曲信息
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    song.songName ?? 'Unknown Song',
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodyMedium
+                                        ?.copyWith(
+                                          fontWeight: FontWeight.w500,
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .onSurface,
+                                        ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  const SizedBox(height: 3),
+                                  Text(
+                                    song.artistName ?? 'Unknown Artist',
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodySmall
+                                        ?.copyWith(
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .onSurfaceVariant,
+                                          fontWeight: FontWeight.w400,
+                                        ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ],
                               ),
+                            ),
 
-                              // 控制按钮
-                              Container(
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(12),
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .surfaceVariant,
-                                ),
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 6, vertical: 2),
-                                child: Row(
-                                  children: [
-                                    IconButton(
-                                      icon: Icon(
-                                        Icons.skip_previous,
-                                        size: 22,
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .onSurface,
-                                      ),
-                                      onPressed: () => musicProvider.previous(),
-                                      padding: const EdgeInsets.all(6),
-                                      constraints:
-                                          const BoxConstraints(minWidth: 36),
-                                      splashRadius: 20,
-                                    ),
-                                    IconButton(
-                                      icon: Icon(
-                                        musicProvider.playerState ==
-                                                AppPlayerState.playing
-                                            ? Icons.pause_circle_filled
-                                            : Icons.play_circle_filled,
-                                        size: 36,
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .primary,
-                                      ),
-                                      onPressed: () {
-                                        if (musicProvider.playerState ==
-                                            AppPlayerState.playing) {
-                                          musicProvider.pause();
-                                        } else {
-                                          musicProvider.play();
-                                        }
-                                      },
-                                      padding: const EdgeInsets.all(4),
-                                      constraints:
-                                          const BoxConstraints(minWidth: 44),
-                                      splashRadius: 24,
-                                    ),
-                                    IconButton(
-                                      icon: Icon(
-                                        Icons.skip_next,
-                                        size: 22,
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .onSurface,
-                                      ),
-                                      onPressed: () => musicProvider.next(),
-                                      padding: const EdgeInsets.all(6),
-                                      constraints:
-                                          const BoxConstraints(minWidth: 36),
-                                      splashRadius: 20,
-                                    ),
-                                  ],
-                                ),
+                            // 控制按钮
+                            Container(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(12),
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .surfaceContainerHighest,
                               ),
-                            ],
-                          ),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 6, vertical: 2),
+                              child: Row(
+                                children: [
+                                  IconButton(
+                                    icon: Icon(
+                                      Icons.skip_previous,
+                                      size: 22,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurface,
+                                    ),
+                                    onPressed: () => musicProvider.previous(),
+                                    padding: const EdgeInsets.all(6),
+                                    constraints: 
+                                        const BoxConstraints(minWidth: 36),
+                                    splashRadius: 20,
+                                  ),
+                                  // 使用StreamBuilder监听播放状态变化
+                                  StreamBuilder<AppPlayerState>(
+                                    stream: musicProvider.playerStateStream,
+                                    initialData: musicProvider.playerState,
+                                    builder: (context, snapshot) {
+                                      final playerState = snapshot.data ?? AppPlayerState.stopped;
+                                      return IconButton(
+                                        icon: Icon(
+                                          playerState == AppPlayerState.playing
+                                              ? Icons.pause_circle_filled
+                                              : Icons.play_circle_filled,
+                                          size: 36,
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .primary,
+                                        ),
+                                        onPressed: () {
+                                          if (playerState == AppPlayerState.playing) {
+                                            musicProvider.pause();
+                                          } else {
+                                            musicProvider.play();
+                                          }
+                                        },
+                                        padding: const EdgeInsets.all(4),
+                                        constraints: 
+                                            const BoxConstraints(minWidth: 44),
+                                        splashRadius: 24,
+                                      );
+                                    },
+                                  ),
+                                  IconButton(
+                                    icon: Icon(
+                                      Icons.skip_next,
+                                      size: 22,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurface,
+                                    ),
+                                    onPressed: () => musicProvider.next(),
+                                    padding: const EdgeInsets.all(6),
+                                    constraints: 
+                                        const BoxConstraints(minWidth: 36),
+                                    splashRadius: 20,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
-            ));
+            ),
+          ),
+        );
       },
     );
   }
@@ -482,7 +505,6 @@ class _SongListPageState extends State<SongListPage> {
 
   @override
   Widget build(BuildContext context) {
-    final musicProvider = Provider.of<MusicProvider>(context);
     final screenWidth = MediaQuery.of(context).size.width;
     final isSmallScreen = screenWidth < 380;
 
@@ -539,7 +561,7 @@ class _SongListPageState extends State<SongListPage> {
           _buildRecommendedPlaylists(),
 
           // 热门歌曲
-          _buildPopularSongs(musicProvider, isSmallScreen),
+          _buildPopularSongs(isSmallScreen),
         ],
       ),
     );
@@ -568,7 +590,7 @@ class _SongListPageState extends State<SongListPage> {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(12.0),
                   image: DecorationImage(
-                    image: NetworkImage(item.imageUrl),
+                    image: CachedNetworkImageProvider(item.imageUrl),
                     fit: BoxFit.cover,
                   ),
                 ),
@@ -579,7 +601,7 @@ class _SongListPageState extends State<SongListPage> {
                       begin: Alignment.bottomCenter,
                       end: Alignment.topCenter,
                       colors: [
-                        Colors.black.withOpacity(0.8),
+                        Colors.black.withValues(alpha: 0.8),
                         Colors.transparent,
                       ],
                     ),
@@ -638,9 +660,9 @@ class _SongListPageState extends State<SongListPage> {
                 '推荐歌单',
                 style: Theme.of(context).textTheme.headlineMedium,
               ),
-              TextButton(
-                onPressed: () {},
-                child: const Text('查看更多 >'),
+              const TextButton(
+                onPressed: null,
+                child: Text('查看更多 >'),
               ),
             ],
           ),
@@ -664,45 +686,41 @@ class _SongListPageState extends State<SongListPage> {
                   Stack(
                     children: [
                       ClipRRect(
-                        borderRadius: BorderRadius.circular(8.0),
-                        child: Image.network(
-                          playlist.imageUrl,
-                          width: double.infinity,
-                          height: 100,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            return Container(
-                              width: double.infinity,
-                              height: 100,
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .primary
-                                  .withOpacity(0.2),
-                              child: const Icon(
-                                Icons.music_note,
-                                size: 30,
-                                color: Colors.grey,
-                              ),
-                            );
-                          },
+                    borderRadius: BorderRadius.circular(8.0),
+                    child: CachedNetworkImage(
+                      imageUrl: playlist.imageUrl,
+                      width: double.infinity,
+                      height: 100,
+                      fit: BoxFit.cover,
+                      errorWidget: (context, url, error) => Container(
+                        width: double.infinity,
+                        height: 100,
+                        color: Theme.of(context)
+                              .colorScheme
+                              .primary
+                              .withValues(alpha: 0.2),
+                        child: const Icon(
+                          Icons.music_note,
+                          size: 30,
+                          color: Colors.grey,
                         ),
                       ),
-                      Positioned(
+                      placeholder: (context, url) => Container(
+                        width: double.infinity,
+                        height: 100,
+                        color: Theme.of(context)
+                            .colorScheme
+                            .surfaceContainerHighest,
+                        child: const Center(
+                          child: CircularProgressIndicator(),
+                        ),
+                      ),
+                    ),
+                  ),
+                      const Positioned(
                         bottom: 2.0,
                         right: 6.0,
-                        child: Container(
-                          width: 28,
-                          height: 28,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: Colors.purple.withOpacity(0.8),
-                          ),
-                          child: const Icon(
-                            Icons.play_arrow,
-                            color: Colors.white,
-                            size: 18,
-                          ),
-                        ),
+                        child: _PlaylistPlayButton(),
                       ),
                     ],
                   ),
@@ -743,7 +761,7 @@ class _SongListPageState extends State<SongListPage> {
   }
 
   // 构建热门歌曲
-  Widget _buildPopularSongs(MusicProvider musicProvider, bool isSmallScreen) {
+  Widget _buildPopularSongs(bool isSmallScreen) {
     return Padding(
       padding: const EdgeInsets.all(12.0),
       child: Column(
@@ -789,11 +807,33 @@ class _SongListPageState extends State<SongListPage> {
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(8.0),
                             child: coverUrl != null
-                                ? Image.network(
-                                    coverUrl,
+                                ? CachedNetworkImage(
+                                    imageUrl: coverUrl,
                                     width: isSmallScreen ? 40 : 48,
                                     height: isSmallScreen ? 40 : 48,
                                     fit: BoxFit.cover,
+                                    placeholder: (context, url) => Container(
+                                      width: isSmallScreen ? 40 : 48,
+                                      height: isSmallScreen ? 40 : 48,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .surfaceContainerHighest,
+                                      child: const Center(
+                                        child: CircularProgressIndicator(),
+                                      ),
+                                    ),
+                                    errorWidget: (context, url, error) => Container(
+                                      width: isSmallScreen ? 40 : 48,
+                                      height: isSmallScreen ? 40 : 48,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .primary
+                                          .withValues(alpha: 0.2),
+                                      child: Icon(
+                                        Icons.music_note,
+                                        size: isSmallScreen ? 20 : 24,
+                                      ),
+                                    ),
                                   )
                                 : Container(
                                     width: isSmallScreen ? 40 : 48,
@@ -801,7 +841,7 @@ class _SongListPageState extends State<SongListPage> {
                                     color: Theme.of(context)
                                         .colorScheme
                                         .primary
-                                        .withOpacity(0.2),
+                                        .withValues(alpha: 0.2),
                                     child: Icon(
                                       Icons.music_note,
                                       size: isSmallScreen ? 20 : 24,
@@ -832,7 +872,7 @@ class _SongListPageState extends State<SongListPage> {
                                       color: Theme.of(context)
                                           .colorScheme
                                           .onSurface
-                                          .withOpacity(0.7),
+                                          .withValues(alpha: 0.7),
                                     ),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
@@ -844,69 +884,78 @@ class _SongListPageState extends State<SongListPage> {
                         Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            IconButton(
-                              icon: Icon(
-                                musicProvider.isSongFavorited(song)
-                                    ? Icons.favorite
-                                    : Icons.favorite_border,
-                                color: musicProvider.isSongFavorited(song)
-                                    ? Theme.of(context).colorScheme.primary
-                                    : null,
-                              ),
-                              onPressed: () async {
-                                final authProvider = Provider.of<AuthProvider>(
-                                    context,
-                                    listen: false);
-                                if (!authProvider.isAuthenticated) {
-                                  // 提示用户登录
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(content: Text('请先登录')),
-                                  );
-                                  // 导航到登录页面
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                        builder: (context) =>
-                                            const LoginScreen()),
-                                  );
-                                  return;
-                                }
+                            // 使用Consumer只监听收藏状态变化
+                            Consumer<MusicProvider>(
+                              builder: (context, musicProvider, child) {
+                                return IconButton(
+                                  icon: Icon(
+                                    musicProvider.isSongFavorited(song)
+                                        ? Icons.favorite
+                                        : Icons.favorite_border,
+                                    color: musicProvider.isSongFavorited(song)
+                                        ? Theme.of(context).colorScheme.primary
+                                        : null,
+                                  ),
+                                  onPressed: () async {
+                                    final authProvider = Provider.of<AuthProvider>(
+                                        context,
+                                        listen: false);
+                                    if (!authProvider.isAuthenticated) {
+                                      // 提示用户登录
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(content: Text('请先登录')),
+                                      );
+                                      // 导航到登录页面
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                            builder: (context) =>
+                                                const LoginScreen()),
+                                      );
+                                      return;
+                                    }
 
-                                bool success;
-                                if (musicProvider.isSongFavorited(song)) {
-                                  success = await musicProvider
-                                      .removeFromFavorites(song);
-                                  if (success && mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(content: Text('已取消收藏')),
-                                    );
-                                  }
-                                } else {
-                                  success =
-                                      await musicProvider.addToFavorites(song);
-                                  if (success && mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(content: Text('已添加到收藏')),
-                                    );
-                                  }
-                                }
+                                    bool success;
+                                    if (musicProvider.isSongFavorited(song)) {
+                                      success = await musicProvider
+                                          .removeFromFavorites(song);
+                                      if (success && mounted) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          const SnackBar(content: Text('已取消收藏')),
+                                        );
+                                      }
+                                    } else {
+                                      success =
+                                          await musicProvider.addToFavorites(song);
+                                      if (success && mounted) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          const SnackBar(content: Text('已添加到收藏')),
+                                        );
+                                      }
+                                    }
+                                  },
+                                );
                               },
                             ),
-                            IconButton(
-                              icon: const Icon(Icons.play_arrow),
-                              onPressed: () async {
-                                // 将整个热门歌曲列表添加到播放列表
-                                await musicProvider.playSong(song,
-                                    playlist: songs);
-                                // 导航到播放器页面
-                                if (mounted) {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                        builder: (context) =>
-                                            const PlayerScreen()),
-                                  );
-                                }
+                            Consumer<MusicProvider>(
+                              builder: (context, musicProvider, child) {
+                                return IconButton(
+                                  icon: const Icon(Icons.play_arrow),
+                                  onPressed: () async {
+                                    // 将整个热门歌曲列表添加到播放列表
+                                    await musicProvider.playSong(song,
+                                        playlist: songs);
+                                    // 导航到播放器页面
+                                    if (mounted) {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                            builder: (context) =>
+                                                const PlayerScreen()),
+                                      );
+                                    }
+                                  },
+                                );
                               },
                             ),
                           ],
@@ -919,6 +968,28 @@ class _SongListPageState extends State<SongListPage> {
             },
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// 歌单播放按钮Widget
+class _PlaylistPlayButton extends StatelessWidget {
+  const _PlaylistPlayButton();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 28,
+      height: 28,
+      decoration: const BoxDecoration(
+        shape: BoxShape.circle,
+        color: Color.fromRGBO(128, 0, 128, 0.8),
+      ),
+      child: const Icon(
+        Icons.play_arrow,
+        color: Colors.white,
+        size: 18,
       ),
     );
   }
@@ -938,6 +1009,9 @@ class _ProfilePageState extends State<ProfilePage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _introductionController = TextEditingController();
+  
+  // 用于跟踪最后一次更新的用户数据，避免不必要的更新
+  Map<String, String>? _lastUserInfo;
 
   @override
   void dispose() {
@@ -947,18 +1021,46 @@ class _ProfilePageState extends State<ProfilePage> {
     _introductionController.dispose();
     super.dispose();
   }
+  
+  @override
+  void initState() {
+    super.initState();
+    // 在初始化时设置表单
+    _updateFormFields();
+  }
+  
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // 当依赖变化时更新表单（例如用户登录/登出）
+    _updateFormFields();
+  }
+  
+  // 更新表单字段，只有当用户数据真正变化时才更新
+  void _updateFormFields() {
+    final authProvider = Provider.of<AuthProvider>(context);
+    if (authProvider.user != null) {
+      final currentUserInfo = {
+        'username': authProvider.user!.username ?? '',
+        'email': authProvider.user!.email ?? '',
+        'phone': authProvider.user!.phone ?? '',
+        'introduction': authProvider.user!.introduction ?? ''
+      };
+      
+      // 只有当用户信息真正变化时才更新表单
+      if (_lastUserInfo != currentUserInfo) {
+        _usernameController.text = authProvider.user!.username ?? '';
+        _emailController.text = authProvider.user!.email ?? '';
+        _phoneController.text = authProvider.user!.phone ?? '';
+        _introductionController.text = authProvider.user!.introduction ?? '';
+        _lastUserInfo = currentUserInfo;
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
-
-    // Initialize form fields when user data changes
-    if (authProvider.user != null) {
-      _usernameController.text = authProvider.user!.username ?? '';
-      _emailController.text = authProvider.user!.email ?? '';
-      _phoneController.text = authProvider.user!.phone ?? '';
-      _introductionController.text = authProvider.user!.introduction ?? '';
-    }
 
     return Scaffold(
       appBar: AppBar(
@@ -1044,7 +1146,7 @@ class _ProfilePageState extends State<ProfilePage> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 32),
             child: Text(
-              authProvider.user!.introduction!,
+              authProvider.user!.introduction!, 
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodySmall,
             ),
@@ -1114,7 +1216,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 if (value == null || value.isEmpty) {
                   return 'Please enter email';
                 }
-                if (!RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$').hasMatch(value)) {
+                if (!RegExp(r'^[^@]+@[^@]+\.[^@]+$').hasMatch(value)) {
                   return 'Please enter a valid email';
                 }
                 return null;
@@ -1192,20 +1294,17 @@ class _ProfilePageState extends State<ProfilePage> {
                             : _introductionController.text,
                       };
 
-                      final success =
-                          await authProvider.updateUserInfo(updatedInfo);
+                      final success = await authProvider.updateUserInfo(updatedInfo);
                       if (success && mounted) {
                         setState(() {
                           _isEditing = false;
                         });
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                              content: Text('Profile updated successfully')),
+                          const SnackBar(content: Text('Profile updated successfully')),
                         );
                       } else if (mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                              content: Text('Failed to update profile')),
+                          const SnackBar(content: Text('Failed to update profile')),
                         );
                       }
                     }
@@ -1225,9 +1324,9 @@ class _ProfilePageState extends State<ProfilePage> {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        const Icon(Icons.person, size: 64),
+         Icon(Icons.person, size: 64),
         const SizedBox(height: 16),
-        const Text('Please login to continue'),
+         Text('Please login to continue'),
         const SizedBox(height: 24),
         ElevatedButton.icon(
           onPressed: () {
@@ -1236,8 +1335,8 @@ class _ProfilePageState extends State<ProfilePage> {
               MaterialPageRoute(builder: (context) => const LoginScreen()),
             );
           },
-          icon: const Icon(Icons.login),
-          label: const Text('Login'),
+          icon:  Icon(Icons.login),
+          label:  Text('Login'),
         ),
       ],
     );
@@ -1251,16 +1350,16 @@ class _ProfilePageState extends State<ProfilePage> {
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              leading: const Icon(Icons.camera),
-              title: const Text('Take Photo'),
+              leading:  Icon(Icons.camera),
+              title:  Text('Take Photo'),
               onTap: () {
                 Navigator.pop(context);
                 _pickImage(ImageSource.camera);
               },
             ),
             ListTile(
-              leading: const Icon(Icons.photo_library),
-              title: const Text('Choose from Gallery'),
+              leading:  Icon(Icons.photo_library),
+              title:  Text('Choose from Gallery'),
               onTap: () {
                 Navigator.pop(context);
                 _pickImage(ImageSource.gallery);
@@ -1290,11 +1389,11 @@ class _ProfilePageState extends State<ProfilePage> {
 
         if (success && mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Avatar updated successfully')),
+             SnackBar(content: Text('Avatar updated successfully')),
           );
         } else if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Failed to update avatar')),
+             SnackBar(content: Text('Failed to update avatar')),
           );
         }
       }
@@ -1302,7 +1401,7 @@ class _ProfilePageState extends State<ProfilePage> {
       AppLogger().e('Error picking image: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Error picking image')),
+           SnackBar(content: Text('Failed to pick image')),
         );
       }
     }

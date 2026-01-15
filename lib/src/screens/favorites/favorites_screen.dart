@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:vibe_music_app/src/providers/auth_provider.dart';
 import 'package:vibe_music_app/src/providers/music_provider.dart';
 import 'package:vibe_music_app/src/screens/auth/login_screen.dart';
@@ -134,7 +135,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('我的收藏'),
+        title: Text('我的收藏'),
       ),
       body: Center(
         child: authProvider.isAuthenticated
@@ -173,8 +174,9 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
         final coverUrl = song.coverUrl;
         return ListTile(
           leading: CircleAvatar(
-            backgroundImage: coverUrl != null ? NetworkImage(coverUrl) : null,
-            child: coverUrl == null ? const Icon(Icons.music_note) : null,
+            backgroundImage:
+                coverUrl != null ? CachedNetworkImageProvider(coverUrl) : null,
+            child: coverUrl == null ? Icon(Icons.music_note) : null,
           ),
           title: Text(song.songName ?? 'Unknown Song'),
           subtitle: Text(song.artistName ?? 'Unknown Artist'),
@@ -190,7 +192,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                   final success = await musicProvider.removeFromFavorites(song);
                   if (success) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('已取消收藏')),
+                      SnackBar(content: Text('已取消收藏')),
                     );
                     // Remove the song from the local list
                     setState(() {
@@ -199,7 +201,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                   }
                 },
               ),
-              const Icon(Icons.play_arrow),
+              Icon(Icons.play_arrow),
             ],
           ),
           onTap: () async {
@@ -220,13 +222,13 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        const Icon(
+        Icon(
           Icons.favorite,
           size: 64,
           color: Colors.grey,
         ),
         const SizedBox(height: 16),
-        const Text(
+        Text(
           '请登录查看您的收藏音乐',
           style: TextStyle(fontSize: 18),
         ),
@@ -238,11 +240,11 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
               MaterialPageRoute(builder: (context) => const LoginScreen()),
             );
           },
-          icon: const Icon(Icons.login),
-          label: const Text('去登录'),
+          icon: Icon(Icons.login),
+          label: Text('去登录'),
           style: ElevatedButton.styleFrom(
             padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
-            textStyle: const TextStyle(fontSize: 16),
+            textStyle: TextStyle(fontSize: 16),
           ),
         ),
       ],

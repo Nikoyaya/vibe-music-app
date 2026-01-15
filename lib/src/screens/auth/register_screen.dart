@@ -15,8 +15,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _confirmPasswordController = TextEditingController();
-  final TextEditingController _verificationCodeController = TextEditingController();
+  final TextEditingController _confirmPasswordController =
+      TextEditingController();
+  final TextEditingController _verificationCodeController =
+      TextEditingController();
   bool _isLoading = false;
   bool _isSendingCode = false;
   bool _verificationSent = false;
@@ -34,7 +36,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Future<void> _sendVerificationCode() async {
     if (_emailController.text.isEmpty || !_emailController.text.contains('@')) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter a valid email')),
+        SnackBar(content: Text('Please enter a valid email')),
       );
       return;
     }
@@ -44,7 +46,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
     });
 
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    final success = await authProvider.sendVerificationCode(_emailController.text);
+    final success =
+        await authProvider.sendVerificationCode(_emailController.text);
 
     setState(() {
       _isSendingCode = false;
@@ -55,11 +58,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
         _verificationSent = true;
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Verification code sent!')),
+        SnackBar(content: Text('Verification code sent!')),
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to send verification code')),
+        SnackBar(content: Text('Failed to send verification code')),
       );
     }
   }
@@ -68,14 +71,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (_formKey.currentState!.validate()) {
       if (_passwordController.text != _confirmPasswordController.text) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Passwords do not match')),
+          SnackBar(content: Text('Passwords do not match')),
         );
         return;
       }
 
       if (!_verificationSent || _verificationCodeController.text.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Please verify your email first')),
+          SnackBar(content: Text('Please verify your email first')),
         );
         return;
       }
@@ -97,7 +100,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
       if (success && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Registration successful! Please login.')),
+          SnackBar(content: Text('Registration successful! Please login.')),
         );
         Navigator.pushReplacement(
           context,
@@ -115,7 +118,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Register'),
+        title: Text('Register'),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),
@@ -148,9 +151,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 child: ElevatedButton.icon(
                   onPressed: _isSendingCode ? null : _sendVerificationCode,
                   icon: _isSendingCode
-                      ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
-                      : const Icon(Icons.send),
-                  label: const Text('Send Verification Code'),
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2))
+                      : Icon(Icons.send),
+                  label: Text('Send Verification Code'),
                 ),
               ),
               if (_verificationSent) ...[
@@ -228,7 +234,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   onPressed: _isLoading ? null : _handleRegister,
                   child: _isLoading
                       ? const CircularProgressIndicator()
-                      : const Text('Register'),
+                      : Text('Register'),
                 ),
               ),
               const SizedBox(height: 16),
@@ -236,10 +242,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 onPressed: () {
                   Navigator.pushReplacement(
                     context,
-                    MaterialPageRoute(builder: (context) => const LoginScreen()),
+                    MaterialPageRoute(
+                        builder: (context) => const LoginScreen()),
                   );
                 },
-                child: const Text('Already have an account? Login'),
+                child: Text('Already have an account? Login'),
               ),
             ],
           ),

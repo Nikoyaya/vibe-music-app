@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
@@ -26,6 +27,20 @@ class MusicProvider with ChangeNotifier {
   double _volume = 0.5; // 默认音量设置为50%
   Set<int> _favoriteSongIds = {}; // Local state to track favorite song IDs
   AudioSession? _audioSession; // 音频会话，用于获取和监听系统音量
+
+  // Stream controllers for frequently changing data
+  final _positionStreamController = StreamController<Duration>.broadcast();
+  final _durationStreamController = StreamController<Duration>.broadcast();
+  final _playerStateStreamController =
+      StreamController<AppPlayerState>.broadcast();
+  final _volumeStreamController = StreamController<double>.broadcast();
+
+  // Stream getters
+  Stream<Duration> get positionStream => _positionStreamController.stream;
+  Stream<Duration> get durationStream => _durationStreamController.stream;
+  Stream<AppPlayerState> get playerStateStream =>
+      _playerStateStreamController.stream;
+  Stream<double> get volumeStream => _volumeStreamController.stream;
 
   AppPlayerState get playerState => _playerState;
   Duration get duration => _duration;
@@ -64,35 +79,44 @@ class MusicProvider with ChangeNotifier {
     _audioPlayer.durationStream.listen((d) {
       if (d != null) {
         _duration = d;
+        _durationStreamController.add(d);
+        // Only notify listeners when duration changes significantly
         notifyListeners();
       }
     });
 
-    // Listen for position changes
+    // Listen for position changes - use stream instead of notifyListeners
     _audioPlayer.positionStream.listen((p) {
       _position = p;
-      notifyListeners();
+      _positionStreamController.add(p);
+      // Don't call notifyListeners() here to avoid frequent rebuilds
     });
 
     // Listen for player state changes
     _audioPlayer.playerStateStream.listen((state) {
+      AppPlayerState newState;
       switch (state.processingState) {
         case ProcessingState.idle:
         case ProcessingState.loading:
-          _playerState = AppPlayerState.loading;
+          newState = AppPlayerState.loading;
           break;
         case ProcessingState.buffering:
-          _playerState = AppPlayerState.loading;
+          newState = AppPlayerState.loading;
           break;
         case ProcessingState.ready:
-          _playerState =
+          newState =
               state.playing ? AppPlayerState.playing : AppPlayerState.paused;
           break;
         case ProcessingState.completed:
           _onSongComplete();
-          break;
+          return;
       }
-      notifyListeners();
+
+      if (_playerState != newState) {
+        _playerState = newState;
+        _playerStateStreamController.add(newState);
+        notifyListeners();
+      }
     });
 
     // Set default loop mode
@@ -108,6 +132,7 @@ class MusicProvider with ChangeNotifier {
       next();
     } else {
       _playerState = AppPlayerState.completed;
+      _playerStateStreamController.add(_playerState);
       notifyListeners();
     }
   }
@@ -240,6 +265,7 @@ class MusicProvider with ChangeNotifier {
   void setVolume(double volume) {
     _volume = volume;
     _audioPlayer.setVolume(volume);
+    _volumeStreamController.add(volume);
     notifyListeners();
   }
 
@@ -393,6 +419,10 @@ class MusicProvider with ChangeNotifier {
   @override
   void dispose() {
     _audioPlayer.dispose();
+    _positionStreamController.close();
+    _durationStreamController.close();
+    _playerStateStreamController.close();
+    _volumeStreamController.close();
     super.dispose();
   }
 }

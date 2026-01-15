@@ -146,10 +146,10 @@ class _AdminScreenState extends State<AdminScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Admin Panel'),
+        title: Text('Admin Panel'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh),
+            icon: Icon(Icons.refresh),
             onPressed: () {
               if (_currentTab == 0) {
                 _loadUsers();
@@ -198,9 +198,9 @@ class _AdminScreenState extends State<AdminScreen> {
             controller: _userSearchController,
             decoration: InputDecoration(
               hintText: 'Search users...',
-              prefixIcon: const Icon(Icons.search),
+              prefixIcon: Icon(Icons.search),
               suffixIcon: IconButton(
-                icon: const Icon(Icons.clear),
+                icon: Icon(Icons.clear),
                 onPressed: () {
                   _userSearchController.clear();
                   _loadUsers();
@@ -267,8 +267,7 @@ class _AdminScreenState extends State<AdminScreen> {
                               ),
                               const SizedBox(width: 8),
                               IconButton(
-                                icon:
-                                    const Icon(Icons.delete, color: Colors.red),
+                                icon: Icon(Icons.delete, color: Colors.red),
                                 onPressed: () => _showDeleteUserDialog(user),
                               ),
                             ],
@@ -291,9 +290,9 @@ class _AdminScreenState extends State<AdminScreen> {
             controller: _songSearchController,
             decoration: InputDecoration(
               hintText: 'Search songs...',
-              prefixIcon: const Icon(Icons.search),
+              prefixIcon: Icon(Icons.search),
               suffixIcon: IconButton(
-                icon: const Icon(Icons.clear),
+                icon: Icon(Icons.clear),
                 onPressed: () {
                   _songSearchController.clear();
                   _loadSongs();
@@ -340,7 +339,7 @@ class _AdminScreenState extends State<AdminScreen> {
                                 ? NetworkImage(song['coverUrl'])
                                 : null,
                             child: song['coverUrl'] == null
-                                ? const Icon(Icons.music_note)
+                                ? Icon(Icons.music_note)
                                 : null,
                           ),
                           title: Text(song['songName'] ?? 'Unknown Song'),
@@ -352,8 +351,7 @@ class _AdminScreenState extends State<AdminScreen> {
                               Text('${song['playCount'] ?? 0} plays'),
                               const SizedBox(width: 8),
                               IconButton(
-                                icon:
-                                    const Icon(Icons.delete, color: Colors.red),
+                                icon: Icon(Icons.delete, color: Colors.red),
                                 onPressed: () => _showDeleteSongDialog(song),
                               ),
                             ],
@@ -370,12 +368,12 @@ class _AdminScreenState extends State<AdminScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete User'),
+        title: Text('Delete User'),
         content: Text('Are you sure you want to delete "${user['username']}"?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: Text('Cancel'),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -383,7 +381,7 @@ class _AdminScreenState extends State<AdminScreen> {
               // Implement delete user logic
             },
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('Delete'),
+            child: Text('Delete'),
           ),
         ],
       ),
@@ -394,12 +392,12 @@ class _AdminScreenState extends State<AdminScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete Song'),
+        title: Text('Delete Song'),
         content: Text('Are you sure you want to delete "${song['songName']}"?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: Text('Cancel'),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -407,7 +405,7 @@ class _AdminScreenState extends State<AdminScreen> {
               // Implement delete song logic
             },
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('Delete'),
+            child: Text('Delete'),
           ),
         ],
       ),

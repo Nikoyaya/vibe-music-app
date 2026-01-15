@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:vibe_music_app/src/providers/music_provider.dart';
 import 'package:vibe_music_app/src/providers/auth_provider.dart';
 import 'package:vibe_music_app/src/screens/auth/login_screen.dart';
@@ -20,24 +21,13 @@ class _PlayerScreenState extends State<PlayerScreen> {
   /// 是否显示音量指示器
   bool _showVolumeIndicator = false;
 
-  /// 当前音量值
-  double _currentVolume = 0.5; // 初始音量
-
-  @override
-  void initState() {
-    super.initState();
-    // 从musicProvider获取初始音量
-    final musicProvider = Provider.of<MusicProvider>(context, listen: false);
-    _currentVolume = musicProvider.volume;
-  }
-
   @override
   Widget build(BuildContext context) {
     final musicProvider = Provider.of<MusicProvider>(context);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('正在播放'),
+        title: Text('正在播放'),
         actions: [
           IconButton(
             icon: Icon(
@@ -58,7 +48,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
               if (!authProvider.isAuthenticated) {
                 // 提示用户登录
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('请先登录')),
+                  SnackBar(content: Text('请先登录')),
                 );
                 // 导航到登录页面
                 Navigator.push(
@@ -74,21 +64,21 @@ class _PlayerScreenState extends State<PlayerScreen> {
                 success = await musicProvider.removeFromFavorites(song);
                 if (success) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('已取消收藏')),
+                    SnackBar(content: Text('已取消收藏')),
                   );
                 }
               } else {
                 success = await musicProvider.addToFavorites(song);
                 if (success) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('已添加到收藏')),
+                    SnackBar(content: Text('已添加到收藏')),
                   );
                 }
               }
             },
           ),
           IconButton(
-            icon: const Icon(Icons.queue_music),
+            icon: Icon(Icons.queue_music),
             onPressed: () {
               setState(() {
                 _isExpanded = !_isExpanded;
@@ -110,17 +100,14 @@ class _PlayerScreenState extends State<PlayerScreen> {
                       onVerticalDragUpdate: (details) {
                         // 垂直滑动调整音量
                         const sensitivity = 0.005; // 灵敏度
-                        double newVolume =
-                            _currentVolume - details.delta.dy * sensitivity;
+                        double newVolume = musicProvider.volume -
+                            details.delta.dy * sensitivity;
 
                         // 确保音量在0.0到1.0之间
                         newVolume = newVolume.clamp(0.0, 1.0);
 
-                        // 更新音量
+                        // 更新音量 - 直接调用provider方法，会通过stream通知更新
                         musicProvider.setVolume(newVolume);
-                        setState(() {
-                          _currentVolume = newVolume;
-                        });
 
                         // 显示音量指示器
                         if (!_showVolumeIndicator) {
@@ -149,7 +136,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
                               borderRadius: BorderRadius.circular(16),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.3),
+                                  color: Colors.black.withValues(alpha: 0.3),
                                   blurRadius: 20,
                                   offset: const Offset(0, 10),
                                 ),
@@ -158,9 +145,34 @@ class _PlayerScreenState extends State<PlayerScreen> {
                             child: musicProvider.currentSong?.coverUrl != null
                                 ? ClipRRect(
                                     borderRadius: BorderRadius.circular(16),
-                                    child: Image.network(
-                                      musicProvider.currentSong!.coverUrl!,
+                                    child: CachedNetworkImage(
+                                      imageUrl:
+                                          musicProvider.currentSong!.coverUrl!,
                                       fit: BoxFit.cover,
+                                      placeholder: (context, url) => Container(
+                                        decoration: BoxDecoration(
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .surfaceContainerHighest,
+                                          borderRadius:
+                                              BorderRadius.circular(16),
+                                        ),
+                                        child: const Center(
+                                          child: CircularProgressIndicator(),
+                                        ),
+                                      ),
+                                      errorWidget: (context, url, error) =>
+                                          Container(
+                                        decoration: BoxDecoration(
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .primaryContainer,
+                                          borderRadius:
+                                              BorderRadius.circular(16),
+                                        ),
+                                        child:
+                                            Icon(Icons.music_note, size: 100),
+                                      ),
                                     ),
                                   )
                                 : Container(
@@ -170,8 +182,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
                                           .primaryContainer,
                                       borderRadius: BorderRadius.circular(16),
                                     ),
-                                    child:
-                                        const Icon(Icons.music_note, size: 100),
+                                    child: Icon(Icons.music_note, size: 100),
                                   ),
                           ),
                           const SizedBox(height: 32),
@@ -194,33 +205,45 @@ class _PlayerScreenState extends State<PlayerScreen> {
                                     ),
                           ),
                           const SizedBox(height: 32),
-                          // Progress Bar
+                          // Progress Bar - 使用StreamBuilder只监听进度变化
                           Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 24),
-                            child: Column(
-                              children: [
-                                Slider(
-                                  value: musicProvider.position.inSeconds
-                                      .toDouble(),
-                                  max: musicProvider.duration.inSeconds
-                                      .toDouble()
-                                      .clamp(1.0, double.infinity),
-                                  onChanged: (value) {
-                                    musicProvider.seekTo(
-                                        Duration(seconds: value.toInt()));
+                            child: StreamBuilder<Duration>(
+                              stream: musicProvider.positionStream,
+                              builder: (context, positionSnapshot) {
+                                return StreamBuilder<Duration>(
+                                  stream: musicProvider.durationStream,
+                                  builder: (context, durationSnapshot) {
+                                    final position =
+                                        positionSnapshot.data ?? Duration.zero;
+                                    final duration =
+                                        durationSnapshot.data ?? Duration.zero;
+
+                                    return Column(
+                                      children: [
+                                        Slider(
+                                          value: position.inSeconds.toDouble(),
+                                          max: duration.inSeconds
+                                              .toDouble()
+                                              .clamp(1.0, double.infinity),
+                                          onChanged: (value) {
+                                            musicProvider.seekTo(Duration(
+                                                seconds: value.toInt()));
+                                          },
+                                        ),
+                                        Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Text(_formatDuration(position)),
+                                            Text(_formatDuration(duration)),
+                                          ],
+                                        ),
+                                      ],
+                                    );
                                   },
-                                ),
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Text(_formatDuration(
-                                        musicProvider.position)),
-                                    Text(_formatDuration(
-                                        musicProvider.duration)),
-                                  ],
-                                ),
-                              ],
+                                );
+                              },
                             ),
                           ),
                           const SizedBox(height: 24),
@@ -248,8 +271,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
                                 const SizedBox(width: 4),
                                 // Previous
                                 IconButton(
-                                  icon:
-                                      const Icon(Icons.skip_previous, size: 32),
+                                  icon: Icon(Icons.skip_previous, size: 32),
                                   onPressed: () => musicProvider.previous(),
                                 ),
                                 const SizedBox(width: 12),
@@ -274,27 +296,35 @@ class _PlayerScreenState extends State<PlayerScreen> {
                                 const SizedBox(width: 12),
                                 // Next
                                 IconButton(
-                                  icon: const Icon(Icons.skip_next, size: 32),
+                                  icon: Icon(Icons.skip_next, size: 32),
                                   onPressed: () => musicProvider.next(),
                                 ),
                                 const SizedBox(width: 4),
                                 // Volume Control - 只显示按钮，点击弹出音量控制
-                                IconButton(
-                                  icon: Icon(
-                                    _currentVolume > 0.5
-                                        ? Icons.volume_up
-                                        : _currentVolume > 0
-                                            ? Icons.volume_down
-                                            : Icons.volume_off,
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .onSurfaceVariant,
-                                  ),
-                                  onPressed: () {
-                                    setState(() {
-                                      _showVolumeIndicator =
-                                          !_showVolumeIndicator;
-                                    });
+                                StreamBuilder<double>(
+                                  stream: musicProvider.volumeStream,
+                                  initialData: musicProvider.volume,
+                                  builder: (context, volumeSnapshot) {
+                                    final currentVolume =
+                                        volumeSnapshot.data ?? 0.5;
+                                    return IconButton(
+                                      icon: Icon(
+                                        currentVolume > 0.5
+                                            ? Icons.volume_up
+                                            : currentVolume > 0
+                                                ? Icons.volume_down
+                                                : Icons.volume_off,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSurfaceVariant,
+                                      ),
+                                      onPressed: () {
+                                        setState(() {
+                                          _showVolumeIndicator =
+                                              !_showVolumeIndicator;
+                                        });
+                                      },
+                                    );
                                   },
                                 ),
                                 const SizedBox(width: 4),
@@ -318,25 +348,28 @@ class _PlayerScreenState extends State<PlayerScreen> {
                           ),
                           // Volume Control - 显示在单独的行，避免水平溢出
                           if (_showVolumeIndicator)
-                            Container(
-                              padding: const EdgeInsets.only(top: 8.0),
-                              child: SizedBox(
-                                width: 150,
-                                height: 40,
-                                child: Slider(
-                                  value: _currentVolume,
-                                  min: 0.0,
-                                  max: 1.0,
-                                  activeColor:
-                                      Theme.of(context).colorScheme.primary,
-                                  onChanged: (value) {
-                                    setState(() {
-                                      _currentVolume = value;
-                                      musicProvider.setVolume(value);
-                                    });
-                                  },
-                                ),
-                              ),
+                            StreamBuilder<double>(
+                              stream: musicProvider.volumeStream,
+                              initialData: musicProvider.volume,
+                              builder: (context, volumeSnapshot) {
+                                return Container(
+                                  padding: const EdgeInsets.only(top: 8.0),
+                                  child: SizedBox(
+                                    width: 150,
+                                    height: 40,
+                                    child: Slider(
+                                      value: volumeSnapshot.data ?? 0.5,
+                                      min: 0.0,
+                                      max: 1.0,
+                                      activeColor:
+                                          Theme.of(context).colorScheme.primary,
+                                      onChanged: (value) {
+                                        musicProvider.setVolume(value);
+                                      },
+                                    ),
+                                  ),
+                                );
+                              },
                             ),
                         ],
                       ),
@@ -363,7 +396,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
                       const BorderRadius.vertical(top: Radius.circular(16)),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
+                      color: Colors.black.withValues(alpha: 0.1),
                       blurRadius: 10,
                       offset: const Offset(0, -5),
                     ),
@@ -387,7 +420,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
                           ? Theme.of(context)
                               .colorScheme
                               .primaryContainer
-                              .withOpacity(0.5)
+                              .withValues(alpha: 0.5)
                           : Colors.transparent,
                       child: ListTile(
                         leading: isCurrent
@@ -398,7 +431,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
                                   color: Theme.of(context).colorScheme.primary,
                                   shape: BoxShape.circle,
                                 ),
-                                child: const Icon(Icons.play_arrow,
+                                child: Icon(Icons.play_arrow,
                                     color: Colors.white, size: 20),
                               )
                             : Container(
@@ -457,7 +490,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
                                 if (!authProvider.isAuthenticated) {
                                   // 提示用户登录
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(content: Text('请先登录')),
+                                    SnackBar(content: Text('请先登录')),
                                   );
                                   // 导航到登录页面
                                   Navigator.push(
@@ -475,7 +508,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
                                       .removeFromFavorites(song);
                                   if (success) {
                                     ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(content: Text('已取消收藏')),
+                                      SnackBar(content: Text('已取消收藏')),
                                     );
                                   }
                                 } else {
@@ -483,7 +516,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
                                       await musicProvider.addToFavorites(song);
                                   if (success) {
                                     ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(content: Text('已添加到收藏')),
+                                      SnackBar(content: Text('已添加到收藏')),
                                     );
                                   }
                                 }
@@ -512,43 +545,51 @@ class _PlayerScreenState extends State<PlayerScreen> {
                 ),
               ),
             ),
-          // 音量指示器
+          // 音量指示器 - 使用StreamBuilder监听音量变化
           if (_showVolumeIndicator)
-            Positioned(
-              top: 80,
-              right: 20,
-              child: Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.3),
-                      blurRadius: 10,
-                      offset: const Offset(0, 5),
+            StreamBuilder<double>(
+              stream: musicProvider.volumeStream,
+              initialData: musicProvider.volume,
+              builder: (context, volumeSnapshot) {
+                final currentVolume = volumeSnapshot.data ?? 0.5;
+                return Positioned(
+                  top: 80,
+                  right: 20,
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color:
+                          Theme.of(context).colorScheme.surfaceContainerHighest,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.3),
+                          blurRadius: 10,
+                          offset: const Offset(0, 5),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-                child: Column(
-                  children: [
-                    Icon(
-                      _currentVolume > 0.5
-                          ? Icons.volume_up
-                          : _currentVolume > 0
-                              ? Icons.volume_down
-                              : Icons.volume_off,
-                      size: 32,
-                      color: Theme.of(context).colorScheme.primary,
+                    child: Column(
+                      children: [
+                        Icon(
+                          currentVolume > 0.5
+                              ? Icons.volume_up
+                              : currentVolume > 0
+                                  ? Icons.volume_down
+                                  : Icons.volume_off,
+                          size: 32,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          '${(currentVolume * 100).round()}%',
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 8),
-                    Text(
-                      '${(_currentVolume * 100).round()}%',
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                  ],
-                ),
-              ),
+                  ),
+                );
+              },
             ),
         ],
       ),

@@ -13,7 +13,8 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  final TextEditingController _usernameOrEmailController = TextEditingController();
+  final TextEditingController _usernameOrEmailController =
+      TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _isAdmin = false;
   bool _isLoading = false;
@@ -60,10 +61,10 @@ class _LoginScreenState extends State<LoginScreen> {
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: Icon(Icons.arrow_back),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text('Login'),
+        title: Text('Login'),
       ),
       body: Container(
         decoration: BoxDecoration(
@@ -81,7 +82,8 @@ class _LoginScreenState extends State<LoginScreen> {
             padding: const EdgeInsets.all(24.0),
             child: Card(
               elevation: 8,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16)),
               child: Padding(
                 padding: const EdgeInsets.all(24.0),
                 child: Form(
@@ -97,21 +99,27 @@ class _LoginScreenState extends State<LoginScreen> {
                       const SizedBox(height: 16),
                       Text(
                         'Vibe Music',
-                        style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style: Theme.of(context)
+                            .textTheme
+                            .headlineMedium
+                            ?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
                       ),
                       const SizedBox(height: 32),
                       TextFormField(
                         controller: _usernameOrEmailController,
                         decoration: InputDecoration(
                           labelText: _isAdmin ? 'Username' : 'Email',
-                          prefixIcon: Icon(_isAdmin ? Icons.person : Icons.email),
+                          prefixIcon:
+                              Icon(_isAdmin ? Icons.person : Icons.email),
                           border: const OutlineInputBorder(),
                         ),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
-                            return _isAdmin ? 'Please enter username' : 'Please enter email';
+                            return _isAdmin
+                                ? 'Please enter username'
+                                : 'Please enter email';
                           }
                           if (!_isAdmin && !value.contains('@')) {
                             return 'Please enter a valid email';
@@ -137,7 +145,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       const SizedBox(height: 16),
                       SwitchListTile(
-                        title: const Text('Admin Login'),
+                        title: Text('Admin Login'),
                         value: _isAdmin,
                         onChanged: (value) {
                           setState(() {
@@ -153,7 +161,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           onPressed: _isLoading ? null : _handleLogin,
                           child: _isLoading
                               ? const CircularProgressIndicator()
-                              : const Text('Login'),
+                              : Text('Login'),
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -161,10 +169,11 @@ class _LoginScreenState extends State<LoginScreen> {
                         onPressed: () {
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (context) => const RegisterScreen()),
+                            MaterialPageRoute(
+                                builder: (context) => const RegisterScreen()),
                           );
                         },
-                        child: const Text('Don\'t have an account? Register'),
+                        child: Text('Don\'t have an account? Register'),
                       ),
                     ],
                   ),
