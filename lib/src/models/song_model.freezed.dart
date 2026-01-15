@@ -16,19 +16,15 @@ final _privateConstructorUsedError = UnsupportedError(
 
 /// @nodoc
 mixin _$Song {
-  @JsonKey(name: 'songId')
   int? get id => throw _privateConstructorUsedError;
   String? get songName => throw _privateConstructorUsedError;
   String? get artistName => throw _privateConstructorUsedError;
-  @JsonKey(name: 'album')
   String? get albumName => throw _privateConstructorUsedError;
   String? get coverUrl => throw _privateConstructorUsedError;
-  @JsonKey(name: 'audioUrl')
   String? get songUrl => throw _privateConstructorUsedError;
   String? get duration => throw _privateConstructorUsedError;
   int? get playCount => throw _privateConstructorUsedError;
   int? get likeCount => throw _privateConstructorUsedError;
-  @JsonKey(name: 'releaseTime')
   DateTime? get createTime => throw _privateConstructorUsedError;
   int? get likeStatus => throw _privateConstructorUsedError;
 
@@ -44,16 +40,16 @@ abstract class $SongCopyWith<$Res> {
       _$SongCopyWithImpl<$Res, Song>;
   @useResult
   $Res call(
-      {@JsonKey(name: 'songId') int? id,
+      {int? id,
       String? songName,
       String? artistName,
-      @JsonKey(name: 'album') String? albumName,
+      String? albumName,
       String? coverUrl,
-      @JsonKey(name: 'audioUrl') String? songUrl,
+      String? songUrl,
       String? duration,
       int? playCount,
       int? likeCount,
-      @JsonKey(name: 'releaseTime') DateTime? createTime,
+      DateTime? createTime,
       int? likeStatus});
 }
 
@@ -141,16 +137,16 @@ abstract class _$$SongImplCopyWith<$Res> implements $SongCopyWith<$Res> {
   @override
   @useResult
   $Res call(
-      {@JsonKey(name: 'songId') int? id,
+      {int? id,
       String? songName,
       String? artistName,
-      @JsonKey(name: 'album') String? albumName,
+      String? albumName,
       String? coverUrl,
-      @JsonKey(name: 'audioUrl') String? songUrl,
+      String? songUrl,
       String? duration,
       int? playCount,
       int? likeCount,
-      @JsonKey(name: 'releaseTime') DateTime? createTime,
+      DateTime? createTime,
       int? likeStatus});
 }
 
@@ -229,34 +225,32 @@ class __$$SongImplCopyWithImpl<$Res>
 
 /// @nodoc
 
-class _$SongImpl with DiagnosticableTreeMixin implements _Song {
+class _$SongImpl extends _Song with DiagnosticableTreeMixin {
   const _$SongImpl(
-      {@JsonKey(name: 'songId') this.id,
+      {this.id,
       this.songName,
       this.artistName,
-      @JsonKey(name: 'album') this.albumName,
+      this.albumName,
       this.coverUrl,
-      @JsonKey(name: 'audioUrl') this.songUrl,
+      this.songUrl,
       this.duration,
       this.playCount,
       this.likeCount,
-      @JsonKey(name: 'releaseTime') this.createTime,
-      this.likeStatus});
+      this.createTime,
+      this.likeStatus})
+      : super._();
 
   @override
-  @JsonKey(name: 'songId')
   final int? id;
   @override
   final String? songName;
   @override
   final String? artistName;
   @override
-  @JsonKey(name: 'album')
   final String? albumName;
   @override
   final String? coverUrl;
   @override
-  @JsonKey(name: 'audioUrl')
   final String? songUrl;
   @override
   final String? duration;
@@ -265,7 +259,6 @@ class _$SongImpl with DiagnosticableTreeMixin implements _Song {
   @override
   final int? likeCount;
   @override
-  @JsonKey(name: 'releaseTime')
   final DateTime? createTime;
   @override
   final int? likeStatus;
@@ -344,34 +337,32 @@ class _$SongImpl with DiagnosticableTreeMixin implements _Song {
       __$$SongImplCopyWithImpl<_$SongImpl>(this, _$identity);
 }
 
-abstract class _Song implements Song {
+abstract class _Song extends Song {
   const factory _Song(
-      {@JsonKey(name: 'songId') final int? id,
+      {final int? id,
       final String? songName,
       final String? artistName,
-      @JsonKey(name: 'album') final String? albumName,
+      final String? albumName,
       final String? coverUrl,
-      @JsonKey(name: 'audioUrl') final String? songUrl,
+      final String? songUrl,
       final String? duration,
       final int? playCount,
       final int? likeCount,
-      @JsonKey(name: 'releaseTime') final DateTime? createTime,
+      final DateTime? createTime,
       final int? likeStatus}) = _$SongImpl;
+  const _Song._() : super._();
 
   @override
-  @JsonKey(name: 'songId')
   int? get id;
   @override
   String? get songName;
   @override
   String? get artistName;
   @override
-  @JsonKey(name: 'album')
   String? get albumName;
   @override
   String? get coverUrl;
   @override
-  @JsonKey(name: 'audioUrl')
   String? get songUrl;
   @override
   String? get duration;
@@ -380,7 +371,6 @@ abstract class _Song implements Song {
   @override
   int? get likeCount;
   @override
-  @JsonKey(name: 'releaseTime')
   DateTime? get createTime;
   @override
   int? get likeStatus;
