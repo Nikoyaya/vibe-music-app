@@ -7,7 +7,7 @@ class AppTheme {
   static final ThemeData lightTheme = ThemeData(
     /// 亮色主题颜色方案
     colorScheme: ColorScheme.light(
-      primary: Colors.purple.shade600, // 主色调
+      primary: Colors.deepPurpleAccent, // 主色调
       secondary: Colors.purple.shade400, // 次要色调
       surface: Colors.white, // 表面色
       background: Colors.grey.shade50, // 背景色
@@ -33,7 +33,7 @@ class AppTheme {
   static final ThemeData darkTheme = ThemeData(
     /// 暗色主题颜色方案
     colorScheme: ColorScheme.dark(
-      primary: Colors.purple.shade500, // 主色调
+      primary: Colors.deepPurpleAccent, // 主色调
       secondary: Colors.purple.shade300, // 次要色调
       surface: Colors.grey.shade900, // 表面色
       background: Colors.black, // 背景色
