@@ -9,6 +9,7 @@ import 'package:vibe_music_app/src/screens/search/search_screen.dart';
 import 'package:vibe_music_app/src/screens/auth/login_screen.dart';
 import 'package:vibe_music_app/src/models/song_model.dart';
 import 'package:carousel_slider/carousel_slider.dart';
+import 'package:vibe_music_app/src/components/pull_to_refresh.dart';
 
 /// 歌曲列表页面
 class SongListPage extends StatefulWidget {
@@ -21,13 +22,13 @@ class SongListPage extends StatefulWidget {
 /// 歌曲列表类型枚举
 enum SongListType {
   recommended, // 推荐歌曲
-  favorite,    // 收藏歌曲
+  favorite, // 收藏歌曲
 }
 
 /// 轮播图数据模型
 class CarouselItem {
   final String imageUrl; // 图片URL
-  final String title;     // 标题
+  final String title; // 标题
   final String description; // 描述
 
   CarouselItem({
@@ -40,7 +41,7 @@ class CarouselItem {
 /// 歌单数据模型
 class PlaylistItem {
   final String imageUrl; // 图片URL
-  final String title;     // 标题
+  final String title; // 标题
   final String playCount; // 播放次数
 
   PlaylistItem({
@@ -117,11 +118,21 @@ class _SongListPageState extends State<SongListPage> {
   /// 加载歌曲数据
   void _loadSongs() {
     final musicProvider = Provider.of<MusicProvider>(context, listen: false);
-    if (_currentType == SongListType.recommended) {
-      _futureSongs = musicProvider.loadRecommendedSongs();
-    } else {
-      _futureSongs = musicProvider.loadUserFavoriteSongs();
-    }
+    setState(() {
+      if (_currentType == SongListType.recommended) {
+        _futureSongs = musicProvider.loadRecommendedSongs();
+      } else {
+        _futureSongs = musicProvider.loadUserFavoriteSongs();
+      }
+    });
+  }
+
+  /// 处理下拉刷新
+  Future<void> _handleRefresh() async {
+    // 重新加载歌曲数据
+    _loadSongs();
+    // 等待数据加载完成
+    await _futureSongs;
   }
 
   @override
@@ -136,7 +147,8 @@ class _SongListPageState extends State<SongListPage> {
           child: BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
             child: Container(
-              color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.8),
+              color:
+                  Theme.of(context).colorScheme.surface.withValues(alpha: 0.8),
               child: AppBar(
                 title: const Text('Vibe Music Player'),
                 actions: [
@@ -150,7 +162,6 @@ class _SongListPageState extends State<SongListPage> {
                       );
                     },
                   ),
-
                 ],
                 backgroundColor: Colors.transparent,
                 foregroundColor: Theme.of(context).colorScheme.onSurface,
@@ -161,18 +172,21 @@ class _SongListPageState extends State<SongListPage> {
           ),
         ),
       ),
-      body: ListView(
-        padding: EdgeInsets.zero,
-        children: [
-          // 轮播图
-          _buildCarousel(),
+      body: PullToRefresh(
+        onRefresh: _handleRefresh,
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            // 轮播图
+            _buildCarousel(),
 
-          // 推荐歌单
-          _buildRecommendedPlaylists(),
+            // 推荐歌单
+            _buildRecommendedPlaylists(),
 
-          // 热门歌曲
-          _buildPopularSongs(isSmallScreen),
-        ],
+            // 热门歌曲
+            _buildPopularSongs(isSmallScreen),
+          ],
+        ),
       ),
     );
   }
@@ -404,7 +418,8 @@ class _SongListPageState extends State<SongListPage> {
                   final song = songs[index];
                   final coverUrl = song.coverUrl;
                   return Card(
-                    margin: EdgeInsets.symmetric(vertical: isSmallScreen ? 4 : 6),
+                    margin:
+                        EdgeInsets.symmetric(vertical: isSmallScreen ? 4 : 6),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -431,7 +446,8 @@ class _SongListPageState extends State<SongListPage> {
                                         child: CircularProgressIndicator(),
                                       ),
                                     ),
-                                    errorWidget: (context, url, error) => Container(
+                                    errorWidget: (context, url, error) =>
+                                        Container(
                                       width: isSmallScreen ? 40 : 48,
                                       height: isSmallScreen ? 40 : 48,
                                       color: Theme.of(context)
@@ -506,34 +522,44 @@ class _SongListPageState extends State<SongListPage> {
                                         : null,
                                   ),
                                   onPressed: () async {
-                                    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+                                    final authProvider =
+                                        Provider.of<AuthProvider>(context,
+                                            listen: false);
                                     if (!authProvider.isAuthenticated) {
                                       // 提示用户登录
-                                      ScaffoldMessenger.of(context).showSnackBar(
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
                                         const SnackBar(content: Text('请先登录')),
                                       );
                                       // 导航到登录页面
                                       Navigator.push(
                                         context,
                                         MaterialPageRoute(
-                                            builder: (context) => const LoginScreen()),
+                                            builder: (context) =>
+                                                const LoginScreen()),
                                       );
                                       return;
                                     }
 
                                     bool success;
                                     if (musicProvider.isSongFavorited(song)) {
-                                      success = await musicProvider.removeFromFavorites(song);
+                                      success = await musicProvider
+                                          .removeFromFavorites(song);
                                       if (success && mounted) {
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          const SnackBar(content: Text('已取消收藏')),
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
+                                          const SnackBar(
+                                              content: Text('已取消收藏')),
                                         );
                                       }
                                     } else {
-                                      success = await musicProvider.addToFavorites(song);
+                                      success = await musicProvider
+                                          .addToFavorites(song);
                                       if (success && mounted) {
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          const SnackBar(content: Text('已添加到收藏')),
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
+                                          const SnackBar(
+                                              content: Text('已添加到收藏')),
                                         );
                                       }
                                     }
@@ -547,13 +573,15 @@ class _SongListPageState extends State<SongListPage> {
                                   icon: const Icon(Icons.play_arrow),
                                   onPressed: () async {
                                     // 将整个热门歌曲列表添加到播放列表
-                                    await musicProvider.playSong(song, playlist: songs);
+                                    await musicProvider.playSong(song,
+                                        playlist: songs);
                                     // 导航到播放器页面
                                     if (mounted) {
                                       Navigator.push(
                                         context,
                                         MaterialPageRoute(
-                                            builder: (context) => const PlayerScreen()),
+                                            builder: (context) =>
+                                                const PlayerScreen()),
                                       );
                                     }
                                   },

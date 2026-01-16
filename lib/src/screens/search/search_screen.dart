@@ -4,8 +4,9 @@ import 'package:vibe_music_app/src/providers/music_provider.dart';
 import 'package:vibe_music_app/src/screens/player/player_screen.dart';
 import 'package:vibe_music_app/src/models/song_model.dart';
 import 'package:vibe_music_app/src/screens/search/components/search_bar.dart';
-import 'package:vibe_music_app/src/screens/search/components/search_button.dart';
-import 'package:vibe_music_app/src/screens/search/components/search_results_list.dart';
+import 'package:vibe_music_app/src/components/common_button.dart';
+import 'package:vibe_music_app/src/components/common_card.dart';
+import 'package:vibe_music_app/src/components/common_loading.dart';
 
 /// 搜索屏幕
 /// 用于搜索歌曲
@@ -121,15 +122,96 @@ class _SearchScreenState extends State<SearchScreen> {
             onSubmitSearch: _searchSongs,
           ),
           // 搜索按钮
-          SearchButton(
-            onSearch: _searchSongs,
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: CommonButton(
+              text: '搜索',
+              onPressed: _searchSongs,
+              isLoading: _isSearching,
+              icon: const Icon(Icons.search),
+            ),
           ),
           const SizedBox(height: 16),
           // 搜索结果列表
-          SearchResultsList(
-            isSearching: _isSearching,
-            searchResults: _searchResults,
-            onResultTap: _handleResultTap,
+          Expanded(
+            child: _isSearching
+                ? const CommonLoading(text: '搜索中...')
+                : _searchResults.isEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.music_note,
+                              size: 64,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant,
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              '搜索歌曲',
+                              style: Theme.of(context).textTheme.bodyLarge,
+                            ),
+                          ],
+                        ),
+                      )
+                    : ListView.builder(
+                        itemCount: _searchResults.length,
+                        itemBuilder: (context, index) {
+                          final song = _searchResults[index];
+                          final coverUrl = song.coverUrl;
+                          return CommonCard(
+                            onTap: () => _handleResultTap(song),
+                            margin: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 6),
+                            padding: const EdgeInsets.all(12),
+                            child: Row(
+                              children: [
+                                // 歌曲封面
+                                CircleAvatar(
+                                  backgroundImage: coverUrl != null
+                                      ? NetworkImage(coverUrl)
+                                      : null,
+                                  child: coverUrl == null
+                                      ? Icon(Icons.music_note)
+                                      : null,
+                                ),
+                                const SizedBox(width: 12),
+                                // 歌曲信息
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        song.songName ?? '未知歌曲',
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .titleMedium,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      Text(
+                                        song.artistName ?? '未知艺术家',
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodyMedium,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                // 播放按钮
+                                Icon(Icons.play_arrow,
+                                    color:
+                                        Theme.of(context).colorScheme.primary),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
           ),
         ],
       ),
