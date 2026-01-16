@@ -6,33 +6,62 @@ import 'package:vibe_music_app/src/models/user_model.dart';
 import 'package:vibe_music_app/src/utils/app_logger.dart';
 import 'package:vibe_music_app/src/utils/sp_util.dart';
 
+/// 认证状态枚举
 enum AuthStatus {
-  unknown,
-  unauthenticated,
-  authenticated,
-  loading,
+  unknown, // 未知状态
+  unauthenticated, // 未认证
+  authenticated, // 已认证
+  loading, // 加载中
 }
 
+/// 认证提供者
+/// 管理用户认证状态、token和用户信息
 class AuthProvider with ChangeNotifier {
+  /// 认证状态
   AuthStatus _status = AuthStatus.unknown;
+
+  /// 用户信息
   User? _user;
+
+  /// 访问令牌
   String? _token;
+
+  /// 刷新令牌
   String? _refreshToken;
+
+  /// 访问令牌过期时间
   DateTime? _tokenExpiry;
+
+  /// 刷新令牌过期时间
   DateTime? _refreshTokenExpiry;
+
+  /// 错误消息
   String? _errorMessage;
 
+  /// 获取认证状态
   AuthStatus get status => _status;
+
+  /// 获取用户信息
   User? get user => _user;
+
+  /// 获取访问令牌
   String? get token => _token;
+
+  /// 获取错误消息
   String? get errorMessage => _errorMessage;
+
+  /// 是否已认证
   bool get isAuthenticated => _status == AuthStatus.authenticated;
+
+  /// 是否为管理员
   bool get isAdmin => _user?.role == 1;
 
+  /// 构造函数
   AuthProvider() {
     _loadAuthData();
   }
 
+  /// 加载认证数据
   Future<void> _loadAuthData() async {
     final token = SpUtil.get<String>('token');
     final tokenExpiry = SpUtil.get<String>('tokenExpiry');
@@ -64,6 +93,7 @@ class AuthProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  /// 获取用户信息
   Future<void> _fetchUserInfo() async {
     try {
       final response = await ApiService().getUserInfo();
@@ -81,6 +111,7 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
+  /// 尝试刷新令牌
   Future<bool> _tryRefreshToken() async {
     if (_refreshToken == null ||
         _refreshTokenExpiry == null ||
@@ -114,6 +145,7 @@ class AuthProvider with ChangeNotifier {
     return false;
   }
 
+  /// 用户登录
   Future<bool> login(String usernameOrEmail, String password,
       {bool isAdmin = false}) async {
     _status = AuthStatus.loading;
@@ -198,6 +230,7 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
+  /// 注册新用户
   Future<bool> register(String email, String username, String password) async {
     _status = AuthStatus.loading;
     _errorMessage = null;
@@ -214,25 +247,26 @@ class AuthProvider with ChangeNotifier {
           notifyListeners();
           return true;
         } else {
-          _errorMessage = data['msg'] ?? 'Registration failed';
+          _errorMessage = data['msg'] ?? '注册失败';
           _status = AuthStatus.unauthenticated;
           notifyListeners();
           return false;
         }
       } else {
-        _errorMessage = 'Network error: ${response.statusCode}';
+        _errorMessage = '网络错误: ${response.statusCode}';
         _status = AuthStatus.unauthenticated;
         notifyListeners();
         return false;
       }
     } catch (e) {
-      _errorMessage = 'Connection error: $e';
+      _errorMessage = '连接错误: $e';
       _status = AuthStatus.unauthenticated;
       notifyListeners();
       return false;
     }
   }
 
+  /// 发送验证码
   Future<bool> sendVerificationCode(String email) async {
     try {
       final response = await ApiService().sendVerificationCode(email);
@@ -244,6 +278,7 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
+  /// 验证验证码
   Future<bool> verifyVerificationCode(String email, String code) async {
     try {
       final response = await ApiService().verifyVerificationCode(email, code);
@@ -255,6 +290,7 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
+  /// 用户登出
   Future<void> logout() async {
     try {
       await ApiService().logout();
@@ -273,6 +309,7 @@ class AuthProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  /// 更新用户信息
   Future<bool> updateUserInfo(Map<String, dynamic> userInfo) async {
     try {
       final response = await ApiService().updateUserInfo(userInfo);
@@ -299,6 +336,7 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
+  /// 更新用户头像
   Future<bool> updateUserAvatar(Uint8List avatarBytes) async {
     // 检查用户是否已经登录
     if (!isAuthenticated || _user == null) {
@@ -329,11 +367,13 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
+  /// 清除错误信息
   void clearError() {
     _errorMessage = null;
     notifyListeners();
   }
 
+  /// 记录SpUtil存储状态
   Future<void> _logSpUtilState() async {
     AppLogger().d('🔐 SpUtil 存储状态:');
     AppLogger().d(

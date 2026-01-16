@@ -3,6 +3,9 @@ import 'package:provider/provider.dart';
 import 'package:vibe_music_app/src/providers/music_provider.dart';
 import 'package:vibe_music_app/src/screens/player/player_screen.dart';
 import 'package:vibe_music_app/src/models/song_model.dart';
+import 'package:vibe_music_app/src/screens/search/components/search_bar.dart';
+import 'package:vibe_music_app/src/screens/search/components/search_button.dart';
+import 'package:vibe_music_app/src/screens/search/components/search_results_list.dart';
 
 /// 搜索屏幕
 /// 用于搜索歌曲
@@ -80,118 +83,53 @@ class _SearchScreenState extends State<SearchScreen> {
     _searchSongs(loadMore: true);
   }
 
+  /// 清除搜索
+  void _clearSearch() {
+    _searchController.clear();
+    setState(() {
+      _searchKeyword = '';
+      _searchResults = [];
+    });
+  }
+
+  /// 处理搜索结果点击
+  void _handleResultTap(Song song) {
+    final musicProvider = Provider.of<MusicProvider>(context, listen: false);
+    musicProvider.playSong(song, playlist: _searchResults);
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const PlayerScreen()),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Search'),
+        title: Text('搜索'),
       ),
       body: Column(
         children: [
-          // Search Bar
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: TextField(
-              controller: _searchController,
-              decoration: InputDecoration(
-                hintText: 'Search songs, artists...',
-                prefixIcon: Icon(Icons.search),
-                suffixIcon: IconButton(
-                  icon: Icon(Icons.clear),
-                  onPressed: () {
-                    _searchController.clear();
-                    setState(() {
-                      _searchKeyword = '';
-                      _searchResults = [];
-                    });
-                  },
-                ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(24),
-                ),
-                filled: true,
-                fillColor:
-                    Theme.of(context).colorScheme.surfaceContainerHighest,
-              ),
-              onChanged: (value) {
-                _searchKeyword = value;
-              },
-              onSubmitted: (_) {
-                _searchSongs();
-              },
-            ),
+          // 搜索栏
+          CustomSearchBar(
+            controller: _searchController,
+            searchKeyword: _searchKeyword,
+            onSearchKeywordChanged: (value) {
+              _searchKeyword = value;
+            },
+            onClearSearch: _clearSearch,
+            onSubmitSearch: _searchSongs,
           ),
-          // Search Button
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: SizedBox(
-              width: double.infinity,
-              height: 48,
-              child: ElevatedButton.icon(
-                onPressed: _searchSongs,
-                icon: Icon(Icons.search),
-                label: Text('Search'),
-              ),
-            ),
+          // 搜索按钮
+          SearchButton(
+            onSearch: _searchSongs,
           ),
           const SizedBox(height: 16),
-          // Results
-          Expanded(
-            child: _isSearching
-                ? const Center(child: CircularProgressIndicator())
-                : _searchResults.isEmpty
-                    ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.music_note,
-                              size: 64,
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .onSurfaceVariant,
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                              'Search for songs',
-                              style: Theme.of(context).textTheme.bodyLarge,
-                            ),
-                          ],
-                        ),
-                      )
-                    : ListView.builder(
-                        controller: _scrollController,
-                        itemCount: _searchResults.length,
-                        itemBuilder: (context, index) {
-                          final song = _searchResults[index];
-                          final coverUrl = song.coverUrl;
-                          return ListTile(
-                            leading: CircleAvatar(
-                              backgroundImage: coverUrl != null
-                                  ? NetworkImage(coverUrl)
-                                  : null,
-                              child: coverUrl == null
-                                  ? Icon(Icons.music_note)
-                                  : null,
-                            ),
-                            title: Text(song.songName ?? 'Unknown Song'),
-                            subtitle: Text(song.artistName ?? 'Unknown Artist'),
-                            trailing: Icon(Icons.play_arrow),
-                            onTap: () {
-                              final musicProvider = Provider.of<MusicProvider>(
-                                  context,
-                                  listen: false);
-                              musicProvider.playSong(song,
-                                  playlist: _searchResults);
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) => const PlayerScreen()),
-                              );
-                            },
-                          );
-                        },
-                      ),
+          // 搜索结果列表
+          SearchResultsList(
+            isSearching: _isSearching,
+            searchResults: _searchResults,
+            onResultTap: _handleResultTap,
           ),
         ],
       ),

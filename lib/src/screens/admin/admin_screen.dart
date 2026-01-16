@@ -1,7 +1,11 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:vibe_music_app/src/services/api_service.dart';
+import 'package:vibe_music_app/src/screens/admin/components/user_list.dart';
+import 'package:vibe_music_app/src/screens/admin/components/song_list.dart';
 
+/// 管理面板屏幕
+/// 用于管理用户和歌曲
 class AdminScreen extends StatefulWidget {
   const AdminScreen({super.key});
 
@@ -10,22 +14,43 @@ class AdminScreen extends StatefulWidget {
 }
 
 class _AdminScreenState extends State<AdminScreen> {
+  /// 当前选中的标签页
   int _currentTab = 0;
+
+  /// 是否正在加载数据
   bool _isLoading = false;
+
+  /// 错误消息
   String? _errorMessage;
 
-  // User management
+  /// 用户管理
   List<dynamic> _users = [];
+
+  /// 用户页码
   int _userPage = 1;
+
+  /// 用户总数
   int _userTotal = 0;
+
+  /// 用户每页大小
   final int _userPageSize = 10;
+
+  /// 用户搜索控制器
   final TextEditingController _userSearchController = TextEditingController();
 
-  // Song management
+  /// 歌曲管理
   List<dynamic> _songs = [];
+
+  /// 歌曲页码
   int _songPage = 1;
+
+  /// 歌曲总数
   int _songTotal = 0;
+
+  /// 歌曲每页大小
   final int _songPageSize = 10;
+
+  /// 歌曲搜索控制器
   final TextEditingController _songSearchController = TextEditingController();
 
   @override
@@ -69,17 +94,17 @@ class _AdminScreenState extends State<AdminScreen> {
           });
         } else {
           setState(() {
-            _errorMessage = data['msg'] ?? 'Failed to load users';
+            _errorMessage = data['msg'] ?? '加载用户失败';
           });
         }
       } else {
         setState(() {
-          _errorMessage = 'Network error: ${response.statusCode}';
+          _errorMessage = '网络错误: ${response.statusCode}';
         });
       }
     } catch (e) {
       setState(() {
-        _errorMessage = 'Error: $e';
+        _errorMessage = '错误: $e';
       });
     }
 
@@ -123,17 +148,17 @@ class _AdminScreenState extends State<AdminScreen> {
           });
         } else {
           setState(() {
-            _errorMessage = data['msg'] ?? 'Failed to load songs';
+            _errorMessage = data['msg'] ?? '加载歌曲失败';
           });
         }
       } else {
         setState(() {
-          _errorMessage = 'Network error: ${response.statusCode}';
+          _errorMessage = '网络错误: ${response.statusCode}';
         });
       }
     } catch (e) {
       setState(() {
-        _errorMessage = 'Error: $e';
+        _errorMessage = '错误: $e';
       });
     }
 
@@ -142,11 +167,33 @@ class _AdminScreenState extends State<AdminScreen> {
     });
   }
 
+  /// 清除用户搜索
+  void _clearUserSearch() {
+    _userSearchController.clear();
+    _loadUsers();
+  }
+
+  /// 清除歌曲搜索
+  void _clearSongSearch() {
+    _songSearchController.clear();
+    _loadSongs();
+  }
+
+  /// 处理删除用户
+  void _handleDeleteUser(dynamic user) {
+    _showDeleteUserDialog(user);
+  }
+
+  /// 处理删除歌曲
+  void _handleDeleteSong(dynamic song) {
+    _showDeleteSongDialog(song);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Admin Panel'),
+        title: Text('管理面板'),
         actions: [
           IconButton(
             icon: Icon(Icons.refresh),
@@ -162,7 +209,7 @@ class _AdminScreenState extends State<AdminScreen> {
       ),
       body: Column(
         children: [
-          // Tab Bar
+          // 标签栏
           TabBar(
             onTap: (index) {
               setState(() {
@@ -175,237 +222,79 @@ class _AdminScreenState extends State<AdminScreen> {
               });
             },
             tabs: const [
-              Tab(text: 'Users'),
-              Tab(text: 'Songs'),
+              Tab(text: '用户'),
+              Tab(text: '歌曲'),
             ],
           ),
-          // Content
+          // 内容
           Expanded(
-            child: _currentTab == 0 ? _buildUserTab() : _buildSongTab(),
+            child: _currentTab == 0
+                ? UserList(
+                    users: _users,
+                    isLoading: _isLoading,
+                    searchController: _userSearchController,
+                    onSearch: _loadUsers,
+                    onClearSearch: _clearUserSearch,
+                    onDeleteUser: _handleDeleteUser,
+                  )
+                : SongList(
+                    songs: _songs,
+                    isLoading: _isLoading,
+                    searchController: _songSearchController,
+                    onSearch: _loadSongs,
+                    onClearSearch: _clearSongSearch,
+                    onDeleteSong: _handleDeleteSong,
+                  ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildUserTab() {
-    return Column(
-      children: [
-        // Search
-        Padding(
-          padding: const EdgeInsets.all(16),
-          child: TextField(
-            controller: _userSearchController,
-            decoration: InputDecoration(
-              hintText: 'Search users...',
-              prefixIcon: Icon(Icons.search),
-              suffixIcon: IconButton(
-                icon: Icon(Icons.clear),
-                onPressed: () {
-                  _userSearchController.clear();
-                  _loadUsers();
-                },
-              ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
-            onSubmitted: (_) => _loadUsers(),
-          ),
-        ),
-        // User List
-        Expanded(
-          child: _isLoading && _users.isEmpty
-              ? const Center(child: CircularProgressIndicator())
-              : _users.isEmpty
-                  ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.people,
-                            size: 64,
-                            color:
-                                Theme.of(context).colorScheme.onSurfaceVariant,
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            _userSearchController.text.isEmpty
-                                ? 'No users found'
-                                : 'No results for "${_userSearchController.text}"',
-                          ),
-                        ],
-                      ),
-                    )
-                  : ListView.builder(
-                      itemCount: _users.length,
-                      itemBuilder: (context, index) {
-                        final user = _users[index];
-                        return ListTile(
-                          leading: CircleAvatar(
-                            child: Text(
-                              (user['username']?[0] ?? 'U')
-                                  .toString()
-                                  .toUpperCase(),
-                            ),
-                          ),
-                          title: Text(user['username'] ?? 'Unknown'),
-                          subtitle: Text(user['email'] ?? ''),
-                          trailing: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Chip(
-                                label:
-                                    Text(user['role'] == 1 ? 'Admin' : 'User'),
-                                backgroundColor: user['role'] == 1
-                                    ? Theme.of(context)
-                                        .colorScheme
-                                        .primaryContainer
-                                    : Theme.of(context)
-                                        .colorScheme
-                                        .surfaceContainerHighest,
-                              ),
-                              const SizedBox(width: 8),
-                              IconButton(
-                                icon: Icon(Icons.delete, color: Colors.red),
-                                onPressed: () => _showDeleteUserDialog(user),
-                              ),
-                            ],
-                          ),
-                        );
-                      },
-                    ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSongTab() {
-    return Column(
-      children: [
-        // Search
-        Padding(
-          padding: const EdgeInsets.all(16),
-          child: TextField(
-            controller: _songSearchController,
-            decoration: InputDecoration(
-              hintText: 'Search songs...',
-              prefixIcon: Icon(Icons.search),
-              suffixIcon: IconButton(
-                icon: Icon(Icons.clear),
-                onPressed: () {
-                  _songSearchController.clear();
-                  _loadSongs();
-                },
-              ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
-            onSubmitted: (_) => _loadSongs(),
-          ),
-        ),
-        // Song List
-        Expanded(
-          child: _isLoading && _songs.isEmpty
-              ? const Center(child: CircularProgressIndicator())
-              : _songs.isEmpty
-                  ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.music_note,
-                            size: 64,
-                            color:
-                                Theme.of(context).colorScheme.onSurfaceVariant,
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            _songSearchController.text.isEmpty
-                                ? 'No songs found'
-                                : 'No results for "${_songSearchController.text}"',
-                          ),
-                        ],
-                      ),
-                    )
-                  : ListView.builder(
-                      itemCount: _songs.length,
-                      itemBuilder: (context, index) {
-                        final song = _songs[index];
-                        return ListTile(
-                          leading: CircleAvatar(
-                            backgroundImage: song['coverUrl'] != null
-                                ? NetworkImage(song['coverUrl'])
-                                : null,
-                            child: song['coverUrl'] == null
-                                ? Icon(Icons.music_note)
-                                : null,
-                          ),
-                          title: Text(song['songName'] ?? 'Unknown Song'),
-                          subtitle:
-                              Text(song['artistName'] ?? 'Unknown Artist'),
-                          trailing: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text('${song['playCount'] ?? 0} plays'),
-                              const SizedBox(width: 8),
-                              IconButton(
-                                icon: Icon(Icons.delete, color: Colors.red),
-                                onPressed: () => _showDeleteSongDialog(song),
-                              ),
-                            ],
-                          ),
-                        );
-                      },
-                    ),
-        ),
-      ],
-    );
-  }
-
+  /// 显示删除用户对话框
   void _showDeleteUserDialog(dynamic user) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Delete User'),
-        content: Text('Are you sure you want to delete "${user['username']}"?'),
+        title: Text('删除用户'),
+        content: Text('确定要删除 "${user['username']}" 吗？'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('Cancel'),
+            child: Text('取消'),
           ),
           ElevatedButton(
             onPressed: () async {
               Navigator.pop(context);
-              // Implement delete user logic
+              // 实现删除用户逻辑
             },
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: Text('Delete'),
+            child: Text('删除'),
           ),
         ],
       ),
     );
   }
 
+  /// 显示删除歌曲对话框
   void _showDeleteSongDialog(dynamic song) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Delete Song'),
-        content: Text('Are you sure you want to delete "${song['songName']}"?'),
+        title: Text('删除歌曲'),
+        content: Text('确定要删除 "${song['songName']}" 吗？'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('Cancel'),
+            child: Text('取消'),
           ),
           ElevatedButton(
             onPressed: () async {
               Navigator.pop(context);
-              // Implement delete song logic
+              // 实现删除歌曲逻辑
             },
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: Text('Delete'),
+            child: Text('删除'),
           ),
         ],
       ),

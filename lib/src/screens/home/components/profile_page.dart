@@ -5,6 +5,7 @@ import 'package:vibe_music_app/src/providers/auth_provider.dart';
 import 'package:vibe_music_app/src/screens/auth/login_screen.dart';
 import 'package:vibe_music_app/src/screens/admin/admin_screen.dart';
 
+/// 个人中心页面
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
 
@@ -13,40 +14,41 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
-  bool _isEditing = false;
-  final _formKey = GlobalKey<FormState>();
-  final TextEditingController _usernameController = TextEditingController();
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _phoneController = TextEditingController();
-  final TextEditingController _introductionController = TextEditingController();
+  bool _isEditing = false; // 是否处于编辑模式
+  final _formKey = GlobalKey<FormState>(); // 表单键
+  final TextEditingController _usernameController = TextEditingController(); // 用户名控制器
+  final TextEditingController _emailController = TextEditingController(); // 邮箱控制器
+  final TextEditingController _phoneController = TextEditingController(); // 手机号控制器
+final TextEditingController _introductionController = TextEditingController(); // 个人简介控制器
   
-  // 用于跟踪最后一次更新的用户数据，避免不必要的更新
+  /// 用于跟踪最后一次更新的用户数据，避免不必要的更新
   Map<String, String>? _lastUserInfo;
 
   @override
   void dispose() {
+    // 释放控制器资源
     _usernameController.dispose();
     _emailController.dispose();
     _phoneController.dispose();
     _introductionController.dispose();
-    super.dispose();
+  super.dispose();
   }
   
   @override
   void initState() {
     super.initState();
     // 在初始化时不调用 _updateFormFields，因为此时 context 不可用
-    // 改为在 didChangeDependencies 中调用
+  // 改为在 didChangeDependencies 中调用
   }
   
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     // 当依赖变化时更新表单（例如用户登录/登出）
-    _updateFormFields();
+  _updateFormFields();
   }
   
-  // 更新表单字段，只有当用户数据真正变化时才更新
+  /// 更新表单字段，只有当用户数据真正变化时才更新
   void _updateFormFields() {
     final authProvider = Provider.of<AuthProvider>(context);
     if (authProvider.user != null) {
@@ -54,7 +56,7 @@ class _ProfilePageState extends State<ProfilePage> {
         'username': authProvider.user!.username ?? '',
         'email': authProvider.user!.email ?? '',
         'phone': authProvider.user!.phone ?? '',
-        'introduction': authProvider.user!.introduction ?? ''
+  'introduction': authProvider.user!.introduction ?? ''
       };
       
       // 只有当用户信息真正变化时才更新表单
@@ -74,7 +76,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Profile'),
+        title: const Text('个人中心'),
         actions: authProvider.isAuthenticated && !_isEditing
             ? [
                 IconButton(
@@ -98,6 +100,7 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
+  /// 构建个人资料查看页面
   Widget _buildProfileView(AuthProvider authProvider) {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -146,7 +149,7 @@ class _ProfilePageState extends State<ProfilePage> {
             authProvider.user!.phone!.isNotEmpty) ...[
           const SizedBox(height: 8),
           Text(
-            'Phone: ${authProvider.user!.phone!}',
+            '手机号: ${authProvider.user!.phone!}',
             style: Theme.of(context).textTheme.bodyMedium,
           ),
         ],
@@ -172,7 +175,7 @@ class _ProfilePageState extends State<ProfilePage> {
               );
             },
             icon: const Icon(Icons.admin_panel_settings),
-            label: const Text('Admin Panel'),
+            label: const Text('管理员面板'),
           ),
         const SizedBox(height: 16),
         ElevatedButton.icon(
@@ -185,12 +188,13 @@ class _ProfilePageState extends State<ProfilePage> {
             }
           },
           icon: const Icon(Icons.logout),
-          label: const Text('Logout'),
+          label: const Text('退出登录'),
         ),
       ],
     );
   }
 
+  /// 构建个人资料编辑表单
   Widget _buildEditProfileForm(AuthProvider authProvider) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
@@ -202,15 +206,15 @@ class _ProfilePageState extends State<ProfilePage> {
             TextFormField(
               controller: _usernameController,
               decoration: const InputDecoration(
-                labelText: 'Username',
+                labelText: '用户名',
                 border: OutlineInputBorder(),
               ),
               validator: (value) {
                 if (value == null || value.isEmpty) {
-                  return 'Please enter username';
+                  return '请输入用户名';
                 }
                 if (!RegExp(r'^[a-zA-Z0-9_-]{4,16}$').hasMatch(value)) {
-                  return 'Username must be 4-16 characters (letters, numbers, _, -)';
+                  return '用户名必须是4-16个字符（字母、数字、_、-）';
                 }
                 return null;
               },
@@ -219,15 +223,15 @@ class _ProfilePageState extends State<ProfilePage> {
             TextFormField(
               controller: _emailController,
               decoration: const InputDecoration(
-                labelText: 'Email',
+                labelText: '邮箱',
                 border: OutlineInputBorder(),
               ),
               validator: (value) {
                 if (value == null || value.isEmpty) {
-                  return 'Please enter email';
+                  return '请输入邮箱';
                 }
                 if (!RegExp(r'^[^@]+@[^@]+\.[^@]+$').hasMatch(value)) {
-                  return 'Please enter a valid email';
+                  return '请输入有效的邮箱地址';
                 }
                 return null;
               },
@@ -236,14 +240,14 @@ class _ProfilePageState extends State<ProfilePage> {
             TextFormField(
               controller: _phoneController,
               decoration: const InputDecoration(
-                labelText: 'Phone',
+                labelText: '手机号',
                 border: OutlineInputBorder(),
               ),
               validator: (value) {
                 if (value != null &&
                     value.isNotEmpty &&
                     !RegExp(r'^1[3456789]\d{9}$').hasMatch(value)) {
-                  return 'Please enter a valid phone number';
+                  return '请输入有效的手机号';
                 }
                 return null;
               },
@@ -252,7 +256,7 @@ class _ProfilePageState extends State<ProfilePage> {
             TextFormField(
               controller: _introductionController,
               decoration: const InputDecoration(
-                labelText: 'Introduction',
+                labelText: '个人简介',
                 border: OutlineInputBorder(),
                 alignLabelWithHint: true,
               ),
@@ -260,7 +264,7 @@ class _ProfilePageState extends State<ProfilePage> {
               maxLength: 100,
               validator: (value) {
                 if (value != null && value.length > 100) {
-                  return 'Introduction must be less than 100 characters';
+                  return '个人简介不能超过100个字符';
                 }
                 return null;
               },
@@ -273,8 +277,9 @@ class _ProfilePageState extends State<ProfilePage> {
                   onPressed: () {
                     setState(() {
                       _isEditing = false;
-                      // Reset form fields to current user data
+                      // 重置表单字段为当前用户数据
                       if (authProvider.user != null) {
+                           
                         _usernameController.text = authProvider.user!.username ?? '';
                         _emailController.text = authProvider.user!.email ?? '';
                         _phoneController.text = authProvider.user!.phone ?? '';
@@ -283,7 +288,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     });
                   },
                   icon: const Icon(Icons.cancel),
-                  label: const Text('Cancel'),
+                  label: const Text('取消'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.grey,
                   ),
@@ -305,20 +310,22 @@ class _ProfilePageState extends State<ProfilePage> {
                       final success = await authProvider.updateUserInfo(updatedInfo);
                       if (success && mounted) {
                         setState(() {
+                              
                           _isEditing = false;
                         });
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Profile updated successfully')),
+                          const SnackBar(
+                              content: Text('个人资料更新成功')),
                         );
                       } else if (mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Failed to update profile')),
+                          const SnackBar(content: Text('更新个人资料失败')),
                         );
                       }
                     }
                   },
                   icon: const Icon(Icons.save),
-                  label: const Text('Save'),
+                  label: const Text('保存'),
                 ),
               ],
             ),
@@ -328,13 +335,14 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
+  /// 构建登录提示页面
   Widget _buildLoginPrompt() {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         const Icon(Icons.person, size: 64),
         const SizedBox(height: 16),
-        const Text('Please login to continue'),
+        const Text('请先登录'),
         const SizedBox(height: 24),
         ElevatedButton.icon(
           onPressed: () {
@@ -344,12 +352,13 @@ class _ProfilePageState extends State<ProfilePage> {
             );
           },
           icon: const Icon(Icons.login),
-          label: const Text('Login'),
+          label: const Text('登录'),
         ),
       ],
     );
   }
 
+  /// 显示图片选择选项
   void _showImagePickerOptions() {
     showModalBottomSheet(
       context: context,
@@ -359,7 +368,7 @@ class _ProfilePageState extends State<ProfilePage> {
           children: [
             ListTile(
               leading: const Icon(Icons.camera),
-              title: const Text('Take Photo'),
+              title: const Text('拍照'),
               onTap: () {
                 Navigator.pop(context);
                 _pickImage(ImageSource.camera);
@@ -367,7 +376,7 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
             ListTile(
               leading: const Icon(Icons.photo_library),
-              title: const Text('Choose from Gallery'),
+              title: const Text('从相册选择'),
               onTap: () {
                 Navigator.pop(context);
                 _pickImage(ImageSource.gallery);
@@ -379,6 +388,7 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
+  /// 选择图片
   Future<void> _pickImage(ImageSource source) async {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     try {
@@ -391,25 +401,25 @@ class _ProfilePageState extends State<ProfilePage> {
       );
 
       if (pickedFile != null) {
-        // Read image bytes instead of path
+        // 读取图片字节而不是路径
         final bytes = await pickedFile.readAsBytes();
         final success = await authProvider.updateUserAvatar(bytes);
 
         if (success && mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Avatar updated successfully')),
+            const SnackBar(content: Text('头像更新成功')),
           );
         } else if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Failed to update avatar')),
+            const SnackBar(content: Text('更新头像失败')),
           );
         }
       }
     } catch (e) {
-      print('Error picking image: $e');
+      print('选择图片错误: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to pick image')),
+          const SnackBar(content: Text('选择图片失败')),
         );
       }
     }

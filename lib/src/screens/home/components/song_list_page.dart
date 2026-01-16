@@ -10,6 +10,7 @@ import 'package:vibe_music_app/src/screens/auth/login_screen.dart';
 import 'package:vibe_music_app/src/models/song_model.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 
+/// 歌曲列表页面
 class SongListPage extends StatefulWidget {
   const SongListPage({super.key});
 
@@ -17,16 +18,17 @@ class SongListPage extends StatefulWidget {
   State<SongListPage> createState() => _SongListPageState();
 }
 
+/// 歌曲列表类型枚举
 enum SongListType {
-  recommended,
-  favorite,
+  recommended, // 推荐歌曲
+  favorite,    // 收藏歌曲
 }
 
-// 模拟轮播图数据
+/// 轮播图数据模型
 class CarouselItem {
-  final String imageUrl;
-  final String title;
-  final String description;
+  final String imageUrl; // 图片URL
+  final String title;     // 标题
+  final String description; // 描述
 
   CarouselItem({
     required this.imageUrl,
@@ -35,11 +37,11 @@ class CarouselItem {
   });
 }
 
-// 模拟歌单数据
+/// 歌单数据模型
 class PlaylistItem {
-  final String imageUrl;
-  final String title;
-  final String playCount;
+  final String imageUrl; // 图片URL
+  final String title;     // 标题
+  final String playCount; // 播放次数
 
   PlaylistItem({
     required this.imageUrl,
@@ -49,10 +51,10 @@ class PlaylistItem {
 }
 
 class _SongListPageState extends State<SongListPage> {
-  late Future<List<Song>> _futureSongs;
-  final SongListType _currentType = SongListType.recommended;
+  late Future<List<Song>> _futureSongs; // 歌曲数据未来
+  final SongListType _currentType = SongListType.recommended; // 当前歌曲列表类型
 
-  // 轮播图数据
+  /// 轮播图数据
   final List<CarouselItem> _carouselItems = [
     CarouselItem(
       imageUrl: 'https://picsum.photos/id/1015/800/400',
@@ -71,7 +73,7 @@ class _SongListPageState extends State<SongListPage> {
     ),
   ];
 
-  // 推荐歌单数据
+  /// 推荐歌单数据
   final List<PlaylistItem> _recommendedPlaylists = [
     PlaylistItem(
       imageUrl: 'https://picsum.photos/id/1/300/300',
@@ -112,6 +114,7 @@ class _SongListPageState extends State<SongListPage> {
     _loadSongs();
   }
 
+  /// 加载歌曲数据
   void _loadSongs() {
     final musicProvider = Provider.of<MusicProvider>(context, listen: false);
     if (_currentType == SongListType.recommended) {
@@ -174,7 +177,7 @@ class _SongListPageState extends State<SongListPage> {
     );
   }
 
-  // 构建轮播图
+  /// 构建轮播图
   Widget _buildCarousel() {
     return Padding(
       padding: const EdgeInsets.all(12.0),
@@ -251,7 +254,7 @@ class _SongListPageState extends State<SongListPage> {
     );
   }
 
-  // 构建推荐歌单
+  /// 构建推荐歌单
   Widget _buildRecommendedPlaylists() {
     final screenWidth = MediaQuery.of(context).size.width;
     final isSmallScreen = screenWidth < 375; // 针对小屏设备进行特殊处理
@@ -367,7 +370,7 @@ class _SongListPageState extends State<SongListPage> {
     );
   }
 
-  // 构建热门歌曲
+  /// 构建热门歌曲
   Widget _buildPopularSongs(bool isSmallScreen) {
     return Padding(
       padding: const EdgeInsets.all(12.0),

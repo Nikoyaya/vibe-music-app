@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:vibe_music_app/src/providers/music_provider.dart';
 import 'package:vibe_music_app/src/providers/auth_provider.dart';
 import 'package:vibe_music_app/src/screens/auth/login_screen.dart';
+import 'package:vibe_music_app/src/screens/player/components/player_cover_art.dart';
+import 'package:vibe_music_app/src/screens/player/components/player_song_info.dart';
+import 'package:vibe_music_app/src/screens/player/components/player_progress_bar.dart';
+import 'package:vibe_music_app/src/screens/player/components/player_controls.dart';
+import 'package:vibe_music_app/src/screens/player/components/player_volume_controls.dart';
+import 'package:vibe_music_app/src/screens/player/components/player_playlist.dart';
 
 /// 播放器屏幕
 /// 用于播放音乐和控制播放状态
@@ -128,253 +133,63 @@ class _PlayerScreenState extends State<PlayerScreen> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          // Album Art
-                          Container(
-                            width: 250,
-                            height: 250,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(16),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.3),
-                                  blurRadius: 20,
-                                  offset: const Offset(0, 10),
-                                ),
-                              ],
-                            ),
-                            child: musicProvider.currentSong?.coverUrl != null
-                                ? ClipRRect(
-                                    borderRadius: BorderRadius.circular(16),
-                                    child: CachedNetworkImage(
-                                      imageUrl:
-                                          musicProvider.currentSong!.coverUrl!,
-                                      fit: BoxFit.cover,
-                                      placeholder: (context, url) => Container(
-                                        decoration: BoxDecoration(
-                                          color: Theme.of(context)
-                                              .colorScheme
-                                              .surfaceContainerHighest,
-                                          borderRadius:
-                                              BorderRadius.circular(16),
-                                        ),
-                                        child: const Center(
-                                          child: CircularProgressIndicator(),
-                                        ),
-                                      ),
-                                      errorWidget: (context, url, error) =>
-                                          Container(
-                                        decoration: BoxDecoration(
-                                          color: Theme.of(context)
-                                              .colorScheme
-                                              .primaryContainer,
-                                          borderRadius:
-                                              BorderRadius.circular(16),
-                                        ),
-                                        child:
-                                            Icon(Icons.music_note, size: 100),
-                                      ),
-                                    ),
-                                  )
-                                : Container(
-                                    decoration: BoxDecoration(
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .primaryContainer,
-                                      borderRadius: BorderRadius.circular(16),
-                                    ),
-                                    child: Icon(Icons.music_note, size: 100),
-                                  ),
+                          // 专辑封面
+                          PlayerCoverArt(
+                            coverUrl: musicProvider.currentSong?.coverUrl,
                           ),
                           const SizedBox(height: 32),
-                          // Song Info
-                          Text(
-                            musicProvider.currentSong?.songName ??
-                                'Unknown Song',
-                            style: Theme.of(context).textTheme.headlineSmall,
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            musicProvider.currentSong?.artistName ??
-                                'Unknown Artist',
-                            style:
-                                Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .onSurfaceVariant,
-                                    ),
+                          // 歌曲信息
+                          PlayerSongInfo(
+                            songName: musicProvider.currentSong?.songName,
+                            artistName: musicProvider.currentSong?.artistName,
                           ),
                           const SizedBox(height: 32),
-                          // Progress Bar - 使用StreamBuilder只监听进度变化
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 24),
-                            child: StreamBuilder<Duration>(
-                              stream: musicProvider.positionStream,
-                              builder: (context, positionSnapshot) {
-                                return StreamBuilder<Duration>(
-                                  stream: musicProvider.durationStream,
-                                  builder: (context, durationSnapshot) {
-                                    final position =
-                                        positionSnapshot.data ?? Duration.zero;
-                                    final duration =
-                                        durationSnapshot.data ?? Duration.zero;
+                          // 进度条 - 使用StreamBuilder只监听进度变化
+                          StreamBuilder<Duration>(
+                            stream: musicProvider.positionStream,
+                            builder: (context, positionSnapshot) {
+                              final position = positionSnapshot.data ?? Duration.zero;
+                              final duration = musicProvider.duration;
 
-                                    return Column(
-                                      children: [
-                                        Slider(
-                                          value: position.inSeconds
-                                              .toDouble()
-                                              .clamp(
-                                                  0.0,
-                                                  duration.inSeconds
-                                                      .toDouble()
-                                                      .clamp(1.0,
-                                                          double.infinity)),
-                                          max: duration.inSeconds
-                                              .toDouble()
-                                              .clamp(1.0, double.infinity),
-                                          onChanged: (value) {
-                                            musicProvider.seekTo(Duration(
-                                                seconds: value.toInt()));
-                                          },
-                                        ),
-                                        Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceBetween,
-                                          children: [
-                                            Text(_formatDuration(position)),
-                                            Text(_formatDuration(duration)),
-                                          ],
-                                        ),
-                                      ],
-                                    );
-                                  },
-                                );
-                              },
-                            ),
+                              return PlayerProgressBar(
+                                position: position,
+                                duration: duration,
+                                onSeek: (duration) {
+                                  musicProvider.seekTo(duration);
+                                },
+                              );
+                            },
                           ),
                           const SizedBox(height: 24),
-                          // Controls
-                          Container(
-                            padding:
-                                const EdgeInsets.symmetric(horizontal: 16.0),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                // Shuffle
-                                IconButton(
-                                  icon: Icon(
-                                    Icons.shuffle,
-                                    color: musicProvider.isShuffle
-                                        ? Theme.of(context).colorScheme.primary
-                                        : Theme.of(context)
-                                            .colorScheme
-                                            .onSurfaceVariant,
-                                  ),
-                                  onPressed: () =>
-                                      musicProvider.toggleShuffle(),
-                                ),
-                                const SizedBox(width: 4),
-                                // Previous
-                                IconButton(
-                                  icon: Icon(Icons.skip_previous, size: 32),
-                                  onPressed: () => musicProvider.previous(),
-                                ),
-                                const SizedBox(width: 12),
-                                // Play/Pause
-                                FloatingActionButton(
-                                  onPressed: () {
-                                    if (musicProvider.playerState ==
-                                        AppPlayerState.playing) {
-                                      musicProvider.pause();
-                                    } else {
-                                      musicProvider.play();
-                                    }
-                                  },
-                                  child: Icon(
-                                    musicProvider.playerState ==
-                                            AppPlayerState.playing
-                                        ? Icons.pause
-                                        : Icons.play_arrow,
-                                    size: 36,
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                // Next
-                                IconButton(
-                                  icon: Icon(Icons.skip_next, size: 32),
-                                  onPressed: () => musicProvider.next(),
-                                ),
-                                const SizedBox(width: 4),
-                                // Volume Control - 只显示按钮，点击弹出音量控制
-                                StreamBuilder<double>(
-                                  stream: musicProvider.volumeStream,
-                                  initialData: musicProvider.volume,
-                                  builder: (context, volumeSnapshot) {
-                                    final currentVolume =
-                                        volumeSnapshot.data ?? 0.5;
-                                    return IconButton(
-                                      icon: Icon(
-                                        currentVolume > 0.5
-                                            ? Icons.volume_up
-                                            : currentVolume > 0
-                                                ? Icons.volume_down
-                                                : Icons.volume_off,
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .onSurfaceVariant,
-                                      ),
-                                      onPressed: () {
-                                        setState(() {
-                                          _showVolumeIndicator =
-                                              !_showVolumeIndicator;
-                                        });
-                                      },
-                                    );
-                                  },
-                                ),
-                                const SizedBox(width: 4),
-                                // Repeat
-                                IconButton(
-                                  icon: Icon(
-                                    musicProvider.repeatMode == RepeatMode.one
-                                        ? Icons.repeat_one
-                                        : Icons.repeat,
-                                    color: musicProvider.repeatMode !=
-                                            RepeatMode.none
-                                        ? Theme.of(context).colorScheme.primary
-                                        : Theme.of(context)
-                                            .colorScheme
-                                            .onSurfaceVariant,
-                                  ),
-                                  onPressed: () => musicProvider.toggleRepeat(),
-                                ),
-                              ],
-                            ),
+                          // 控制按钮
+                          PlayerControls(
+                            isPlaying: musicProvider.playerState == AppPlayerState.playing,
+                            isShuffle: musicProvider.isShuffle,
+                            repeatMode: musicProvider.repeatMode == RepeatMode.one ? 'one' : musicProvider.repeatMode == RepeatMode.all ? 'all' : 'none',
+                            volume: musicProvider.volume,
+                            onPlay: musicProvider.play,
+                            onPause: musicProvider.pause,
+                            onPrevious: musicProvider.previous,
+                            onNext: musicProvider.next,
+                            onToggleShuffle: musicProvider.toggleShuffle,
+                            onToggleRepeat: musicProvider.toggleRepeat,
+                            onToggleVolumeControls: () {
+                              setState(() {
+                                _showVolumeIndicator = !_showVolumeIndicator;
+                              });
+                            },
                           ),
-                          // Volume Control - 显示在单独的行，避免水平溢出
+                          // 音量控制 - 显示在单独的行，避免水平溢出
                           if (_showVolumeIndicator)
                             StreamBuilder<double>(
                               stream: musicProvider.volumeStream,
                               initialData: musicProvider.volume,
                               builder: (context, volumeSnapshot) {
-                                return Container(
-                                  padding: const EdgeInsets.only(top: 8.0),
-                                  child: SizedBox(
-                                    width: 150,
-                                    height: 40,
-                                    child: Slider(
-                                      value: volumeSnapshot.data ?? 0.5,
-                                      min: 0.0,
-                                      max: 1.0,
-                                      activeColor:
-                                          Theme.of(context).colorScheme.primary,
-                                      onChanged: (value) {
-                                        musicProvider.setVolume(value);
-                                      },
-                                    ),
-                                  ),
+                                return PlayerVolumeControls(
+                                  volume: volumeSnapshot.data ?? 0.5,
+                                  onVolumeChanged: (value) {
+                                    musicProvider.setVolume(value);
+                                  },
                                 );
                               },
                             ),
@@ -386,171 +201,51 @@ class _PlayerScreenState extends State<PlayerScreen> {
               ),
             ),
           ),
-          // Playlist (expandable)
+          // 播放列表（可展开）
           if (_isExpanded && musicProvider.playlist.isNotEmpty)
-            Positioned(
-              bottom: 0,
-              left: 0,
-              right: 0,
-              child: Container(
-                constraints: BoxConstraints(
-                  maxHeight:
-                      MediaQuery.of(context).size.height * 0.3, // 最大高度为屏幕高度的30%
-                ),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                  borderRadius:
-                      const BorderRadius.vertical(top: Radius.circular(16)),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.1),
-                      blurRadius: 10,
-                      offset: const Offset(0, -5),
-                    ),
-                  ],
-                ),
-                child: ListView.separated(
-                  itemCount: musicProvider.playlist.length,
-                  separatorBuilder: (context, index) => Divider(
-                    height: 1,
-                    thickness: 1,
-                    color: Theme.of(context).colorScheme.outlineVariant,
-                    indent: 72,
-                    endIndent: 16,
-                  ),
-                  itemBuilder: (context, index) {
-                    final song = musicProvider.playlist[index];
-                    final isCurrent = index == musicProvider.currentIndex;
-                    return AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      color: isCurrent
-                          ? Theme.of(context)
-                              .colorScheme
-                              .primaryContainer
-                              .withValues(alpha: 0.5)
-                          : Colors.transparent,
-                      child: ListTile(
-                        leading: isCurrent
-                            ? Container(
-                                width: 40,
-                                height: 40,
-                                decoration: BoxDecoration(
-                                  color: Theme.of(context).colorScheme.primary,
-                                  shape: BoxShape.circle,
-                                ),
-                                child: Icon(Icons.play_arrow,
-                                    color: Colors.white, size: 20),
-                              )
-                            : Container(
-                                width: 40,
-                                height: 40,
-                                alignment: Alignment.center,
-                                child: Text(
-                                  '${index + 1}',
-                                  style: TextStyle(
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .onSurfaceVariant,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ),
-                        title: Text(
-                          song.songName ?? 'Unknown',
-                          style: TextStyle(
-                            color: isCurrent
-                                ? Theme.of(context).colorScheme.primary
-                                : Theme.of(context).colorScheme.onSurface,
-                            fontWeight:
-                                isCurrent ? FontWeight.bold : FontWeight.normal,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        subtitle: Text(
-                          song.artistName ?? '',
-                          style: TextStyle(
-                            color: isCurrent
-                                ? Theme.of(context).colorScheme.primary
-                                : Theme.of(context)
-                                    .colorScheme
-                                    .onSurfaceVariant,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            IconButton(
-                              icon: Icon(
-                                musicProvider.isSongFavorited(song)
-                                    ? Icons.favorite
-                                    : Icons.favorite_border,
-                                color: musicProvider.isSongFavorited(song)
-                                    ? Theme.of(context).colorScheme.primary
-                                    : null,
-                                size: 18,
-                              ),
-                              onPressed: () async {
-                                final authProvider = Provider.of<AuthProvider>(
-                                    context,
-                                    listen: false);
-                                if (!authProvider.isAuthenticated) {
-                                  // 提示用户登录
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text('请先登录')),
-                                  );
-                                  // 导航到登录页面
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                        builder: (context) =>
-                                            const LoginScreen()),
-                                  );
-                                  return;
-                                }
+            PlayerPlaylist(
+              playlist: musicProvider.playlist,
+              currentIndex: musicProvider.currentIndex,
+              onSongTap: (index) {
+                musicProvider.playSong(musicProvider.playlist[index]);
+              },
+              onToggleFavorite: (song) async {
+                final authProvider = Provider.of<AuthProvider>(
+                    context,
+                    listen: false);
+                if (!authProvider.isAuthenticated) {
+                  // 提示用户登录
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('请先登录')),
+                  );
+                  // 导航到登录页面
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) =>
+                            const LoginScreen()),
+                  );
+                  return;
+                }
 
-                                bool success;
-                                if (musicProvider.isSongFavorited(song)) {
-                                  success = await musicProvider
-                                      .removeFromFavorites(song);
-                                  if (success) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(content: Text('已取消收藏')),
-                                    );
-                                  }
-                                } else {
-                                  success =
-                                      await musicProvider.addToFavorites(song);
-                                  if (success) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(content: Text('已添加到收藏')),
-                                    );
-                                  }
-                                }
-                              },
-                              padding: EdgeInsets.zero,
-                            ),
-                            Text(
-                              song.formattedDuration,
-                              style: TextStyle(
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .onSurfaceVariant,
-                                fontSize: 12,
-                              ),
-                            ),
-                          ],
-                        ),
-                        onTap: () {
-                          musicProvider.playSong(song);
-                        },
-                        contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 4),
-                      ),
+                bool success;
+                if (musicProvider.isSongFavorited(song)) {
+                  success = await musicProvider.removeFromFavorites(song);
+                  if (success) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('已取消收藏')),
                     );
-                  },
-                ),
-              ),
+                  }
+                } else {
+                  success = await musicProvider.addToFavorites(song);
+                  if (success) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('已添加到收藏')),
+                    );
+                  }
+                }
+              },
+              isSongFavorited: (song) => musicProvider.isSongFavorited(song),
             ),
           // 音量指示器 - 使用StreamBuilder监听音量变化
           if (_showVolumeIndicator)
@@ -570,7 +265,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
                       borderRadius: BorderRadius.circular(12),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.3),
+                          color: Colors.black.withAlpha(76), // 使用withAlpha替代withValues
                           blurRadius: 10,
                           offset: const Offset(0, 5),
                         ),
@@ -601,11 +296,5 @@ class _PlayerScreenState extends State<PlayerScreen> {
         ],
       ),
     );
-  }
-
-  String _formatDuration(Duration duration) {
-    final minutes = duration.inMinutes;
-    final seconds = duration.inSeconds % 60;
-    return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
   }
 }

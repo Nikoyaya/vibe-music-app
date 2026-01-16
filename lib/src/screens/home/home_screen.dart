@@ -57,13 +57,13 @@ class _HomeScreenState extends State<HomeScreen> {
                     },
                     destinations: [
                       NavigationDestination(
-                          icon: Icon(Icons.music_note), label: 'Songs'),
+                          icon: Icon(Icons.music_note), label: '歌曲'),
                       NavigationDestination(
-                          icon: Icon(Icons.search), label: 'Search'),
+                          icon: Icon(Icons.search), label: '搜索'),
                       NavigationDestination(
-                          icon: Icon(Icons.favorite), label: 'Favorites'),
+                          icon: Icon(Icons.favorite), label: '收藏'),
                       NavigationDestination(
-                          icon: Icon(Icons.person), label: 'Profile'),
+                          icon: Icon(Icons.person), label: '我的'),
                     ],
                     elevation: 0,
                     backgroundColor: Colors.transparent,

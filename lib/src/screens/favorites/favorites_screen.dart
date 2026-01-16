@@ -146,7 +146,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
   }
 
   Widget _buildFavoriteSongsList(MusicProvider musicProvider) {
-    // Show loading indicator if we're on the first page and still loading
+    // 如果是第一页且仍在加载，显示加载指示器
     if (_allSongs.isEmpty && _isLoadingMore) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -159,10 +159,9 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
 
     return ListView.builder(
       controller: _scrollController,
-      itemCount: _allSongs.length +
-          (_isLoadingMore ? 1 : 0), // Add 1 for loading indicator
+      itemCount: _allSongs.length + (_isLoadingMore ? 1 : 0), // 为加载指示器添加1个额外项
       itemBuilder: (context, index) {
-        // If we've reached the end and are loading more, show a loading indicator
+        // 如果已到达末尾且正在加载更多，显示加载指示器
         if (index == _allSongs.length) {
           return const Padding(
             padding: EdgeInsets.all(16.0),
@@ -178,8 +177,8 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                 coverUrl != null ? CachedNetworkImageProvider(coverUrl) : null,
             child: coverUrl == null ? Icon(Icons.music_note) : null,
           ),
-          title: Text(song.songName ?? 'Unknown Song'),
-          subtitle: Text(song.artistName ?? 'Unknown Artist'),
+          title: Text(song.songName ?? '未知歌曲'),
+          subtitle: Text(song.artistName ?? '未知艺术家'),
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
             children: [

@@ -34,20 +34,20 @@ class ApiService {
   /// [data]: 响应数据，可以是字符串、Map或List
   dynamic _replaceUrls(dynamic data) {
     if (data is String) {
-      // If it's a string, replace the URL
+      // 如果是字符串，替换URL
       return data.replaceAll('http://192.168.100.128', baseIp);
     } else if (data is Map) {
-      // If it's a map, recursively process each value
+      // 如果是Map，递归处理每个值
       final newMap = <String, dynamic>{};
       for (final entry in data.entries) {
         newMap[entry.key] = _replaceUrls(entry.value);
       }
       return newMap;
     } else if (data is List) {
-      // If it's a list, recursively process each item
+      // 如果是List，递归处理每个项
       return data.map((item) => _replaceUrls(item)).toList();
     }
-    // If it's not a string, map, or list, return as is
+    // 如果不是字符串、Map或List，直接返回
     return data;
   }
 
