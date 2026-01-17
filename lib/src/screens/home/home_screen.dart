@@ -30,49 +30,50 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _pages[_currentPage], // 显示当前选中的页面
-      bottomNavigationBar: Column(
-        mainAxisSize: MainAxisSize.min,
+      body: Stack(
         children: [
+          // 显示当前选中的页面
+          _pages[_currentPage],
           // 正在播放音乐的小悬浮组件
-          const CurrentlyPlayingBar(),
-          // 底部导航栏
-          SafeArea(
-            child: ClipRRect(
-              borderRadius:
-                  const BorderRadius.vertical(top: Radius.circular(20)),
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
-                child: Container(
-                  color: Theme.of(context)
-                      .colorScheme
-                      .surface
-                      .withValues(alpha: 0.8),
-                  child: NavigationBar(
-                    selectedIndex: _currentPage,
-                    onDestinationSelected: (index) {
-                      setState(() {
-                        _currentPage = index;
-                      });
-                    },
-                    destinations: [
-                      NavigationDestination(
-                          icon: Icon(Icons.music_note), label: '歌曲'),
-                      NavigationDestination(
-                          icon: Icon(Icons.search), label: '搜索'),
-                      NavigationDestination(
-                          icon: Icon(Icons.favorite), label: '收藏'),
-                      NavigationDestination(
-                          icon: Icon(Icons.person), label: '我的'),
-                    ],
-                    elevation: 0,
-                    backgroundColor: Colors.transparent,
-                  ),
-                ),
-              ),
-            ),
+          const Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: CurrentlyPlayingBar(),
           ),
         ],
+      ),
+      bottomNavigationBar: SafeArea(
+        child: Container(
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surface,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                spreadRadius: 2,
+                blurRadius: 10,
+                offset: const Offset(0, -2),
+              ),
+            ],
+          ),
+          child: NavigationBar(
+            selectedIndex: _currentPage,
+            onDestinationSelected: (index) {
+              setState(() {
+                _currentPage = index;
+              });
+            },
+            destinations: [
+              NavigationDestination(icon: Icon(Icons.music_note), label: '歌曲'),
+              NavigationDestination(icon: Icon(Icons.search), label: '搜索'),
+              NavigationDestination(icon: Icon(Icons.favorite), label: '收藏'),
+              NavigationDestination(icon: Icon(Icons.person), label: '我的'),
+            ],
+            elevation: 0,
+            backgroundColor: Colors.transparent,
+          ),
+        ),
       ),
     );
   }

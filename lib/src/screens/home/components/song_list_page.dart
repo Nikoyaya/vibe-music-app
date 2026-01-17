@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'dart:ui';
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:vibe_music_app/src/providers/auth_provider.dart';
@@ -141,50 +140,98 @@ class _SongListPageState extends State<SongListPage> {
     final isSmallScreen = screenWidth < 380;
 
     return Scaffold(
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(60),
-        child: ClipRRect(
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
-            child: Container(
-              color:
-                  Theme.of(context).colorScheme.surface.withValues(alpha: 0.8),
-              child: AppBar(
-                title: const Text('Vibe Music Player'),
-                actions: [
-                  IconButton(
-                    icon: const Icon(Icons.search),
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => const SearchScreen()),
-                      );
-                    },
-                  ),
-                ],
-                backgroundColor: Colors.transparent,
-                foregroundColor: Theme.of(context).colorScheme.onSurface,
-                shadowColor: Colors.transparent,
-                elevation: 0,
-              ),
-            ),
-          ),
-        ),
-      ),
       body: PullToRefresh(
         onRefresh: _handleRefresh,
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            // 轮播图
-            _buildCarousel(),
+        child: CustomScrollView(
+          slivers: [
+            // 可滚动的AppBar，支持渐变和消失效果
+            SliverAppBar(
+              automaticallyImplyLeading: false,
+              backgroundColor: Theme.of(context).colorScheme.surface,
+              foregroundColor: Theme.of(context).colorScheme.onSurface,
+              shadowColor: Theme.of(context).colorScheme.shadow,
+              elevation: 2,
+              shape: const RoundedRectangleBorder(
+                borderRadius: BorderRadius.vertical(
+                  bottom: Radius.circular(20),
+                ),
+              ),
+              // 配置滚动行为
+              expandedHeight: 80,
+              floating: false,
+              pinned: false,
+              snap: false,
+              // 滚动时的渐变效果
+              flexibleSpace: FlexibleSpaceBar(
+                background: Container(
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.surface,
+                    borderRadius: const BorderRadius.vertical(
+                      bottom: Radius.circular(20),
+                    ),
+                  ),
+                  child: Padding(
+                    padding:
+                        const EdgeInsets.only(left: 20, right: 20, bottom: 16),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            // 标题
+                            Text(
+                              'Vibe Music Player',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Theme.of(context).colorScheme.onSurface,
+                              ),
+                            ),
+                            // 搜索按钮
+                            IconButton(
+                              icon: const Icon(Icons.search),
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) =>
+                                          const SearchScreen()),
+                                );
+                              },
+                              color: Theme.of(context).colorScheme.onSurface,
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(minWidth: 40),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
 
-            // 推荐歌单
-            _buildRecommendedPlaylists(),
+            // 内容部分
+            SliverList(
+              delegate: SliverChildBuilderDelegate(
+                (context, index) {
+                  return Column(
+                    children: [
+                      // 轮播图
+                      _buildCarousel(),
 
-            // 热门歌曲
-            _buildPopularSongs(isSmallScreen),
+                      // 推荐歌单
+                      _buildRecommendedPlaylists(),
+
+                      // 热门歌曲
+                      _buildPopularSongs(isSmallScreen),
+                    ],
+                  );
+                },
+                childCount: 1,
+              ),
+            ),
           ],
         ),
       ),
@@ -194,10 +241,10 @@ class _SongListPageState extends State<SongListPage> {
   /// 构建轮播图
   Widget _buildCarousel() {
     return Padding(
-      padding: const EdgeInsets.all(12.0),
+      padding: const EdgeInsets.all(16.0),
       child: CarouselSlider(
         options: CarouselOptions(
-          height: 180.0,
+          height: 200.0,
           autoPlay: true,
           autoPlayInterval: const Duration(seconds: 5),
           enlargeCenterPage: true,
@@ -210,48 +257,70 @@ class _SongListPageState extends State<SongListPage> {
             builder: (BuildContext context) {
               return Container(
                 width: MediaQuery.of(context).size.width,
-                margin: const EdgeInsets.symmetric(horizontal: 5.0),
+                margin: const EdgeInsets.symmetric(horizontal: 8.0),
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12.0),
+                  borderRadius: BorderRadius.circular(16.0),
                   image: DecorationImage(
                     image: CachedNetworkImageProvider(item.imageUrl),
                     fit: BoxFit.cover,
                   ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Theme.of(context).colorScheme.shadow,
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
                 ),
                 child: Container(
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(12.0),
+                    borderRadius: BorderRadius.circular(16.0),
                     gradient: LinearGradient(
                       begin: Alignment.bottomCenter,
                       end: Alignment.topCenter,
                       colors: [
-                        Colors.black.withValues(alpha: 0.8),
+                        Colors.black.withOpacity(0.8),
+                        Colors.black.withOpacity(0.4),
                         Colors.transparent,
                       ],
                     ),
                   ),
                   child: Padding(
-                    padding: const EdgeInsets.all(16.0),
+                    padding: const EdgeInsets.all(20.0),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.end,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
                           item.description,
-                          style: const TextStyle(
+                          style: TextStyle(
                             color: Colors.white,
                             fontSize: 12,
+                            shadows: [
+                              Shadow(
+                                color: Colors.black.withOpacity(0.5),
+                                offset: const Offset(0, 1),
+                                blurRadius: 2,
+                              ),
+                            ],
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
-                        const SizedBox(height: 4),
+                        const SizedBox(height: 6),
                         Text(
                           item.title,
-                          style: const TextStyle(
+                          style: TextStyle(
                             color: Colors.white,
-                            fontSize: 20,
+                            fontSize: 22,
                             fontWeight: FontWeight.bold,
+                            shadows: [
+                              Shadow(
+                                color: Colors.black.withOpacity(0.5),
+                                offset: const Offset(0, 2),
+                                blurRadius: 4,
+                              ),
+                            ],
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -273,7 +342,7 @@ class _SongListPageState extends State<SongListPage> {
     final screenWidth = MediaQuery.of(context).size.width;
     final isSmallScreen = screenWidth < 375; // 针对小屏设备进行特殊处理
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -282,23 +351,31 @@ class _SongListPageState extends State<SongListPage> {
             children: [
               Text(
                 '推荐歌单',
-                style: Theme.of(context).textTheme.headlineMedium,
+                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
               ),
-              const TextButton(
+              TextButton(
                 onPressed: null,
-                child: Text('查看更多 >'),
+                child: Text(
+                  '查看更多 >',
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.primary,
+                    fontSize: 14,
+                  ),
+                ),
               ),
             ],
           ),
-          const SizedBox(height: 12.0),
+          const SizedBox(height: 16.0),
           GridView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: isSmallScreen ? 2 : (screenWidth > 600 ? 3 : 2),
-              crossAxisSpacing: 2.0,
-              mainAxisSpacing: 2.0,
-              childAspectRatio: 1.1,
+              crossAxisSpacing: 12.0,
+              mainAxisSpacing: 16.0,
+              childAspectRatio: 0.85,
             ),
             itemCount: _recommendedPlaylists.length,
             itemBuilder: (context, index) {
@@ -310,67 +387,74 @@ class _SongListPageState extends State<SongListPage> {
                   Stack(
                     children: [
                       ClipRRect(
-                        borderRadius: BorderRadius.circular(8.0),
+                        borderRadius: BorderRadius.circular(12.0),
                         child: CachedNetworkImage(
                           imageUrl: playlist.imageUrl,
                           width: double.infinity,
-                          height: 100,
+                          height: 120,
                           fit: BoxFit.cover,
                           errorWidget: (context, url, error) => Container(
                             width: double.infinity,
-                            height: 100,
-                            color: Theme.of(context)
-                                .colorScheme
-                                .primary
-                                .withValues(alpha: 0.2),
-                            child: const Icon(
+                            height: 120,
+                            decoration: BoxDecoration(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .primary
+                                  .withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(12.0),
+                            ),
+                            child: Icon(
                               Icons.music_note,
-                              size: 30,
-                              color: Colors.grey,
+                              size: 36,
+                              color: Theme.of(context).colorScheme.primary,
                             ),
                           ),
                           placeholder: (context, url) => Container(
                             width: double.infinity,
-                            height: 100,
-                            color: Theme.of(context)
-                                .colorScheme
-                                .surfaceContainerHighest,
+                            height: 120,
+                            decoration: BoxDecoration(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .surfaceContainerHighest,
+                              borderRadius: BorderRadius.circular(12.0),
+                            ),
                             child: const Center(
                               child: CircularProgressIndicator(),
                             ),
                           ),
                         ),
                       ),
-                      const Positioned(
-                        bottom: 2.0,
-                        right: 6.0,
+                      Positioned(
+                        bottom: 8.0,
+                        right: 8.0,
                         child: _PlaylistPlayButton(),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 4.0),
+                  const SizedBox(height: 8.0),
                   SizedBox(
                     height: 50,
                     child: Text(
                       playlist.title,
                       style: isSmallScreen
-                          ? Theme.of(context)
-                              .textTheme
-                              .bodySmall
-                              ?.copyWith(fontSize: 12)
-                          : Theme.of(context)
-                              .textTheme
-                              .bodyMedium
-                              ?.copyWith(fontSize: 14),
+                          ? Theme.of(context).textTheme.bodySmall?.copyWith(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                              )
+                          : Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                              ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  const SizedBox(height: 2.0),
+                  const SizedBox(height: 4.0),
                   Text(
                     playlist.playCount,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           fontSize: isSmallScreen ? 10 : 12,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -387,15 +471,17 @@ class _SongListPageState extends State<SongListPage> {
   /// 构建热门歌曲
   Widget _buildPopularSongs(bool isSmallScreen) {
     return Padding(
-      padding: const EdgeInsets.all(12.0),
+      padding: const EdgeInsets.all(16.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             '热门歌曲',
-            style: Theme.of(context).textTheme.headlineMedium,
+            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
           ),
-          const SizedBox(height: 12.0),
+          const SizedBox(height: 16.0),
           FutureBuilder<List<Song>>(
             future: _futureSongs,
             builder: (context, snapshot) {
@@ -417,59 +503,103 @@ class _SongListPageState extends State<SongListPage> {
                 itemBuilder: (context, index) {
                   final song = songs[index];
                   final coverUrl = song.coverUrl;
-                  return Card(
+                  return Container(
                     margin:
-                        EdgeInsets.symmetric(vertical: isSmallScreen ? 4 : 6),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                        EdgeInsets.symmetric(vertical: isSmallScreen ? 6 : 8),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.surface,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Theme.of(context).colorScheme.shadow,
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
                     ),
                     child: Row(
                       children: [
-                        // 使用Container代替ListTile的leading，避免宽度问题
+                        // 歌曲排名
                         Container(
-                          margin: const EdgeInsets.only(right: 12.0),
+                          width: 36,
+                          height: 60,
+                          alignment: Alignment.center,
+                          child: Text(
+                            '${index + 1}',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: index < 3
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
+                              color: index < 3
+                                  ? Theme.of(context).colorScheme.primary
+                                  : Theme.of(context)
+                                      .colorScheme
+                                      .onSurfaceVariant,
+                            ),
+                          ),
+                        ),
+                        // 歌曲封面
+                        Container(
+                          margin: const EdgeInsets.only(right: 16.0),
                           child: ClipRRect(
-                            borderRadius: BorderRadius.circular(8.0),
+                            borderRadius: BorderRadius.circular(10.0),
                             child: coverUrl != null
                                 ? CachedNetworkImage(
                                     imageUrl: coverUrl,
-                                    width: isSmallScreen ? 40 : 48,
-                                    height: isSmallScreen ? 40 : 48,
+                                    width: isSmallScreen ? 48 : 56,
+                                    height: isSmallScreen ? 48 : 56,
                                     fit: BoxFit.cover,
                                     placeholder: (context, url) => Container(
-                                      width: isSmallScreen ? 40 : 48,
-                                      height: isSmallScreen ? 40 : 48,
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .surfaceContainerHighest,
+                                      width: isSmallScreen ? 48 : 56,
+                                      height: isSmallScreen ? 48 : 56,
+                                      decoration: BoxDecoration(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .surfaceContainerHighest,
+                                        borderRadius:
+                                            BorderRadius.circular(10.0),
+                                      ),
                                       child: const Center(
                                         child: CircularProgressIndicator(),
                                       ),
                                     ),
                                     errorWidget: (context, url, error) =>
                                         Container(
-                                      width: isSmallScreen ? 40 : 48,
-                                      height: isSmallScreen ? 40 : 48,
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .primary
-                                          .withValues(alpha: 0.2),
+                                      width: isSmallScreen ? 48 : 56,
+                                      height: isSmallScreen ? 48 : 56,
+                                      decoration: BoxDecoration(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .primary
+                                            .withOpacity(0.2),
+                                        borderRadius:
+                                            BorderRadius.circular(10.0),
+                                      ),
                                       child: Icon(
                                         Icons.music_note,
-                                        size: isSmallScreen ? 20 : 24,
+                                        size: isSmallScreen ? 24 : 28,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .primary,
                                       ),
                                     ),
                                   )
                                 : Container(
-                                    width: isSmallScreen ? 40 : 48,
-                                    height: isSmallScreen ? 40 : 48,
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .primary
-                                        .withValues(alpha: 0.2),
+                                    width: isSmallScreen ? 48 : 56,
+                                    height: isSmallScreen ? 48 : 56,
+                                    decoration: BoxDecoration(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .primary
+                                          .withOpacity(0.2),
+                                      borderRadius: BorderRadius.circular(10.0),
+                                    ),
                                     child: Icon(
                                       Icons.music_note,
-                                      size: isSmallScreen ? 20 : 24,
+                                      size: isSmallScreen ? 24 : 28,
+                                      color:
+                                          Theme.of(context).colorScheme.primary,
                                     ),
                                   ),
                           ),
@@ -482,23 +612,23 @@ class _SongListPageState extends State<SongListPage> {
                             children: [
                               Text(
                                 song.songName ?? 'Unknown Song',
-                                style: isSmallScreen
-                                    ? Theme.of(context).textTheme.titleSmall
-                                    : Theme.of(context).textTheme.titleMedium,
+                                style: TextStyle(
+                                  fontSize: isSmallScreen ? 14 : 16,
+                                  fontWeight: FontWeight.w500,
+                                  color:
+                                      Theme.of(context).colorScheme.onSurface,
+                                ),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
                               Text(
                                 song.artistName ?? 'Unknown Artist',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodyMedium
-                                    ?.copyWith(
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .onSurface
-                                          .withValues(alpha: 0.7),
-                                    ),
+                                style: TextStyle(
+                                  fontSize: isSmallScreen ? 12 : 14,
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onSurfaceVariant,
+                                ),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -519,7 +649,9 @@ class _SongListPageState extends State<SongListPage> {
                                         : Icons.favorite_border,
                                     color: musicProvider.isSongFavorited(song)
                                         ? Theme.of(context).colorScheme.primary
-                                        : null,
+                                        : Theme.of(context)
+                                            .colorScheme
+                                            .onSurfaceVariant,
                                   ),
                                   onPressed: () async {
                                     final authProvider =
@@ -570,7 +702,12 @@ class _SongListPageState extends State<SongListPage> {
                             Consumer<MusicProvider>(
                               builder: (context, musicProvider, child) {
                                 return IconButton(
-                                  icon: const Icon(Icons.play_arrow),
+                                  icon: Icon(
+                                    Icons.play_circle_outline,
+                                    size: 28,
+                                    color:
+                                        Theme.of(context).colorScheme.primary,
+                                  ),
                                   onPressed: () async {
                                     // 将整个热门歌曲列表添加到播放列表
                                     await musicProvider.playSong(song,
@@ -612,9 +749,9 @@ class _PlaylistPlayButton extends StatelessWidget {
     return Container(
       width: 28,
       height: 28,
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: Color.fromRGBO(128, 0, 128, 0.8),
+        color: Theme.of(context).colorScheme.primary.withOpacity(0.8),
       ),
       child: const Icon(
         Icons.play_arrow,
