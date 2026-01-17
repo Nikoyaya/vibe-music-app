@@ -25,6 +25,7 @@ dependencies:
   carousel_slider: ^5.0.0
   logger: ^2.0.2+1
   audio_session: ^0.2.2
+  flutter_native_splash: ^2.4.7
 
 dev_dependencies:
   flutter_test:
@@ -32,8 +33,37 @@ dev_dependencies:
   flutter_lints: ^5.0.0
   build_runner: ^2.4.8
   freezed: ^2.4.7
+  flutter_launcher_icons: "^0.14.4"
+
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/images/icons/icon.png"
+  min_sdk_android: 21 # android min sdk min:16, default 21
+  web:
+    generate: true
+    image_path: "assets/images/icons/icon.png"
+    background_color: "#hexcode"
+    theme_color: "#hexcode"
+  windows:
+    generate: true
+    image_path: "assets/images/icons/icon.png"
+
+flutter_native_splash:
+  android: true
+  ios: true
+  web: false
+ 
+  color: "#101010"
+  image: assets/images/launchBackground/launch.png
+
+  android_12:
+    color: "#101010"
+    image: assets/images/launchBackground/launch.png
+
 
 flutter:
   uses-material-design: true
   assets:
     - .env
+    - assets/images/launchBackground/launch.png
