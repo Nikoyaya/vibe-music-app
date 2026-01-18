@@ -36,6 +36,19 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
   /// 滚动控制器，用于实现下拉加载更多
   final ScrollController _scrollController = ScrollController();
 
+  /// 移除重复歌曲
+  /// [songs] 歌曲列表
+  /// 返回去重后的歌曲列表
+  List<Song> _removeDuplicateSongs(List<Song> songs) {
+    final seenIds = <int>{};
+    return songs.where((song) {
+      if (song.id == null) return true;
+      final contains = seenIds.contains(song.id);
+      seenIds.add(song.id!);
+      return !contains;
+    }).toList();
+  }
+
   @override
   void initState() {
     super.initState();
@@ -105,10 +118,18 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
     )
         .then((newSongs) {
       setState(() {
+        // 去重处理：根据歌曲ID过滤重复歌曲
+        final uniqueNewSongs = _removeDuplicateSongs(newSongs);
+
         if (_currentPage == 1) {
-          _allSongs = newSongs;
+          _allSongs = uniqueNewSongs;
         } else {
-          _allSongs.addAll(newSongs);
+          // 先过滤掉已存在的歌曲，再添加
+          final songsToAdd = uniqueNewSongs
+              .where((song) =>
+                  !_allSongs.any((existingSong) => existingSong.id == song.id))
+              .toList();
+          _allSongs.addAll(songsToAdd);
         }
 
         // If we got fewer songs than requested, we've reached the end

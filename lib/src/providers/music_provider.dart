@@ -403,7 +403,7 @@ class MusicProvider with ChangeNotifier {
   Future<List<Song>> loadUserFavoriteSongs(
       {int page = 1, int size = 20}) async {
     try {
-      final response = await ApiService().getAllSongs(page, size);
+      final response = await ApiService().getUserFavoriteSongs(page, size);
       if (response.statusCode == 200) {
         final data =
             response.data is Map ? response.data : jsonDecode(response.data);
@@ -432,7 +432,7 @@ class MusicProvider with ChangeNotifier {
 
     try {
       // 调用API添加收藏歌曲
-      final response = await ApiService().addFavoriteSong(song.id!);
+      final response = await ApiService().collectSong(song.id!);
       if (response.statusCode == 200) {
         final data =
             response.data is Map ? response.data : jsonDecode(response.data);
@@ -456,7 +456,7 @@ class MusicProvider with ChangeNotifier {
 
     try {
       // 调用API移除收藏歌曲
-      final response = await ApiService().removeFavoriteSong(song.id!);
+      final response = await ApiService().cancelCollectSong(song.id!);
       if (response.statusCode == 200) {
         final data =
             response.data is Map ? response.data : jsonDecode(response.data);
@@ -488,6 +488,6 @@ class MusicProvider with ChangeNotifier {
 /// 重复模式枚举
 enum RepeatMode {
   none, // 不重复
-  all,  // 全部重复
-  one,  // 单曲重复
+  all, // 全部重复
+  one, // 单曲重复
 }

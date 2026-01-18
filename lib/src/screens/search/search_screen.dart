@@ -7,6 +7,7 @@ import 'package:vibe_music_app/src/screens/search/components/search_bar.dart';
 import 'package:vibe_music_app/src/components/common_button.dart';
 import 'package:vibe_music_app/src/components/common_card.dart';
 import 'package:vibe_music_app/src/components/common_loading.dart';
+import 'package:vibe_music_app/src/providers/auth_provider.dart';
 
 /// 搜索屏幕
 /// 用于搜索歌曲
@@ -161,6 +162,13 @@ class _SearchScreenState extends State<SearchScreen> {
                         itemBuilder: (context, index) {
                           final song = _searchResults[index];
                           final coverUrl = song.coverUrl;
+                          final musicProvider =
+                              Provider.of<MusicProvider>(context);
+                          final authProvider =
+                              Provider.of<AuthProvider>(context);
+                          final isFavorited =
+                              musicProvider.isSongFavorited(song);
+
                           return CommonCard(
                             onTap: () => _handleResultTap(song),
                             margin: const EdgeInsets.symmetric(
@@ -202,6 +210,49 @@ class _SearchScreenState extends State<SearchScreen> {
                                       ),
                                     ],
                                   ),
+                                ),
+                                // 收藏按钮
+                                IconButton(
+                                  icon: Icon(
+                                    isFavorited
+                                        ? Icons.favorite
+                                        : Icons.favorite_border,
+                                    color: isFavorited
+                                        ? Theme.of(context).colorScheme.primary
+                                        : null,
+                                  ),
+                                  onPressed: () async {
+                                    if (!authProvider.isAuthenticated) {
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        const SnackBar(content: Text('请先登录')),
+                                      );
+                                      return;
+                                    }
+
+                                    bool success;
+                                    if (isFavorited) {
+                                      success = await musicProvider
+                                          .removeFromFavorites(song);
+                                      if (success) {
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
+                                          const SnackBar(
+                                              content: Text('已取消收藏')),
+                                        );
+                                      }
+                                    } else {
+                                      success = await musicProvider
+                                          .addToFavorites(song);
+                                      if (success) {
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
+                                          const SnackBar(
+                                              content: Text('已添加到收藏')),
+                                        );
+                                      }
+                                    }
+                                  },
                                 ),
                                 // 播放按钮
                                 Icon(Icons.play_arrow,

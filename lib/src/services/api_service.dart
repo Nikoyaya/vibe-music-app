@@ -286,22 +286,51 @@ class ApiService {
     return await _request('GET', '/song/getRecommendedSongs');
   }
 
+  // Future<Response> getUserFavoriteSongs(int page, int size) async {
+  //   return await _request('POST', '/song/getUserFavoriteSongs', body: {
+  //     'page': page,
+  //     'size': size,
+  //   });
+  // }
+
+  // User Favorite endpoints
   Future<Response> getUserFavoriteSongs(int page, int size) async {
-    return await _request('POST', '/song/getUserFavoriteSongs', body: {
-      'page': page,
-      'size': size,
+    return await _request('POST', '/favorite/getFavoriteSongs', body: {
+      'pageNum': page,
+      'pageSize': size,
     });
   }
 
-  Future<Response> addFavoriteSong(int songId) async {
-    return await _request('POST', '/song/addFavoriteSong', body: {
+  Future<Response> collectSong(int songId) async {
+    return await _request('POST', '/favorite/collectSong', queryParams: {
       'songId': songId,
     });
   }
 
-  Future<Response> removeFavoriteSong(int songId) async {
-    return await _request('POST', '/song/removeFavoriteSong', body: {
-      'songId': songId,
+  Future<Response> cancelCollectSong(int songId) async {
+    return await _request('DELETE', '/favorite/cancelCollectSong',
+        queryParams: {
+          'songId': songId,
+        });
+  }
+
+  Future<Response> getFavoritePlaylists(int page, int size) async {
+    return await _request('POST', '/favorite/getFavoritePlaylists', body: {
+      'pageNum': page,
+      'pageSize': size,
     });
+  }
+
+  Future<Response> collectPlaylist(int playlistId) async {
+    return await _request('POST', '/favorite/collectPlaylist', queryParams: {
+      'playlistId': playlistId,
+    });
+  }
+
+  Future<Response> cancelCollectPlaylist(int playlistId) async {
+    return await _request('DELETE', '/favorite/cancelCollectPlaylist',
+        queryParams: {
+          'playlistId': playlistId,
+        });
   }
 }
