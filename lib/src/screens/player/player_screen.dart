@@ -148,7 +148,8 @@ class _PlayerScreenState extends State<PlayerScreen> {
                           StreamBuilder<Duration>(
                             stream: musicProvider.positionStream,
                             builder: (context, positionSnapshot) {
-                              final position = positionSnapshot.data ?? Duration.zero;
+                              final position =
+                                  positionSnapshot.data ?? Duration.zero;
                               final duration = musicProvider.duration;
 
                               return PlayerProgressBar(
@@ -163,9 +164,15 @@ class _PlayerScreenState extends State<PlayerScreen> {
                           const SizedBox(height: 24),
                           // 控制按钮
                           PlayerControls(
-                            isPlaying: musicProvider.playerState == AppPlayerState.playing,
+                            isPlaying: musicProvider.playerState ==
+                                AppPlayerState.playing,
                             isShuffle: musicProvider.isShuffle,
-                            repeatMode: musicProvider.repeatMode == RepeatMode.one ? 'one' : musicProvider.repeatMode == RepeatMode.all ? 'all' : 'none',
+                            repeatMode:
+                                musicProvider.repeatMode == RepeatMode.one
+                                    ? 'one'
+                                    : musicProvider.repeatMode == RepeatMode.all
+                                        ? 'all'
+                                        : 'none',
                             volume: musicProvider.volume,
                             onPlay: musicProvider.play,
                             onPause: musicProvider.pause,
@@ -201,6 +208,20 @@ class _PlayerScreenState extends State<PlayerScreen> {
               ),
             ),
           ),
+          // 点击外部区域收起播放列表的遮罩层
+          if (_isExpanded && musicProvider.playlist.isNotEmpty)
+            Positioned.fill(
+              child: GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _isExpanded = false;
+                  });
+                },
+                child: Container(
+                  color: Colors.transparent,
+                ),
+              ),
+            ),
           // 播放列表（可展开）
           if (_isExpanded && musicProvider.playlist.isNotEmpty)
             PlayerPlaylist(
@@ -210,9 +231,8 @@ class _PlayerScreenState extends State<PlayerScreen> {
                 musicProvider.playSong(musicProvider.playlist[index]);
               },
               onToggleFavorite: (song) async {
-                final authProvider = Provider.of<AuthProvider>(
-                    context,
-                    listen: false);
+                final authProvider =
+                    Provider.of<AuthProvider>(context, listen: false);
                 if (!authProvider.isAuthenticated) {
                   // 提示用户登录
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -222,8 +242,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                        builder: (context) =>
-                            const LoginScreen()),
+                        builder: (context) => const LoginScreen()),
                   );
                   return;
                 }
@@ -265,7 +284,8 @@ class _PlayerScreenState extends State<PlayerScreen> {
                       borderRadius: BorderRadius.circular(12),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withAlpha(76), // 使用withAlpha替代withValues
+                          color: Colors.black
+                              .withAlpha(76), // 使用withAlpha替代withValues
                           blurRadius: 10,
                           offset: const Offset(0, 5),
                         ),
