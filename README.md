@@ -1,16 +1,184 @@
-# vibe_music_app
+# Vibe Music App
 
-A new Flutter project.
+一款基于 Flutter 开发的音乐播放器应用，用于连接和播放 Vibe Music Server 中的音乐。
 
-## Getting Started
+## 功能特点
 
-This project is a starting point for a Flutter application.
+- 🎵 **音频播放**：支持播放、暂停、上一曲、下一曲等基本操作
+- 📱 **响应式设计**：适配不同屏幕尺寸的设备
+- 🔄 **播放控制**：支持循环播放、随机播放等模式
+- ❤️ **收藏功能**：支持收藏和取消收藏歌曲
+- 🔍 **搜索功能**：支持搜索歌曲
+- 📋 **播放列表**：显示和管理当前播放列表
+- 🎨 **美观界面**：现代化的 UI 设计，流畅的动画效果
+- 🌐 **网络连接**：连接到 Vibe Music Server 获取音乐数据
 
-A few resources to get you started if this is your first Flutter project:
+## 技术栈
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+- **框架**：Flutter 3.0+
+- **语言**：Dart
+- **音频播放**：just_audio
+- **状态管理**：provider
+- **网络请求**：dio
+- **图片加载**：cached_network_image
+- **环境变量**：flutter_dotenv
+- **动画效果**：Flutter 内置动画 + shimmer
+- **图标**：flutter_svg
+- **本地存储**：shared_preferences
+- **构建工具**：Flutter CLI
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## 安装和运行
+
+### 前提条件
+
+- Flutter SDK 3.0 或更高版本
+- Dart SDK 3.0 或更高版本
+- Android Studio 或 VS Code（推荐）
+- 模拟器或真实设备
+
+### 步骤
+
+1. **克隆仓库**
+   ```bash
+   git clone <repository-url>
+   cd vibe_music_app
+   ```
+
+2. **安装依赖**
+   ```bash
+   flutter pub get
+   ```
+
+3. **配置环境变量**
+   - 复制 `.env.example` 文件为 `.env`
+   - 根据实际情况修改 `.env` 文件中的配置
+
+4. **运行应用**
+   ```bash
+   # 在模拟器或连接的设备上运行
+   flutter run
+   
+   # 运行特定设备
+   flutter run -d <device-id>
+   ```
+
+## 项目结构
+
+```
+vibe_music_app/
+├── android/          # Android 平台特定代码
+├── ios/              # iOS 平台特定代码
+├── lib/              # Flutter 源代码
+│   ├── src/          # 源代码目录
+│   │   ├── components/     # 通用组件
+│   │   ├── models/         # 数据模型
+│   │   ├── providers/      # 状态管理
+│   │   ├── screens/         # 屏幕页面
+│   │   ├── services/        # 服务类
+│   │   └── utils/           # 工具类
+│   └── main.dart      # 应用入口
+├── assets/           # 静态资源
+│   └── images/        # 图片资源
+├── .env              # 环境变量配置
+├── pubspec.yaml      # 依赖配置
+└── README.md         # 项目文档
+```
+
+## 配置说明
+
+### 环境变量 (.env)
+
+项目使用 `.env` 文件管理环境变量，主要配置项包括：
+
+```env
+# API 基础 URL
+BASE_URL=http://your-server-address:8080
+
+# API 超时时间（毫秒）
+API_TIMEOUT=30000
+
+# 基础 IP 地址（用于替换响应中的图片 URL）
+BASE_IP=http://your-server-address
+
+```
+
+### 构建配置
+
+#### Android
+
+- **最小 SDK 版本**：21
+- **目标 SDK 版本**：根据 Flutter 配置
+- **构建类型**：支持 debug 和 release 模式
+
+#### iOS
+
+- **最低 iOS 版本**：11.0
+- **构建配置**：支持 debug 和 release 模式
+
+## 构建和部署
+
+### 构建 APK
+
+```bash
+# 构建 release 版本的 APK
+flutter build apk --release
+
+# 构建拆分 APK（更小的体积）
+flutter build apk --split-per-abi
+```
+
+### 构建 iOS
+
+```bash
+# 构建 release 版本的 iOS 应用
+flutter build ios --release
+```
+
+### 构建 Web
+
+```bash
+# 构建 Web 版本
+flutter build web
+```
+
+## 开发指南
+
+### 代码风格
+
+- 遵循 Flutter 官方代码风格指南
+- 使用 `flutter format` 格式化代码
+- 使用 `flutter analyze` 进行代码分析
+
+### 调试技巧
+
+- 使用 VS Code 或 Android Studio 的 Flutter 插件进行调试
+- 使用 `flutter run --debug` 运行调试版本
+- 使用 `print` 或 `debugPrint` 输出调试信息
+
+### 常见问题
+
+1. **构建失败**：检查 Flutter SDK 版本和依赖配置
+2. **网络请求失败**：检查 `.env` 文件中的 BASE_URL 配置
+3. **音频播放失败**：检查音频文件格式和网络连接
+4. **内存不足**：尝试清理缓存和优化代码
+
+## 贡献指南
+
+1. **Fork 仓库**
+2. **创建分支**：`git checkout -b feature/your-feature`
+3. **提交更改**：`git commit -m "Add your feature"`
+4. **推送分支**：`git push origin feature/your-feature`
+5. **创建 Pull Request**
+
+## 许可证
+
+本项目采用 MIT 许可证 - 详情请参阅 [LICENSE](LICENSE) 文件
+
+## 联系方式
+
+- 项目地址：<repository-url>
+- 问题反馈：<repository-url>/issues
+
+---
+
+**享受音乐，享受生活！🎧**
