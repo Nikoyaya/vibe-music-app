@@ -40,7 +40,7 @@
 
 1. **克隆仓库**
    ```bash
-   git clone <repository-url>
+   git clone https://gitee.com/jason_kwok35/vibe-music-app
    cd vibe_music_app
    ```
 
@@ -176,8 +176,8 @@ flutter build web
 
 ## 联系方式
 
-- 项目地址：<repository-url>
-- 问题反馈：<repository-url>/issues
+- 项目地址：https://gitee.com/jason_kwok35/vibe-music-app
+- 问题反馈：https://gitee.com/jason_kwok35/vibe-music-app/issues
 
 ---
 
