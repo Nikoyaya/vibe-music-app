@@ -1,10 +1,12 @@
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:vibe_music_app/src/services/api_service.dart';
 import 'package:vibe_music_app/src/models/user_model.dart';
 import 'package:vibe_music_app/src/utils/app_logger.dart';
 import 'package:vibe_music_app/src/utils/sp_util.dart';
+import 'package:vibe_music_app/src/utils/deviceInfoUtils/device_info_manager.dart';
 
 /// 认证状态枚举
 enum AuthStatus {
@@ -202,6 +204,9 @@ class AuthProvider with ChangeNotifier {
           // 验证保存状态
           _logSpUtilState();
 
+          // 获取设备信息并调用后端接口
+          await _sendDeviceInfo();
+
           _status = AuthStatus.authenticated;
           notifyListeners();
           AppLogger().d('🎉 登录流程完成，状态更新为已认证');
@@ -385,5 +390,87 @@ class AuthProvider with ChangeNotifier {
         .d('  refreshTokenExpiry: ${SpUtil.get<String>('refreshTokenExpiry')}');
     AppLogger()
         .d('  user: ${SpUtil.get<String>('user') != null ? "✓ 已保存" : "✗ 未保存"}');
+  }
+
+  /// 发送设备信息到后端
+  Future<void> _sendDeviceInfo() async {
+    try {
+      AppLogger().d('📱 开始获取设备信息...');
+
+      // 获取当前设备信息
+      final deviceInfo = await DeviceInfoManager.getCurrentPlatformDeviceInfo();
+
+      // 确定客户端类型
+      String clientType;
+      if (kIsWeb) {
+        clientType = "web";
+      } else {
+        switch (defaultTargetPlatform) {
+          case TargetPlatform.android:
+            clientType = "android";
+            break;
+          case TargetPlatform.iOS:
+            clientType = "ios";
+            break;
+          default:
+            clientType = "other";
+        }
+      }
+
+      AppLogger().d('📱 设备信息获取结果: ${deviceInfo != null ? "成功" : "失败"}');
+      AppLogger().d('📱 客户端类型: $clientType');
+
+      // 检查设备信息是否发生变更
+      final storedDeviceInfo = SpUtil.get<String>('deviceInfo');
+      final storedClientType = SpUtil.get<String>('clientType');
+
+      // 将当前设备信息转换为字符串，用于比较
+      final currentDeviceInfoStr =
+          deviceInfo != null ? jsonEncode(deviceInfo) : null;
+
+      // 检查是否需要更新设备信息
+      bool needUpdate = false;
+
+      if (storedDeviceInfo == null || storedClientType == null) {
+        // 首次登录，需要更新
+        needUpdate = true;
+        AppLogger().d('📱 首次登录，需要更新设备信息');
+      } else if (storedDeviceInfo != currentDeviceInfoStr ||
+          storedClientType != clientType) {
+        // 设备信息发生变更，需要更新
+        needUpdate = true;
+        AppLogger().d('📱 设备信息发生变更，需要更新');
+        AppLogger().d('📱 存储的设备信息: $storedDeviceInfo');
+        AppLogger().d('📱 当前设备信息: $currentDeviceInfoStr');
+        AppLogger().d('📱 存储的客户端类型: $storedClientType');
+        AppLogger().d('📱 当前客户端类型: $clientType');
+      } else {
+        // 设备信息未发生变更，不需要更新
+        AppLogger().d('📱 设备信息未发生变更，不需要更新');
+      }
+
+      if (needUpdate) {
+        // 调用后端接口
+        final response = await ApiService().getClientIp(clientType, deviceInfo);
+
+        AppLogger().d('📊 获取客户端IP响应状态码: ${response.statusCode}');
+
+        // 只检查状态码，不需要处理返回的result信息
+        if (response.statusCode == 200) {
+          AppLogger().d('✅ 获取客户端IP和设备信息成功');
+          // 存储设备信息到 SharedPreferences
+          if (currentDeviceInfoStr != null) {
+            await SpUtil.put('deviceInfo', currentDeviceInfoStr);
+          }
+          await SpUtil.put('clientType', clientType);
+          AppLogger().d('✅ 设备信息已存储到 SharedPreferences');
+        } else {
+          AppLogger().e('❌ 网络错误: ${response.statusCode}');
+        }
+      }
+    } catch (e) {
+      AppLogger().e('❌ 发送设备信息失败: $e');
+      // 设备信息发送失败不影响登录流程
+    }
   }
 }

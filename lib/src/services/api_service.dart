@@ -333,4 +333,15 @@ class ApiService {
           'playlistId': playlistId,
         });
   }
+
+  /// 获取客户端IP和设备信息
+  /// [clientType]: 客户端类型 (web, android, ios, other)
+  /// [deviceInfo]: 设备信息
+  Future<Response> getClientIp(
+      String clientType, Map<String, String>? deviceInfo) async {
+    return await _request('POST', '/common/getClientIp', body: {
+      'clientType': clientType,
+      'deviceInfo': deviceInfo,
+    });
+  }
 }

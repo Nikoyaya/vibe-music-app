@@ -24,6 +24,7 @@ dependencies:
   logger: ^2.0.2+1
   audio_session: ^0.2.2
   flutter_native_splash: ^2.4.7
+  device_info_plus: ^12.3.0
 
 dev_dependencies:
   flutter_test:
