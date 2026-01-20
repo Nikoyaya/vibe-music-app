@@ -43,74 +43,101 @@ class PlayerControls extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmallScreen = screenWidth < 400;
+    
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      padding: const EdgeInsets.symmetric(horizontal: 8.0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         mainAxisSize: MainAxisSize.min,
         children: [
           // 随机播放
-          IconButton(
-            icon: Icon(
-              Icons.shuffle,
-              color: isShuffle
-                  ? Theme.of(context).colorScheme.primary
-                  : Theme.of(context)
-                      .colorScheme
-                      .onSurfaceVariant,
+          Flexible(
+            flex: 1,
+            child: IconButton(
+              icon: Icon(
+                Icons.shuffle,
+                size: isSmallScreen ? 20 : 24,
+                color: isShuffle
+                    ? Theme.of(context).colorScheme.primary
+                    : Theme.of(context)
+                        .colorScheme
+                        .onSurfaceVariant,
+              ),
+              onPressed: onToggleShuffle,
+              padding: const EdgeInsets.all(4),
             ),
-            onPressed: onToggleShuffle,
           ),
-          const SizedBox(width: 4),
+          SizedBox(width: isSmallScreen ? 2 : 4),
           // 上一首
-          IconButton(
-            icon: Icon(Icons.skip_previous, size: 32),
-            onPressed: onPrevious,
+          Flexible(
+            flex: 1,
+            child: IconButton(
+              icon: Icon(Icons.skip_previous, size: isSmallScreen ? 24 : 32),
+              onPressed: onPrevious,
+              padding: const EdgeInsets.all(4),
+            ),
           ),
-          const SizedBox(width: 12),
+          SizedBox(width: isSmallScreen ? 8 : 12),
           // 播放/暂停
           FloatingActionButton(
             onPressed: isPlaying ? onPause : onPlay,
             child: Icon(
               isPlaying ? Icons.pause : Icons.play_arrow,
-              size: 36,
+              size: isSmallScreen ? 28 : 36,
             ),
+            mini: isSmallScreen,
           ),
-          const SizedBox(width: 12),
+          SizedBox(width: isSmallScreen ? 8 : 12),
           // 下一首
-          IconButton(
-            icon: Icon(Icons.skip_next, size: 32),
-            onPressed: onNext,
+          Flexible(
+            flex: 1,
+            child: IconButton(
+              icon: Icon(Icons.skip_next, size: isSmallScreen ? 24 : 32),
+              onPressed: onNext,
+              padding: const EdgeInsets.all(4),
+            ),
           ),
-          const SizedBox(width: 4),
+          SizedBox(width: isSmallScreen ? 2 : 4),
           // 音量控制
-          IconButton(
-            icon: Icon(
-              volume > 0.5
-                  ? Icons.volume_up
-                  : volume > 0
-                      ? Icons.volume_down
-                      : Icons.volume_off,
-              color: Theme.of(context)
-                  .colorScheme
-                  .onSurfaceVariant,
+          Flexible(
+            flex: 1,
+            child: IconButton(
+              icon: Icon(
+                volume > 0.5
+                    ? Icons.volume_up
+                    : volume > 0
+                        ? Icons.volume_down
+                        : Icons.volume_off,
+                size: isSmallScreen ? 20 : 24,
+                color: Theme.of(context)
+                    .colorScheme
+                    .onSurfaceVariant,
+              ),
+              onPressed: onToggleVolumeControls,
+              padding: const EdgeInsets.all(4),
             ),
-            onPressed: onToggleVolumeControls,
           ),
-          const SizedBox(width: 4),
+          SizedBox(width: isSmallScreen ? 2 : 4),
           // 重复模式
-          IconButton(
-            icon: Icon(
-              repeatMode == 'one'
-                  ? Icons.repeat_one
-                  : Icons.repeat,
-              color: repeatMode != 'none'
-                  ? Theme.of(context).colorScheme.primary
-                  : Theme.of(context)
-                      .colorScheme
-                      .onSurfaceVariant,
+          Flexible(
+            flex: 1,
+            child: IconButton(
+              icon: Icon(
+                repeatMode == 'one'
+                    ? Icons.repeat_one
+                    : Icons.repeat,
+                size: isSmallScreen ? 20 : 24,
+                color: repeatMode != 'none'
+                    ? Theme.of(context).colorScheme.primary
+                    : Theme.of(context)
+                        .colorScheme
+                        .onSurfaceVariant,
+              ),
+              onPressed: onToggleRepeat,
+              padding: const EdgeInsets.all(4),
             ),
-            onPressed: onToggleRepeat,
           ),
         ],
       ),

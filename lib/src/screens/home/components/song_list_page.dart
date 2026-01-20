@@ -9,6 +9,7 @@ import 'package:vibe_music_app/src/screens/auth/login_screen.dart';
 import 'package:vibe_music_app/src/models/song_model.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:vibe_music_app/src/components/pull_to_refresh.dart';
+import 'package:vibe_music_app/src/utils/glass_morphism/glass_morphism.dart';
 
 /// 歌曲列表页面
 class SongListPage extends StatefulWidget {
@@ -139,101 +140,86 @@ class _SongListPageState extends State<SongListPage> {
     final screenWidth = MediaQuery.of(context).size.width;
     final isSmallScreen = screenWidth < 380;
 
-    return Scaffold(
-      body: PullToRefresh(
-        onRefresh: _handleRefresh,
-        child: CustomScrollView(
-          slivers: [
-            // 可滚动的AppBar，支持渐变和消失效果
-            SliverAppBar(
-              automaticallyImplyLeading: false,
-              backgroundColor: Theme.of(context).colorScheme.surface,
-              foregroundColor: Theme.of(context).colorScheme.onSurface,
-              shadowColor: Theme.of(context).colorScheme.shadow,
-              elevation: 2,
-              shape: const RoundedRectangleBorder(
-                borderRadius: BorderRadius.vertical(
-                  bottom: Radius.circular(20),
-                ),
-              ),
-              // 配置滚动行为
-              expandedHeight: 80,
-              floating: false,
-              pinned: false,
-              snap: false,
-              // 滚动时的渐变效果
-              flexibleSpace: FlexibleSpaceBar(
-                background: Container(
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.surface,
-                    borderRadius: const BorderRadius.vertical(
-                      bottom: Radius.circular(20),
+    return PullToRefresh(
+      onRefresh: _handleRefresh,
+      child: CustomScrollView(
+        slivers: [
+          // 顶部搜索栏
+          SliverPadding(
+            padding: const EdgeInsets.all(16),
+            sliver: SliverToBoxAdapter(
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surfaceContainer,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 10,
+                      spreadRadius: 2,
                     ),
-                  ),
-                  child: Padding(
-                    padding:
-                        const EdgeInsets.only(left: 20, right: 20, bottom: 16),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.end,
+                  ],
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    // 标题
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            // 标题
-                            Text(
-                              'Vibe Music Player',
-                              style: TextStyle(
-                                fontSize: 18,
+                        Text(
+                          'Vibe Music',
+                          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                                 fontWeight: FontWeight.bold,
-                                color: Theme.of(context).colorScheme.onSurface,
                               ),
-                            ),
-                            // 搜索按钮
-                            IconButton(
-                              icon: const Icon(Icons.search),
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (context) =>
-                                          const SearchScreen()),
-                                );
-                              },
-                              color: Theme.of(context).colorScheme.onSurface,
-                              padding: EdgeInsets.zero,
-                              constraints: const BoxConstraints(minWidth: 40),
-                            ),
-                          ],
                         ),
                       ],
                     ),
-                  ),
+                    // 操作按钮组
+                    Row(
+                      children: [
+                        const SizedBox(width: 12),
+                        // 搜索按钮
+                        IconButton(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => const SearchScreen()),
+                            );
+                          },
+                          icon: Icon(Icons.search),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
             ),
+          ),
 
-            // 内容部分
-            SliverList(
-              delegate: SliverChildBuilderDelegate(
-                (context, index) {
-                  return Column(
-                    children: [
-                      // 轮播图
-                      _buildCarousel(),
+          // 内容部分
+          SliverList(
+            delegate: SliverChildBuilderDelegate(
+              (context, index) {
+                return Column(
+                  children: [
+                    // 轮播图
+                    _buildCarousel(),
 
-                      // 推荐歌单
-                      _buildRecommendedPlaylists(),
+                    // 推荐歌单
+                    _buildRecommendedPlaylists(),
 
-                      // 热门歌曲
-                      _buildPopularSongs(isSmallScreen),
-                    ],
-                  );
-                },
-                childCount: 1,
-              ),
+                    // 热门歌曲
+                    _buildPopularSongs(isSmallScreen),
+                  ],
+                );
+              },
+              childCount: 1,
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -367,7 +353,7 @@ class _SongListPageState extends State<SongListPage> {
               ),
             ],
           ),
-          const SizedBox(height: 16.0),
+          //const SizedBox(height: 16.0),
           GridView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
@@ -504,16 +490,15 @@ class _SongListPageState extends State<SongListPage> {
                   final song = songs[index];
                   final coverUrl = song.coverUrl;
                   return Container(
-                    margin:
-                        EdgeInsets.symmetric(vertical: isSmallScreen ? 6 : 8),
+                    margin: EdgeInsets.symmetric(vertical: isSmallScreen ? 6 : 8),
                     decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.surface,
-                      borderRadius: BorderRadius.circular(16),
+                      color: Theme.of(context).colorScheme.surfaceVariant,
+                      borderRadius: BorderRadius.circular(12),
                       boxShadow: [
                         BoxShadow(
-                          color: Theme.of(context).colorScheme.shadow,
+                          color: Colors.black.withOpacity(0.05),
                           blurRadius: 8,
-                          offset: const Offset(0, 2),
+                          spreadRadius: 1,
                         ),
                       ],
                     ),
@@ -533,9 +518,7 @@ class _SongListPageState extends State<SongListPage> {
                                   : FontWeight.normal,
                               color: index < 3
                                   ? Theme.of(context).colorScheme.primary
-                                  : Theme.of(context)
-                                      .colorScheme
-                                      .onSurfaceVariant,
+                                  : Theme.of(context).colorScheme.onSurfaceVariant,
                             ),
                           ),
                         ),
@@ -554,34 +537,24 @@ class _SongListPageState extends State<SongListPage> {
                                       width: isSmallScreen ? 48 : 56,
                                       height: isSmallScreen ? 48 : 56,
                                       decoration: BoxDecoration(
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .surfaceContainerHighest,
-                                        borderRadius:
-                                            BorderRadius.circular(10.0),
+                                        color: Theme.of(context).colorScheme.surfaceContainer,
+                                        borderRadius: BorderRadius.circular(10.0),
                                       ),
                                       child: const Center(
                                         child: CircularProgressIndicator(),
                                       ),
                                     ),
-                                    errorWidget: (context, url, error) =>
-                                        Container(
+                                    errorWidget: (context, url, error) => Container(
                                       width: isSmallScreen ? 48 : 56,
                                       height: isSmallScreen ? 48 : 56,
                                       decoration: BoxDecoration(
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .primary
-                                            .withOpacity(0.2),
-                                        borderRadius:
-                                            BorderRadius.circular(10.0),
+                                        color: Theme.of(context).colorScheme.surfaceContainer,
+                                        borderRadius: BorderRadius.circular(10.0),
                                       ),
                                       child: Icon(
                                         Icons.music_note,
                                         size: isSmallScreen ? 24 : 28,
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .primary,
+                                        color: Theme.of(context).colorScheme.primary,
                                       ),
                                     ),
                                   )
@@ -589,17 +562,13 @@ class _SongListPageState extends State<SongListPage> {
                                     width: isSmallScreen ? 48 : 56,
                                     height: isSmallScreen ? 48 : 56,
                                     decoration: BoxDecoration(
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .primary
-                                          .withOpacity(0.2),
+                                      color: Theme.of(context).colorScheme.surfaceContainer,
                                       borderRadius: BorderRadius.circular(10.0),
                                     ),
                                     child: Icon(
                                       Icons.music_note,
                                       size: isSmallScreen ? 24 : 28,
-                                      color:
-                                          Theme.of(context).colorScheme.primary,
+                                      color: Theme.of(context).colorScheme.primary,
                                     ),
                                   ),
                           ),
@@ -612,23 +581,17 @@ class _SongListPageState extends State<SongListPage> {
                             children: [
                               Text(
                                 song.songName ?? 'Unknown Song',
-                                style: TextStyle(
-                                  fontSize: isSmallScreen ? 14 : 16,
-                                  fontWeight: FontWeight.w500,
-                                  color:
-                                      Theme.of(context).colorScheme.onSurface,
-                                ),
+                                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                      fontWeight: FontWeight.w500,
+                                    ),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
                               Text(
                                 song.artistName ?? 'Unknown Artist',
-                                style: TextStyle(
-                                  fontSize: isSmallScreen ? 12 : 14,
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .onSurfaceVariant,
-                                ),
+                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                    ),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -643,85 +606,71 @@ class _SongListPageState extends State<SongListPage> {
                             Consumer<MusicProvider>(
                               builder: (context, musicProvider, child) {
                                 return IconButton(
-                                  icon: Icon(
-                                    musicProvider.isSongFavorited(song)
-                                        ? Icons.favorite
-                                        : Icons.favorite_border,
-                                    color: musicProvider.isSongFavorited(song)
-                                        ? Theme.of(context).colorScheme.primary
-                                        : Theme.of(context)
-                                            .colorScheme
-                                            .onSurfaceVariant,
-                                  ),
                                   onPressed: () async {
-                                    final authProvider =
-                                        Provider.of<AuthProvider>(context,
-                                            listen: false);
+                                    final authProvider = Provider.of<AuthProvider>(context,
+                                        listen: false);
                                     if (!authProvider.isAuthenticated) {
                                       // 提示用户登录
-                                      ScaffoldMessenger.of(context)
-                                          .showSnackBar(
+                                      ScaffoldMessenger.of(context).showSnackBar(
                                         const SnackBar(content: Text('请先登录')),
                                       );
                                       // 导航到登录页面
                                       Navigator.push(
                                         context,
                                         MaterialPageRoute(
-                                            builder: (context) =>
-                                                const LoginScreen()),
+                                            builder: (context) => const LoginScreen()),
                                       );
                                       return;
                                     }
 
                                     bool success;
                                     if (musicProvider.isSongFavorited(song)) {
-                                      success = await musicProvider
-                                          .removeFromFavorites(song);
+                                      success = await musicProvider.removeFromFavorites(song);
                                       if (success && mounted) {
-                                        ScaffoldMessenger.of(context)
-                                            .showSnackBar(
-                                          const SnackBar(
-                                              content: Text('已取消收藏')),
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          const SnackBar(content: Text('已取消收藏')),
                                         );
                                       }
                                     } else {
-                                      success = await musicProvider
-                                          .addToFavorites(song);
+                                      success = await musicProvider.addToFavorites(song);
                                       if (success && mounted) {
-                                        ScaffoldMessenger.of(context)
-                                            .showSnackBar(
-                                          const SnackBar(
-                                              content: Text('已添加到收藏')),
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          const SnackBar(content: Text('已添加到收藏')),
                                         );
                                       }
                                     }
                                   },
+                                  icon: Icon(
+                                    musicProvider.isSongFavorited(song)
+                                        ? Icons.favorite
+                                        : Icons.favorite_border,
+                                    color: musicProvider.isSongFavorited(song)
+                                        ? Colors.red
+                                        : Theme.of(context).colorScheme.onSurfaceVariant,
+                                  ),
                                 );
                               },
                             ),
                             Consumer<MusicProvider>(
                               builder: (context, musicProvider, child) {
                                 return IconButton(
-                                  icon: Icon(
-                                    Icons.play_circle_outline,
-                                    size: 28,
-                                    color:
-                                        Theme.of(context).colorScheme.primary,
-                                  ),
                                   onPressed: () async {
                                     // 将整个热门歌曲列表添加到播放列表
-                                    await musicProvider.playSong(song,
-                                        playlist: songs);
+                                    await musicProvider.playSong(song, playlist: songs);
                                     // 导航到播放器页面
                                     if (mounted) {
                                       Navigator.push(
                                         context,
                                         MaterialPageRoute(
-                                            builder: (context) =>
-                                                const PlayerScreen()),
+                                            builder: (context) => const PlayerScreen()),
                                       );
                                     }
                                   },
+                                  icon: Icon(
+                                    Icons.play_circle_outline,
+                                    size: 28,
+                                    color: Theme.of(context).colorScheme.primary,
+                                  ),
                                 );
                               },
                             ),

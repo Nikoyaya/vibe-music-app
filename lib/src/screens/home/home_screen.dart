@@ -6,6 +6,9 @@ import 'components/currently_playing_bar.dart';
 import 'components/song_list_page.dart';
 import 'components/profile_page.dart';
 
+import 'package:vibe_music_app/src/utils/glass_morphism/responsive_layout.dart';
+import 'package:vibe_music_app/src/utils/glass_morphism/sidebar_navigation.dart';
+
 /// 主页屏幕
 /// 包含底部导航栏和多个子页面
 class HomeScreen extends StatefulWidget {
@@ -29,6 +32,15 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    return ResponsiveLayout(
+      mobileLayout: _buildMobileLayout(),
+      tabletLayout: _buildTabletLayout(),
+      desktopLayout: _buildDesktopLayout(),
+    );
+  }
+
+  /// 构建移动端布局
+  Widget _buildMobileLayout() {
     return Scaffold(
       body: Stack(
         children: [
@@ -76,5 +88,118 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
     );
+  }
+
+  /// 构建平板端布局
+  Widget _buildTabletLayout() {
+    return Scaffold(
+      backgroundColor: Theme.of(context).colorScheme.background,
+      body: Row(
+        children: [
+          // 侧边栏导航
+          Container(
+            width: 200,
+            child: SidebarNavigation(
+              currentIndex: _currentPage,
+              onDestinationSelected: (index) {
+                setState(() {
+                  _currentPage = index;
+                });
+              },
+            ),
+          ),
+          // 主内容区域
+          Expanded(
+            child: Stack(
+              children: [
+                // 显示当前选中的页面
+                _pages[_currentPage],
+                // 正在播放音乐的小悬浮组件
+                const Positioned(
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  child: CurrentlyPlayingBar(),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 构建桌面端布局
+  Widget _buildDesktopLayout() {
+    return Scaffold(
+      backgroundColor: Theme.of(context).colorScheme.background,
+      body: Row(
+        children: [
+          // 侧边栏导航
+          Container(
+            width: 240,
+            child: SidebarNavigation(
+              currentIndex: _currentPage,
+              onDestinationSelected: (index) {
+                setState(() {
+                  _currentPage = index;
+                });
+              },
+            ),
+          ),
+          // 主内容区域
+          Expanded(
+            child: Stack(
+              children: [
+                // 顶部导航栏
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  child: TopNavigationBar(
+                    title: _getPageTitle(_currentPage),
+                    actions: [
+                      IconButton(
+                        icon: Icon(Icons.settings, color: Colors.white),
+                        onPressed: () {},
+                      ),
+                    ],
+                  ),
+                ),
+                // 显示当前选中的页面
+                Padding(
+                  padding: const EdgeInsets.only(top: 70),
+                  child: _pages[_currentPage],
+                ),
+                // 正在播放音乐的小悬浮组件
+                const Positioned(
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  child: CurrentlyPlayingBar(),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 获取页面标题
+  /// [index] - 页面索引
+  String _getPageTitle(int index) {
+    switch (index) {
+      case 0:
+        return '音乐库';
+      case 1:
+        return '搜索';
+      case 2:
+        return '我的收藏';
+      case 3:
+        return '个人中心';
+      default:
+        return 'Glass Music Player';
+    }
   }
 }
