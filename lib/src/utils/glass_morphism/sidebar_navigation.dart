@@ -1,10 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:vibe_music_app/src/utils/glass_morphism/glass_morphism.dart';
 
+/// 侧边栏导航组件
+///
+/// 用于在平板和桌面端显示侧边导航栏，包含应用标题、导航项和用户信息
 class SidebarNavigation extends StatelessWidget {
+  /// 当前选中的导航项索引
   final int currentIndex;
+  /// 导航项选择回调函数
   final Function(int) onDestinationSelected;
   
+  /// 侧边栏导航构造函数
+  ///
+  /// [参数说明]:
+  /// - [currentIndex]: 当前选中的导航项索引
+  /// - [onDestinationSelected]: 导航项选择回调函数
   const SidebarNavigation({
     super.key,
     required this.currentIndex,
@@ -75,10 +85,20 @@ class SidebarNavigation extends StatelessWidget {
   }
 }
 
+/// 顶部导航栏组件
+///
+/// 用于在桌面端显示顶部导航栏，包含页面标题和操作按钮
 class TopNavigationBar extends StatelessWidget {
+  /// 页面标题
   final String title;
+  /// 操作按钮列表
   final List<Widget>? actions;
   
+  /// 顶部导航栏构造函数
+  ///
+  /// [参数说明]:
+  /// - [title]: 页面标题
+  /// - [actions]: 操作按钮列表
   const TopNavigationBar({
     super.key,
     required this.title,
@@ -111,11 +131,23 @@ class TopNavigationBar extends StatelessWidget {
   }
 }
 
+/// 玻璃拟态底部导航栏组件
+///
+/// 用于显示带有玻璃拟态效果的底部导航栏
 class BottomNavigationBarGlass extends StatelessWidget {
+  /// 当前选中的导航项索引
   final int currentIndex;
+  /// 导航项选择回调函数
   final Function(int) onDestinationSelected;
+  /// 导航项列表
   final List<NavigationDestination> items;
   
+  /// 玻璃拟态底部导航栏构造函数
+  ///
+  /// [参数说明]:
+  /// - [currentIndex]: 当前选中的导航项索引
+  /// - [onDestinationSelected]: 导航项选择回调函数
+  /// - [items]: 导航项列表
   const BottomNavigationBarGlass({
     super.key,
     required this.currentIndex,

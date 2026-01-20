@@ -1,7 +1,22 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 
+/// 玻璃拟态效果工具类
+///
+/// 提供创建具有玻璃拟态效果的UI组件的静态方法
+/// 玻璃拟态效果是一种半透明、模糊背景的设计风格
 class GlassMorphism {
+  /// 创建玻璃拟态卡片
+  ///
+  /// [参数说明]:
+  /// - [child]: 卡片内部的子组件
+  /// - [blur]: 模糊程度，默认10
+  /// - [opacity]: 透明度，默认0.2
+  /// - [borderRadius]: 圆角半径，默认16
+  /// - [padding]: 内边距，默认16
+  /// - [borderColor]: 边框颜色，默认白色
+  ///
+  /// [返回值]: 带有玻璃拟态效果的卡片组件
   static Widget glassCard({
     required Widget child,
     double blur = 10,
@@ -45,6 +60,16 @@ class GlassMorphism {
     );
   }
 
+  /// 创建玻璃拟态容器
+  ///
+  /// [参数说明]:
+  /// - [child]: 容器内部的子组件
+  /// - [blur]: 模糊程度，默认10
+  /// - [opacity]: 透明度，默认0.1
+  /// - [borderRadius]: 圆角半径，默认0
+  /// - [padding]: 内边距，默认0
+  ///
+  /// [返回值]: 带有玻璃拟态效果的容器组件
   static Widget glassContainer({
     required Widget child,
     double blur = 10,
@@ -75,6 +100,17 @@ class GlassMorphism {
     );
   }
 
+  /// 创建玻璃拟态按钮
+  ///
+  /// [参数说明]:
+  /// - [child]: 按钮内部的子组件
+  /// - [onPressed]: 按钮点击回调函数
+  /// - [blur]: 模糊程度，默认8
+  /// - [opacity]: 透明度，默认0.2
+  /// - [borderRadius]: 圆角半径，默认8
+  /// - [padding]: 内边距，默认水平16，垂直8
+  ///
+  /// [返回值]: 带有玻璃拟态效果的按钮组件
   static Widget glassButton({
     required Widget child,
     required VoidCallback onPressed,

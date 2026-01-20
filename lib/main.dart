@@ -32,7 +32,7 @@ class VibeMusicApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => MusicProvider()), // 音乐播放状态管理
       ],
       child: MaterialApp(
-        title: 'Vibe音乐', // 应用标题
+        title: 'Vibe Music', // 应用标题
         theme: AppTheme.lightTheme, // 亮色主题
         darkTheme: AppTheme.darkTheme, // 暗色主题
         themeMode: ThemeMode.dark, // 默认使用深色主题
