@@ -119,102 +119,106 @@ class _CurrentlyPlayingBarState extends State<CurrentlyPlayingBar> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        // 进度条 - 使用StreamBuilder监听进度变化
-                        StreamBuilder<Duration>(
-                          stream: musicProvider.positionStream,
-                          builder: (context, positionSnapshot) {
-                            return StreamBuilder<Duration>(
-                              stream: musicProvider.durationStream,
-                              builder: (context, durationSnapshot) {
-                                final position = positionSnapshot.data ?? Duration.zero;
-                                final duration = durationSnapshot.data ?? Duration.zero;
-                                final progress = duration.inSeconds > 0
-                                    ? position.inSeconds / duration.inSeconds
-                                    : 0.0;
+                        // // 进度条 - 使用StreamBuilder监听进度变化
+                        // StreamBuilder<Duration>(
+                        //   stream: musicProvider.positionStream,
+                        //   builder: (context, positionSnapshot) {
+                        //     return StreamBuilder<Duration>(
+                        //       stream: musicProvider.durationStream,
+                        //       builder: (context, durationSnapshot) {
+                        //         final position = positionSnapshot.data ?? Duration.zero;
+                        //         final duration = durationSnapshot.data ?? Duration.zero;
+                        //         final progress = duration.inSeconds > 0
+                        //             ? position.inSeconds / duration.inSeconds
+                        //             : 0.0;
 
-                                return LayoutBuilder(
-                                  builder: (context, constraints) {
-                                    final progressWidth = constraints.maxWidth - 32;
-                                    return GestureDetector(
-                                      onTapDown: (TapDownDetails details) {
-                                        final RenderBox box = context.findRenderObject() as RenderBox;
-                                        final tapPosition = box.globalToLocal(details.globalPosition);
-                                        final tapProgress = tapPosition.dx / progressWidth;
-                                        final newPosition = Duration(
-                                          seconds: (tapProgress * duration.inSeconds).toInt(),
-                                        );
-                                        musicProvider.seekTo(newPosition);
-                                      },
-                                      child: Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                                        height: 6,
-                                        child: Container(
-                                          width: double.infinity,
-                                          height: 6,
-                                          decoration: BoxDecoration(
-                                            color: Colors.white.withOpacity(0.2),
-                                            borderRadius: BorderRadius.circular(3),
-                                          ),
-                                          child: Stack(
-                                            children: [
-                                              ClipRRect(
-                                                borderRadius: BorderRadius.circular(3),
-                                                child: LinearProgressIndicator(
-                                                  value: progress,
-                                                  backgroundColor: Colors.transparent,
-                                                  color: Theme.of(context).colorScheme.primary,
-                                                  minHeight: 6,
-                                                ),
-                                              ),
-                                              // 进度指示器
-                                              Positioned(
-                                                left: progress * progressWidth - 6,
-                                                top: -3,
-                                                child: Container(
-                                                  width: 12,
-                                                  height: 12,
-                                                  decoration: BoxDecoration(
-                                                    color: Theme.of(context).colorScheme.primary,
-                                                    shape: BoxShape.circle,
-                                                    border: Border.all(
-                                                      color: Colors.white,
-                                                      width: 2,
-                                                    ),
-                                                    boxShadow: [
-                                                      BoxShadow(
-                                                        color: Colors.black.withOpacity(0.3),
-                                                        blurRadius: 4,
-                                                        offset: Offset(0, 1),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                );
-                              },
-                            );
-                          },
-                        ),
+                        //         return LayoutBuilder(
+                        //           builder: (context, constraints) {
+                        //             final progressWidth = constraints.maxWidth - 32;
+                        //             return GestureDetector(
+                        //               onTapDown: (TapDownDetails details) {
+                        //                 final RenderBox box = context.findRenderObject() as RenderBox;
+                        //                 final tapPosition = box.globalToLocal(details.globalPosition);
+                        //                 final tapProgress = tapPosition.dx / progressWidth;
+                        //                 final newPosition = Duration(
+                        //                   seconds: (tapProgress * duration.inSeconds).toInt(),
+                        //                 );
+                        //                 musicProvider.seekTo(newPosition);
+                        //               },
+                        //               child: Container(
+                        //                 padding: const EdgeInsets.symmetric(horizontal: 16),
+                        //                 height: 6,
+                        //                 child: Container(
+                        //                   width: double.infinity,
+                        //                   height: 6,
+                        //                   decoration: BoxDecoration(
+                        //                     color: Colors.white.withOpacity(0.2),
+                        //                     borderRadius: BorderRadius.circular(3),
+                        //                   ),
+                        //                   child: Stack(
+                        //                     children: [
+                        //                       ClipRRect(
+                        //                         borderRadius: BorderRadius.circular(3),
+                        //                         child: LinearProgressIndicator(
+                        //                           value: progress,
+                        //                           backgroundColor: Colors.transparent,
+                        //                           color: Theme.of(context).colorScheme.primary,
+                        //                           minHeight: 6,
+                        //                         ),
+                        //                       ),
+                        //                       // 进度指示器
+                        //                       Positioned(
+                        //                         left: progress * progressWidth - 6,
+                        //                         top: -3,
+                        //                         child: Container(
+                        //                           width: 12,
+                        //                           height: 12,
+                        //                           decoration: BoxDecoration(
+                        //                             color: Theme.of(context).colorScheme.primary,
+                        //                             shape: BoxShape.circle,
+                        //                             border: Border.all(
+                        //                               color: Colors.white,
+                        //                               width: 2,
+                        //                             ),
+                        //                             boxShadow: [
+                        //                               BoxShadow(
+                        //                                 color: Colors.black.withOpacity(0.3),
+                        //                                 blurRadius: 4,
+                        //                                 offset: Offset(0, 1),
+                        //                               ),
+                        //                             ],
+                        //                           ),
+                        //                         ),
+                        //                       ),
+                        //                     ],
+                        //                   ),
+                        //                 ),
+                        //               ),
+                        //             );
+                        //           },
+                        //         );
+                        //       },
+                        //     );
+                        //   },
+                        // ),
 
                         // 歌曲信息和控制按钮
                         GestureDetector(
                           onTap: () {
                             // 只有当没有滑动偏移、不在滑动状态且没有显示关闭对话框时才导航到播放页面
-                            if (_offset == 0 && !_isSwiping && !_isShowingCloseDialog) {
+                            if (_offset == 0 &&
+                                !_isSwiping &&
+                                !_isShowingCloseDialog) {
                               Navigator.push(
                                 context,
-                                MaterialPageRoute(builder: (context) => const PlayerScreen()),
+                                MaterialPageRoute(
+                                    builder: (context) => const PlayerScreen()),
                               );
                             }
                           },
                           child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 10),
                             child: Row(
                               children: [
                                 // 歌曲封面
@@ -228,13 +232,21 @@ class _CurrentlyPlayingBarState extends State<CurrentlyPlayingBar> {
                                             width: 56,
                                             height: 56,
                                             fit: BoxFit.cover,
-                                            loadingBuilder: (context, child, loadingProgress) {
-                                              if (loadingProgress == null) return child;
+                                            loadingBuilder: (context, child,
+                                                loadingProgress) {
+                                              if (loadingProgress == null)
+                                                return child;
                                               return Container(
                                                 width: 56,
                                                 height: 56,
-                                                color: Theme.of(context).colorScheme.primaryContainer,
-                                                child: Icon(Icons.music_note, size: 28, color: Theme.of(context).colorScheme.onPrimaryContainer),
+                                                color: Theme.of(context)
+                                                    .colorScheme
+                                                    .primaryContainer,
+                                                child: Icon(Icons.music_note,
+                                                    size: 28,
+                                                    color: Theme.of(context)
+                                                        .colorScheme
+                                                        .onPrimaryContainer),
                                               );
                                             },
                                           )
@@ -242,10 +254,17 @@ class _CurrentlyPlayingBarState extends State<CurrentlyPlayingBar> {
                                             width: 56,
                                             height: 56,
                                             decoration: BoxDecoration(
-                                              color: Theme.of(context).colorScheme.primaryContainer,
-                                              borderRadius: BorderRadius.circular(12),
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .primaryContainer,
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
                                             ),
-                                            child: Icon(Icons.music_note, size: 28, color: Theme.of(context).colorScheme.onPrimaryContainer),
+                                            child: Icon(Icons.music_note,
+                                                size: 28,
+                                                color: Theme.of(context)
+                                                    .colorScheme
+                                                    .onPrimaryContainer),
                                           ),
                                   ),
                                 ),
@@ -254,13 +273,17 @@ class _CurrentlyPlayingBarState extends State<CurrentlyPlayingBar> {
                                 // 歌曲信息
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
                                       Text(
                                         song.songName ?? 'Unknown Song',
-                                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodyMedium
+                                            ?.copyWith(
                                               fontWeight: FontWeight.w600,
                                               color: Colors.white,
                                             ),
@@ -270,8 +293,12 @@ class _CurrentlyPlayingBarState extends State<CurrentlyPlayingBar> {
                                       const SizedBox(height: 3),
                                       Text(
                                         song.artistName ?? 'Unknown Artist',
-                                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                              color: Colors.white.withOpacity(0.8),
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodySmall
+                                            ?.copyWith(
+                                              color:
+                                                  Colors.white.withOpacity(0.8),
                                               fontWeight: FontWeight.w400,
                                             ),
                                         maxLines: 1,
@@ -283,7 +310,8 @@ class _CurrentlyPlayingBarState extends State<CurrentlyPlayingBar> {
 
                                 // 控制按钮
                                 GlassMorphism.glassCard(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 8, vertical: 4),
                                   child: Row(
                                     children: [
                                       IconButton(
@@ -292,9 +320,11 @@ class _CurrentlyPlayingBarState extends State<CurrentlyPlayingBar> {
                                           size: 22,
                                           color: Colors.white,
                                         ),
-                                        onPressed: () => musicProvider.previous(),
+                                        onPressed: () =>
+                                            musicProvider.previous(),
                                         padding: const EdgeInsets.all(6),
-                                        constraints: const BoxConstraints(minWidth: 36),
+                                        constraints:
+                                            const BoxConstraints(minWidth: 36),
                                         splashRadius: 20,
                                       ),
                                       // 使用StreamBuilder监听播放状态变化
@@ -302,24 +332,30 @@ class _CurrentlyPlayingBarState extends State<CurrentlyPlayingBar> {
                                         stream: musicProvider.playerStateStream,
                                         initialData: musicProvider.playerState,
                                         builder: (context, snapshot) {
-                                          final playerState = snapshot.data ?? AppPlayerState.stopped;
+                                          final playerState = snapshot.data ??
+                                              AppPlayerState.stopped;
                                           return IconButton(
                                             icon: Icon(
-                                              playerState == AppPlayerState.playing
+                                              playerState ==
+                                                      AppPlayerState.playing
                                                   ? Icons.pause_circle_filled
                                                   : Icons.play_circle_filled,
                                               size: 36,
-                                              color: Theme.of(context).colorScheme.primary,
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .primary,
                                             ),
                                             onPressed: () {
-                                              if (playerState == AppPlayerState.playing) {
+                                              if (playerState ==
+                                                  AppPlayerState.playing) {
                                                 musicProvider.pause();
                                               } else {
                                                 musicProvider.play();
                                               }
                                             },
                                             padding: const EdgeInsets.all(4),
-                                            constraints: const BoxConstraints(minWidth: 44),
+                                            constraints: const BoxConstraints(
+                                                minWidth: 44),
                                             splashRadius: 24,
                                           );
                                         },
@@ -332,7 +368,8 @@ class _CurrentlyPlayingBarState extends State<CurrentlyPlayingBar> {
                                         ),
                                         onPressed: () => musicProvider.next(),
                                         padding: const EdgeInsets.all(6),
-                                        constraints: const BoxConstraints(minWidth: 36),
+                                        constraints:
+                                            const BoxConstraints(minWidth: 36),
                                         splashRadius: 20,
                                       ),
                                     ],
