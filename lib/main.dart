@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:provider/provider.dart';
+import 'package:get/get.dart';
 import 'package:vibe_music_app/src/routes/app_routes.dart';
 import 'package:vibe_music_app/src/theme/app_theme.dart';
-import 'package:vibe_music_app/src/providers/auth_provider.dart';
-import 'package:vibe_music_app/src/providers/music_provider.dart';
 import 'package:vibe_music_app/src/utils/app_logger.dart';
 import 'package:vibe_music_app/src/utils/sp_util.dart';
+import 'package:vibe_music_app/src/utils/di/dependency_injection.dart';
 
 Future<void> main() async {
   // 加载环境变量
@@ -15,6 +14,8 @@ Future<void> main() async {
   AppLogger().initialize();
   // 初始化SpUtil存储工具
   await SpUtil.init();
+  // 初始化GetX依赖注入
+  DependencyInjection.init();
   // 运行应用
   runApp(const VibeMusicApp());
 }
@@ -25,21 +26,14 @@ class VibeMusicApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MultiProvider(
-      // 提供全局状态管理
-      providers: [
-        ChangeNotifierProvider(create: (_) => AuthProvider()), // 认证状态管理
-        ChangeNotifierProvider(create: (_) => MusicProvider()), // 音乐播放状态管理
-      ],
-      child: MaterialApp(
-        title: 'Vibe Music', // 应用标题
-        theme: AppTheme.lightTheme, // 亮色主题
-        darkTheme: AppTheme.darkTheme, // 暗色主题
-        themeMode: ThemeMode.dark, // 默认使用深色主题
-        initialRoute: AppRoutes.home, // 初始路由为主页
-        routes: AppRoutes.routes, // 应用路由配置
-        debugShowCheckedModeBanner: false, // 隐藏调试横幅
-      ),
+    return GetMaterialApp(
+      title: 'Vibe Music', // 应用标题
+      theme: AppTheme.lightTheme, // 亮色主题
+      darkTheme: AppTheme.darkTheme, // 暗色主题
+      themeMode: ThemeMode.dark, // 默认使用深色主题
+      initialRoute: AppRoutes.home, // 初始路由为主页
+      getPages: AppRoutes.routes, // 应用路由配置
+      debugShowCheckedModeBanner: false, // 隐藏调试横幅
     );
   }
 }

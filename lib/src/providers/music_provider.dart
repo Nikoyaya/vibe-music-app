@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:audio_session/audio_session.dart';
 import 'package:vibe_music_app/src/services/api_service.dart';
@@ -37,7 +38,7 @@ class MusicProvider with ChangeNotifier {
   // 音量大小（默认50%）
   double _volume = 0.5; // 默认音量设置为50%
   // 收藏歌曲ID集合
-  Set<int> _favoriteSongIds = {}; // 本地状态，用于跟踪收藏的歌曲ID
+  RxSet<int> _favoriteSongIds = <int>{}.obs; // 本地状态，用于跟踪收藏的歌曲ID
   // 音频会话
   AudioSession? _audioSession; // 音频会话，用于获取和监听系统音量
 
@@ -68,6 +69,7 @@ class MusicProvider with ChangeNotifier {
   bool get isShuffle => _isShuffle;
   RepeatMode get repeatMode => _repeatMode;
   double get volume => _volume;
+  RxSet<int> get favoriteSongIds => _favoriteSongIds;
 
   /// 构造函数
   MusicProvider() {

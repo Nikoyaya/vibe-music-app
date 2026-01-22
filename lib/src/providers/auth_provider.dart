@@ -236,13 +236,15 @@ class AuthProvider with ChangeNotifier {
   }
 
   /// 注册新用户
-  Future<bool> register(String email, String username, String password) async {
+  Future<bool> register(String email, String username, String password,
+      String verificationCode) async {
     _status = AuthStatus.loading;
     _errorMessage = null;
     notifyListeners();
 
     try {
-      final response = await ApiService().register(email, username, password);
+      final response = await ApiService()
+          .register(email, username, password, verificationCode);
 
       if (response.statusCode == 200) {
         final data =
@@ -252,7 +254,7 @@ class AuthProvider with ChangeNotifier {
           notifyListeners();
           return true;
         } else {
-          _errorMessage = data['msg'] ?? '注册失败';
+          _errorMessage = data['message'] ?? '注册失败';
           _status = AuthStatus.unauthenticated;
           notifyListeners();
           return false;

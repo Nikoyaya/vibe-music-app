@@ -169,11 +169,12 @@ class ApiService {
   }
 
   Future<Response> register(
-      String email, String username, String password) async {
+      String email, String username, String password, String verificationCode) async {
     return await _request('POST', '/user/register', body: {
       'email': email,
       'username': username,
       'password': password,
+      'verificationCode': verificationCode,
     });
   }
 

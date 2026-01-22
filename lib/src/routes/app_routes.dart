@@ -1,13 +1,14 @@
-import 'package:flutter/material.dart';
-import 'package:vibe_music_app/src/screens/home/home_screen.dart';
-import 'package:vibe_music_app/src/screens/player/player_screen.dart';
-import 'package:vibe_music_app/src/screens/search/search_screen.dart';
-import 'package:vibe_music_app/src/screens/auth/login_screen.dart';
-import 'package:vibe_music_app/src/screens/auth/register_screen.dart';
-import 'package:vibe_music_app/src/screens/admin/admin_screen.dart';
+import 'package:get/get.dart';
+import 'package:vibe_music_app/src/pages/home/home_page.dart';
+import 'package:vibe_music_app/src/pages/player/player_page.dart';
+import 'package:vibe_music_app/src/pages/search/search_page.dart';
+import 'package:vibe_music_app/src/pages/auth/login/login_page.dart';
+import 'package:vibe_music_app/src/pages/auth/register/register_page.dart';
+import 'package:vibe_music_app/src/pages/admin/admin_page.dart';
+import 'package:vibe_music_app/src/pages/favorites/favorites_page.dart';
 
 /// 应用路由管理类
-/// 统一管理应用中所有的路由配置
+/// 使用GetX的命名路由系统
 class AppRoutes {
   /// 首页路由
   static const String home = '/';
@@ -27,14 +28,45 @@ class AppRoutes {
   /// 管理员页路由
   static const String admin = '/admin';
 
+  /// 收藏页路由
+  static const String favorites = '/favorites';
+
   /// 路由映射表
-  /// 将路由名称与对应的页面组件关联起来
-  static final Map<String, WidgetBuilder> routes = {
-    home: (context) => const HomeScreen(),
-    player: (context) => const PlayerScreen(),
-    search: (context) => const SearchScreen(),
-    login: (context) => const LoginScreen(),
-    register: (context) => const RegisterScreen(),
-    admin: (context) => const AdminScreen(),
-  };
+  static final List<GetPage> routes = [
+    GetPage(
+      name: home,
+      page: () => const HomePage(),
+      transition: Transition.fade,
+    ),
+    GetPage(
+      name: player,
+      page: () => const PlayerPage(),
+      transition: Transition.fade,
+    ),
+    GetPage(
+      name: search,
+      page: () => const SearchPage(),
+      transition: Transition.fade,
+    ),
+    GetPage(
+      name: login,
+      page: () => const LoginPage(),
+      transition: Transition.fade,
+    ),
+    GetPage(
+      name: register,
+      page: () => const RegisterPage(),
+      transition: Transition.fade,
+    ),
+    GetPage(
+      name: admin,
+      page: () => const AdminPage(),
+      transition: Transition.fade,
+    ),
+    GetPage(
+      name: favorites,
+      page: () => const FavoritesPage(),
+      transition: Transition.fade,
+    ),
+  ];
 }

@@ -1,0 +1,86 @@
+import 'package:get/get.dart';
+import 'package:flutter/material.dart';
+import 'package:vibe_music_app/src/providers/auth_provider.dart';
+import 'package:vibe_music_app/src/utils/app_logger.dart';
+
+class LoginController extends GetxController {
+  // 表单状态
+  final GlobalKey<FormState> formKey;
+
+  // 控制器
+  final usernameOrEmailController = TextEditingController();
+  final passwordController = TextEditingController();
+
+  // 状态
+  var isAdmin = false.obs;
+  var isLoading = false.obs;
+
+  // 认证提供者
+  late AuthProvider _authProvider;
+
+  // 构造函数
+  LoginController()
+      : formKey = GlobalKey<FormState>(
+            debugLabel: 'LoginForm_${DateTime.now().millisecondsSinceEpoch}') {
+    _authProvider = Get.find<AuthProvider>();
+  }
+
+  @override
+  void onInit() {
+    super.onInit();
+  }
+
+  @override
+  void onClose() {
+    usernameOrEmailController.dispose();
+    passwordController.dispose();
+    super.onClose();
+  }
+
+  /// 处理登录
+  Future<void> handleLogin() async {
+    if (formKey.currentState?.validate() ?? false) {
+      isLoading.value = true;
+
+      try {
+        final success = await _authProvider.login(
+          usernameOrEmailController.text,
+          passwordController.text,
+          isAdmin: isAdmin.value,
+        );
+
+        if (success) {
+          // 登录成功，跳转到首页
+          Get.offAllNamed('/');
+        } else if (_authProvider.errorMessage != null) {
+          // 登录失败，显示错误信息
+          Get.snackbar('Error', _authProvider.errorMessage!);
+        }
+      } catch (e, stackTrace) {
+        AppLogger().e('Login error: $e', stackTrace: stackTrace);
+        Get.snackbar('Error', 'An unexpected error occurred');
+      } finally {
+        isLoading.value = false;
+      }
+    }
+  }
+
+  /// 切换管理员登录模式
+  void toggleAdminMode(bool value) {
+    isAdmin.value = value;
+  }
+
+  /// 导航到注册页面
+  void navigateToRegister() {
+    Get.toNamed('/register');
+  }
+
+  /// 返回上一页或导航到首页
+  void goBack() {
+    if (Navigator.canPop(Get.context!)) {
+      Get.back();
+    } else {
+      Get.offAllNamed('/');
+    }
+  }
+}

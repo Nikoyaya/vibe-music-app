@@ -1,0 +1,222 @@
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:vibe_music_app/src/pages/home/widgets/controller.dart';
+import 'package:vibe_music_app/src/utils/glass_morphism/responsive_layout.dart';
+import 'package:vibe_music_app/src/utils/glass_morphism/sidebar_navigation.dart';
+import 'package:vibe_music_app/src/pages/home/components/song_list_page.dart';
+import 'package:vibe_music_app/src/pages/home/components/profile_page.dart';
+import 'package:vibe_music_app/src/pages/home/components/currently_playing_bar.dart';
+import 'package:vibe_music_app/src/pages/search/search_page.dart';
+import 'package:vibe_music_app/src/pages/favorites/favorites_page.dart';
+
+class HomeView extends GetView<HomeController> {
+  const HomeView({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return ResponsiveLayout(
+      mobileLayout: _buildMobileLayout(context),
+      tabletLayout: _buildTabletLayout(context),
+      desktopLayout: _buildDesktopLayout(context),
+    );
+  }
+
+  /// 构建移动端布局
+  Widget _buildMobileLayout(BuildContext context) {
+    return Scaffold(
+      body: Stack(
+        children: [
+          // 显示当前选中的页面
+          Obx(() => _getCurrentPage()),
+          // 正在播放音乐的小悬浮组件
+          const Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: CurrentlyPlayingBar(),
+          ),
+        ],
+      ),
+      bottomNavigationBar: SafeArea(
+        child: Obx(() => Container(
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surface,
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(24)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    spreadRadius: 2,
+                    blurRadius: 10,
+                    offset: const Offset(0, -2),
+                  ),
+                ],
+              ),
+              child: NavigationBar(
+                selectedIndex: controller.currentPage.value,
+                onDestinationSelected: controller.changePage,
+                destinations: [
+                  NavigationDestination(
+                      icon: Icon(Icons.music_note), label: '歌曲'),
+                  NavigationDestination(icon: Icon(Icons.search), label: '搜索'),
+                  NavigationDestination(
+                      icon: Icon(Icons.favorite), label: '收藏'),
+                  NavigationDestination(icon: Icon(Icons.person), label: '我的'),
+                ],
+                elevation: 0,
+                backgroundColor: Colors.transparent,
+              ),
+            )),
+      ),
+    );
+  }
+
+  /// 构建平板端布局
+  Widget _buildTabletLayout(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Theme.of(context).colorScheme.background,
+      body: Row(
+        children: [
+          // 侧边栏导航
+          Container(
+            width: 200,
+            child: Obx(() => SidebarNavigation(
+                  currentIndex: controller.currentPage.value,
+                  onDestinationSelected: controller.changePage,
+                )),
+          ),
+          // 主内容区域
+          Expanded(
+            child: Stack(
+              children: [
+                // 显示当前选中的页面
+                Obx(() => _getCurrentPage()),
+                // 正在播放音乐的小悬浮组件
+                const Positioned(
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  child: CurrentlyPlayingBar(),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 构建桌面端布局
+  Widget _buildDesktopLayout(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Theme.of(context).colorScheme.background,
+      body: Row(
+        children: [
+          // 侧边栏导航
+          Container(
+            width: 240,
+            child: Obx(() => SidebarNavigation(
+                  currentIndex: controller.currentPage.value,
+                  onDestinationSelected: controller.changePage,
+                )),
+          ),
+          // 主内容区域
+          Expanded(
+            child: Stack(
+              children: [
+                // 顶部导航栏
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  child: TopNavigationBar(
+                    title: Obx(() => Text(controller.getCurrentPageTitle())),
+                    actions: [
+                      IconButton(
+                        icon: Icon(Icons.settings, color: Colors.white),
+                        onPressed: controller.navigateToSettings,
+                      ),
+                    ],
+                  ),
+                ),
+                // 显示当前选中的页面
+                Padding(
+                  padding: const EdgeInsets.only(top: 70),
+                  child: Obx(() => _getCurrentPage()),
+                ),
+                // 正在播放音乐的小悬浮组件
+                const Positioned(
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  child: CurrentlyPlayingBar(),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 获取当前页面
+  Widget _getCurrentPage() {
+    switch (controller.currentPage.value) {
+      case 0:
+        return const SongListPage();
+      case 1:
+        return const SearchPage();
+      case 2:
+        return const FavoritesPage();
+      case 3:
+        return const ProfilePage();
+      default:
+        return const SongListPage();
+    }
+  }
+}
+
+/// 顶部导航栏组件
+class TopNavigationBar extends StatelessWidget {
+  final Widget title;
+  final List<Widget>? actions;
+
+  const TopNavigationBar({Key? key, required this.title, this.actions})
+      : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 70,
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            spreadRadius: 2,
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(
+              child: Text(
+                title is Text ? (title as Text).data ?? '' : title.toString(),
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+              ),
+            ),
+            if (actions != null) Row(children: actions!),
+          ],
+        ),
+      ),
+    );
+  }
+}
