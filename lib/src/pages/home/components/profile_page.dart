@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:vibe_music_app/src/providers/auth_provider.dart';
-import 'package:vibe_music_app/src/pages/auth/login/login_page.dart';
-import 'package:vibe_music_app/src/pages/admin/admin_page.dart';
 
 /// 个人中心页面
 class ProfilePage extends StatefulWidget {
