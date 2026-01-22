@@ -96,7 +96,7 @@ class FavoritesController extends GetxController {
       
       isLoadingMore.value = false;
     }).catchError((error, stackTrace) {
-      AppLogger().e('Error loading favorite songs: $error', stackTrace: stackTrace);
+      AppLogger().e('加载收藏歌曲错误: $error', stackTrace: stackTrace);
       isLoadingMore.value = false;
     });
   }

@@ -57,7 +57,7 @@ class LoginController extends GetxController {
           Get.snackbar('Error', _authProvider.errorMessage!);
         }
       } catch (e, stackTrace) {
-        AppLogger().e('Login error: $e', stackTrace: stackTrace);
+        AppLogger().e('登录错误: $e', stackTrace: stackTrace);
         Get.snackbar('Error', 'An unexpected error occurred');
       } finally {
         isLoading.value = false;

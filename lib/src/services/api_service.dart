@@ -93,15 +93,17 @@ class ApiService {
     );
 
     // Log request details
-    AppLogger().i('\n=== API请求 ===');
-    AppLogger().i('URL: $baseUrl$endpoint');
-    AppLogger().i('方法: $method');
-    AppLogger().i('请求头: ${_dio.options.headers}');
-    if (queryParams != null) {
-      AppLogger().i('查询参数: $queryParams');
+    AppLogger().d('\n=== API请求 ===');
+    AppLogger().d('URL: $baseUrl$endpoint');
+    AppLogger().d('方法: $method');
+    AppLogger().d('请求头: ${_dio.options.headers}');
+
+    if (queryParams != null && queryParams.isNotEmpty) {
+      AppLogger().d('查询参数: $queryParams');
     }
+
     if (body != null) {
-      AppLogger().i('请求体: $body');
+      AppLogger().d('请求体: $body');
     }
 
     try {
@@ -119,10 +121,10 @@ class ApiService {
       }
 
       // Log response details
-      AppLogger().i('\n=== API响应 ===');
-      AppLogger().i('状态码: ${response.statusCode}');
-      AppLogger().i('响应数据: ${response.data}');
-      AppLogger().i('=================\n');
+      AppLogger().d('\n=== API响应 ===');
+      AppLogger().d('状态码: ${response.statusCode}');
+      AppLogger().d('响应数据: ${response.data}');
+      AppLogger().d('=================\n');
 
       return response;
     } catch (e) {
@@ -168,8 +170,8 @@ class ApiService {
     });
   }
 
-  Future<Response> register(
-      String email, String username, String password, String verificationCode) async {
+  Future<Response> register(String email, String username, String password,
+      String verificationCode) async {
     return await _request('POST', '/user/register', body: {
       'email': email,
       'username': username,
@@ -197,10 +199,10 @@ class ApiService {
   }
 
   Future<Response> updateUserAvatar(Uint8List avatarBytes) async {
-    AppLogger().i('\n=== 头像更新请求 ===');
-    AppLogger().i('头像字节长度: ${avatarBytes.length} 字节');
-    AppLogger().i('请求头: ${_dio.options.headers}');
-    AppLogger().i('=================\n');
+    AppLogger().d('\n=== 头像更新请求 ===');
+    AppLogger().d('头像字节长度: ${avatarBytes.length} 字节');
+    AppLogger().d('请求头: ${_dio.options.headers}');
+    AppLogger().d('=================\n');
 
     try {
       // Create FormData with the bytes directly
@@ -212,8 +214,8 @@ class ApiService {
       });
 
       // Log form data details
-      AppLogger().i('表单数据字段: ${formData.fields}');
-      AppLogger().i('表单文件数量: ${formData.files.length}');
+      AppLogger().d('表单数据字段: ${formData.fields}');
+      AppLogger().d('表单文件数量: ${formData.files.length}');
 
       // 更新头像的接口不需要Bearer前缀，临时移除它
       final originalAuthorization = _dio.options.headers['Authorization'];
@@ -241,10 +243,10 @@ class ApiService {
       }
 
       // Log response details
-      AppLogger().i('\n=== 头像更新响应 ===');
-      AppLogger().i('状态码: ${response.statusCode}');
-      AppLogger().i('响应数据: ${response.data}');
-      AppLogger().i('=================\n');
+      AppLogger().d('\n=== 头像更新响应 ===');
+      AppLogger().d('状态码: ${response.statusCode}');
+      AppLogger().d('响应数据: ${response.data}');
+      AppLogger().d('=================\n');
 
       return response;
     } catch (e) {

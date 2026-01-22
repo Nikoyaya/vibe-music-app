@@ -77,7 +77,7 @@ class AdminController extends GetxController {
         errorMessage.value = '网络错误: ${response.statusCode}';
       }
     } catch (e, stackTrace) {
-      AppLogger().e('Load users error: $e', stackTrace: stackTrace);
+      AppLogger().e('加载用户错误: $e', stackTrace: stackTrace);
       errorMessage.value = '错误: $e';
     } finally {
       isLoading.value = false;
@@ -121,7 +121,7 @@ class AdminController extends GetxController {
         errorMessage.value = '网络错误: ${response.statusCode}';
       }
     } catch (e, stackTrace) {
-      AppLogger().e('Load songs error: $e', stackTrace: stackTrace);
+      AppLogger().e('加载歌曲错误: $e', stackTrace: stackTrace);
       errorMessage.value = '错误: $e';
     } finally {
       isLoading.value = false;

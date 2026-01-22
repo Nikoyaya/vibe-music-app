@@ -68,7 +68,7 @@ class SearchPageController extends GetxController {
         searchResults.value = songs;
       }
     } catch (e, stackTrace) {
-      AppLogger().e('Search songs error: $e', stackTrace: stackTrace);
+      AppLogger().e('搜索歌曲错误: $e', stackTrace: stackTrace);
       Get.snackbar('Error', '搜索失败，请重试');
     } finally {
       isSearching.value = false;

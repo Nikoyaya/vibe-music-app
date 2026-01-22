@@ -75,7 +75,7 @@ class RegisterController extends GetxController {
         Get.snackbar('Error', 'Failed to send verification code');
       }
     } catch (e, stackTrace) {
-      AppLogger().e('Send verification code error: $e', stackTrace: stackTrace);
+      AppLogger().e('发送验证码错误: $e', stackTrace: stackTrace);
       Get.snackbar('Error', 'An unexpected error occurred');
     } finally {
       isSendingCode.value = false;
@@ -125,7 +125,7 @@ class RegisterController extends GetxController {
           Get.snackbar('Error', _authProvider.errorMessage!);
         }
       } catch (e, stackTrace) {
-        AppLogger().e('Register error: $e', stackTrace: stackTrace);
+        AppLogger().e('注册错误: $e', stackTrace: stackTrace);
         Get.snackbar('Error', 'An unexpected error occurred');
       } finally {
         isLoading.value = false;

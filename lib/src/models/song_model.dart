@@ -77,7 +77,7 @@ class Song with _$Song {
               processedAudioUrl.substring(0, processedAudioUrl.length - 1);
         }
 
-        AppLogger().i('处理后的音频URL: $processedAudioUrl');
+        AppLogger().d('处理后的音频URL: $processedAudioUrl');
       } catch (e) {
         AppLogger().e('处理音频URL失败: $e');
         // 如果解析失败，尝试手动修复明显问题
@@ -101,7 +101,7 @@ class Song with _$Song {
     for (var field in durationFields) {
       if (json.containsKey(field) && json[field] != null) {
         durationValue = json[field]?.toString().trim();
-        AppLogger().i('从字段$field获取到duration值: $durationValue');
+        AppLogger().d('从字段$field获取到duration值: $durationValue');
         break;
       }
     }
@@ -134,16 +134,16 @@ class Song with _$Song {
     final durationStr = duration ?? '';
     // 移除所有空格
     final cleanDuration = durationStr.trim().replaceAll(' ', '');
-    AppLogger().i('原始duration: "$durationStr"，清理后: "$cleanDuration"');
+    AppLogger().d('原始duration: "$durationStr"，清理后: "$cleanDuration"');
 
     if (cleanDuration.isEmpty) {
-      AppLogger().i('duration为空，返回0:00');
+      AppLogger().d('duration为空，返回0:00');
       return '0:00';
     }
 
     // 处理带单位的格式：123s, 2m3s, 1h2m3s
     if (RegExp(r'^\d+[smh]+$', caseSensitive: false).hasMatch(cleanDuration)) {
-      AppLogger().i('带单位格式，尝试解析');
+      AppLogger().d('带单位格式，尝试解析');
       // 匹配数字和单位
       final matches = RegExp(r'(\d+)([smh])', caseSensitive: false)
           .allMatches(cleanDuration);
@@ -167,7 +167,7 @@ class Song with _$Song {
       }
 
       if (totalSeconds > 0) {
-        AppLogger().i('带单位格式，解析为$totalSeconds秒');
+        AppLogger().d('带单位格式，解析为$totalSeconds秒');
         return _formatSeconds(totalSeconds);
       }
     }
@@ -176,7 +176,7 @@ class Song with _$Song {
     if (RegExp(r'^\d+(\.\d+)?$').hasMatch(cleanDuration)) {
       final double secondsDouble = double.tryParse(cleanDuration) ?? 0;
       final seconds = secondsDouble.toInt();
-      AppLogger().i('秒数格式，解析为$secondsDouble秒，取整为$seconds秒');
+      AppLogger().d('秒数格式，解析为$secondsDouble秒，取整为$seconds秒');
       return _formatSeconds(seconds);
     }
 
@@ -200,7 +200,7 @@ class Song with _$Song {
       final minutes = int.tryParse(hhMmSsMatch.group(2) ?? '0') ?? 0;
       final secondsDouble = double.tryParse(hhMmSsMatch.group(3) ?? '0') ?? 0;
       final seconds = secondsDouble.toInt();
-      AppLogger().i(
+      AppLogger().d(
           '时:分:秒格式，解析为$hours时$minutes分${secondsDouble}秒，取整为$hours时$minutes分$seconds秒');
       return _formatSeconds(hours * 3600 + minutes * 60 + seconds);
     }
@@ -211,12 +211,12 @@ class Song with _$Song {
       final double secondsDouble =
           double.tryParse(digitsOnly.group(0) ?? '0') ?? 0;
       final seconds = secondsDouble.toInt();
-      AppLogger().i('提取数字格式，解析为$secondsDouble秒，取整为$seconds秒');
+      AppLogger().d('提取数字格式，解析为$secondsDouble秒，取整为$seconds秒');
       return _formatSeconds(seconds);
     }
 
     // 无法识别的格式，返回默认值
-    AppLogger().i('无法识别的格式，返回0:00');
+    AppLogger().d('无法识别的格式，返回0:00');
     return '0:00';
   }
 
