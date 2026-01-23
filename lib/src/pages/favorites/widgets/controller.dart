@@ -12,6 +12,7 @@ class FavoritesController extends GetxController {
   var currentPage = 1.obs;
   var isLoadingMore = false.obs;
   var hasMoreSongs = true.obs;
+  var isAuthenticated = false.obs; // 可观察的认证状态
 
   // 常量
   static const int pageSize = 20;
@@ -29,6 +30,9 @@ class FavoritesController extends GetxController {
     _authProvider = Get.find<AuthProvider>();
     _musicProvider = Get.find<MusicProvider>();
 
+    // 初始设置认证状态
+    isAuthenticated.value = _authProvider.isAuthenticated;
+
     // 添加滚动监听器
     scrollController.addListener(() {
       if (scrollController.position.pixels ==
@@ -39,6 +43,7 @@ class FavoritesController extends GetxController {
 
     // 监听认证状态变化
     _authProvider.addListener(() {
+      isAuthenticated.value = _authProvider.isAuthenticated;
       if (_authProvider.isAuthenticated) {
         loadFavoriteSongs();
       } else {
@@ -172,9 +177,9 @@ class FavoritesController extends GetxController {
     Get.toNamed('/login');
   }
 
-  /// 检查是否已登录
-  bool get isAuthenticated {
-    return _authProvider.isAuthenticated;
+  /// 检查是否已登录（兼容旧代码）
+  bool get isAuthenticatedValue {
+    return isAuthenticated.value;
   }
 
   /// 更新收藏歌曲列表

@@ -14,7 +14,7 @@ class FavoritesView extends GetView<FavoritesController> {
       ),
       body: Center(
         child: Obx(() {
-          if (!controller.isAuthenticated) {
+          if (!controller.isAuthenticated.value) {
             return buildLoginPrompt();
           }
 
