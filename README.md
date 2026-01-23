@@ -39,6 +39,24 @@
 - **代码生成**：freezed
 - **构建工具**：Flutter CLI
 
+## App 展示
+
+### 移动端截图
+
+以下是应用在移动设备上的截图：
+
+#### 首页
+
+![首页截图](screenshots/flutter_01.png)
+
+#### 播放器页面
+
+![播放器页面截图](screenshots/flutter_02.png)
+
+#### 收藏页面
+
+![收藏页面截图](screenshots/flutter_03.png)
+
 ## 安装和运行
 
 ### 前提条件
