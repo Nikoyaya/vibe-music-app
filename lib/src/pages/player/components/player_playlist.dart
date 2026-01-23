@@ -19,6 +19,9 @@ class PlayerPlaylist extends StatelessWidget {
   /// 检查歌曲是否被收藏的函数
   final bool Function(Song) isSongFavorited;
 
+  /// 删除歌曲回调
+  final Function(int) onRemoveSong;
+
   const PlayerPlaylist({
     Key? key,
     required this.playlist,
@@ -26,6 +29,7 @@ class PlayerPlaylist extends StatelessWidget {
     required this.onSongTap,
     required this.onToggleFavorite,
     required this.isSongFavorited,
+    required this.onRemoveSong,
   }) : super(key: key);
 
   @override
@@ -199,17 +203,30 @@ class PlayerPlaylist extends StatelessWidget {
                             fontSize: 12,
                           ),
                         ),
-                        trailing: IconButton(
-                          icon: Icon(
-                            isSongFavorited(song)
-                                ? Icons.favorite
-                                : Icons.favorite_border,
-                            color: isSongFavorited(song)
-                                ? Theme.of(context).colorScheme.primary
-                                : null,
-                            size: 20,
-                          ),
-                          onPressed: () => onToggleFavorite(song),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon: Icon(
+                                isSongFavorited(song)
+                                    ? Icons.favorite
+                                    : Icons.favorite_border,
+                                color: isSongFavorited(song)
+                                    ? Theme.of(context).colorScheme.primary
+                                    : null,
+                                size: 20,
+                              ),
+                              onPressed: () => onToggleFavorite(song),
+                            ),
+                            IconButton(
+                              icon: Icon(
+                                Icons.delete_outline,
+                                color: Theme.of(context).colorScheme.error,
+                                size: 20,
+                              ),
+                              onPressed: () => onRemoveSong(index),
+                            ),
+                          ],
                         ),
                         onTap: () => onSongTap(index),
                       ),

@@ -632,8 +632,14 @@ class _SongListPageState extends State<SongListPage> {
                                   final authProvider = Get.find<AuthProvider>();
                                   if (!authProvider.isAuthenticated) {
                                     // 提示用户登录
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(content: Text('请先登录')),
+                                    Get.snackbar(
+                                      '提示',
+                                      '请先登录',
+                                      backgroundColor: Colors.blue,
+                                      colorText: Colors.white,
+                                      icon:
+                                          Icon(Icons.info, color: Colors.white),
+                                      duration: Duration(seconds: 2),
                                     );
                                     // 导航到登录页面
                                     Get.toNamed('/login');
@@ -645,18 +651,28 @@ class _SongListPageState extends State<SongListPage> {
                                     success = await musicProvider
                                         .removeFromFavorites(song);
                                     if (success && mounted) {
-                                      ScaffoldMessenger.of(context)
-                                          .showSnackBar(
-                                        const SnackBar(content: Text('已取消收藏')),
+                                      Get.snackbar(
+                                        '成功',
+                                        '已取消收藏',
+                                        backgroundColor: Colors.green,
+                                        colorText: Colors.white,
+                                        icon: Icon(Icons.check_circle,
+                                            color: Colors.white),
+                                        duration: Duration(seconds: 2),
                                       );
                                     }
                                   } else {
                                     success = await musicProvider
                                         .addToFavorites(song);
                                     if (success && mounted) {
-                                      ScaffoldMessenger.of(context)
-                                          .showSnackBar(
-                                        const SnackBar(content: Text('已添加到收藏')),
+                                      Get.snackbar(
+                                        '成功',
+                                        '已添加到收藏',
+                                        backgroundColor: Colors.green,
+                                        colorText: Colors.white,
+                                        icon: Icon(Icons.check_circle,
+                                            color: Colors.white),
+                                        duration: Duration(seconds: 2),
                                       );
                                     }
                                   }
@@ -688,6 +704,51 @@ class _SongListPageState extends State<SongListPage> {
                                 Icons.play_circle_outline,
                                 size: 28,
                                 color: Theme.of(context).colorScheme.primary,
+                              ),
+                            ),
+                            // 更多按钮
+                            IconButton(
+                              onPressed: () {
+                                // 显示更多选项菜单
+                                showModalBottomSheet(
+                                  context: context,
+                                  builder: (context) {
+                                    return Container(
+                                      padding: const EdgeInsets.all(16),
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          ListTile(
+                                            leading:
+                                                Icon(Icons.queue_play_next),
+                                            title: Text('下一首播放'),
+                                            onTap: () {
+                                              // 添加到下一首播放
+                                              Get.find<MusicProvider>()
+                                                  .insertNextToPlay(song);
+                                              Get.snackbar(
+                                                '成功',
+                                                '已添加到下一首播放',
+                                                backgroundColor: Colors.green,
+                                                colorText: Colors.white,
+                                                icon: Icon(Icons.check_circle,
+                                                    color: Colors.white),
+                                                duration: Duration(seconds: 2),
+                                              );
+                                              Navigator.pop(context);
+                                            },
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  },
+                                );
+                              },
+                              icon: Icon(
+                                Icons.more_vert,
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onSurfaceVariant,
                               ),
                             ),
                           ],

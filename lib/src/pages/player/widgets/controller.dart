@@ -62,7 +62,8 @@ class PlayerController extends GetxController {
         break;
     }
     _volume.value = _musicProvider.volume;
-    _playlist.value = _musicProvider.playlist;
+    // 创建播放列表的副本，确保UI检测到变化
+    _playlist.value = [..._musicProvider.playlist];
     _currentIndex.value = _musicProvider.currentIndex;
   }
 
@@ -151,6 +152,13 @@ class PlayerController extends GetxController {
   /// 检查歌曲是否已收藏
   bool isSongFavorited(Song song) {
     return _musicProvider.isSongFavorited(song);
+  }
+
+  /// 从播放列表移除歌曲
+  void removeFromPlaylist(int index) {
+    _musicProvider.removeFromPlaylist(index);
+    // 更新本地状态
+    _updateObservableVariables();
   }
 
   /// 获取当前播放状态

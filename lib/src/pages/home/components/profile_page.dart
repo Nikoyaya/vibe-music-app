@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:vibe_music_app/src/providers/auth_provider.dart';
+import 'package:vibe_music_app/src/utils/app_logger.dart';
 
 /// 个人中心页面
 class ProfilePage extends StatefulWidget {
@@ -313,12 +314,22 @@ class _ProfilePageState extends State<ProfilePage> {
                         setState(() {
                           _isEditing = false;
                         });
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('个人资料更新成功')),
+                        Get.snackbar(
+                          '成功',
+                          '个人资料更新成功',
+                          backgroundColor: Colors.green,
+                          colorText: Colors.white,
+                          icon: Icon(Icons.check_circle, color: Colors.white),
+                          duration: Duration(seconds: 2),
                         );
                       } else if (mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('更新个人资料失败')),
+                        Get.snackbar(
+                          '错误',
+                          '更新个人资料失败',
+                          backgroundColor: Colors.red,
+                          colorText: Colors.white,
+                          icon: Icon(Icons.error, color: Colors.white),
+                          duration: Duration(seconds: 2),
                         );
                       }
                     }
@@ -402,20 +413,35 @@ class _ProfilePageState extends State<ProfilePage> {
         final success = await authProvider.updateUserAvatar(bytes);
 
         if (success && mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('头像更新成功')),
+          Get.snackbar(
+            '成功',
+            '头像更新成功',
+            backgroundColor: Colors.green,
+            colorText: Colors.white,
+            icon: Icon(Icons.check_circle, color: Colors.white),
+            duration: Duration(seconds: 2),
           );
         } else if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('更新头像失败')),
+          Get.snackbar(
+            '错误',
+            '更新头像失败',
+            backgroundColor: Colors.red,
+            colorText: Colors.white,
+            icon: Icon(Icons.error, color: Colors.white),
+            duration: Duration(seconds: 2),
           );
         }
       }
     } catch (e) {
-      print('选择图片错误: $e');
+      AppLogger().e('选择图片错误: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('选择图片失败')),
+        Get.snackbar(
+          '错误',
+          '选择图片失败',
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+          icon: Icon(Icons.error, color: Colors.white),
+          duration: Duration(seconds: 2),
         );
       }
     }

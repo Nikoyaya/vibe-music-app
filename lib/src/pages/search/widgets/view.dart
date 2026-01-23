@@ -5,6 +5,7 @@ import 'package:vibe_music_app/src/components/common_button.dart';
 import 'package:vibe_music_app/src/components/common_card.dart';
 import 'package:vibe_music_app/src/components/common_loading.dart';
 import 'package:vibe_music_app/src/pages/search/components/search_bar.dart';
+import 'package:vibe_music_app/src/providers/music_provider.dart';
 
 class SearchView extends GetView<SearchPageController> {
   const SearchView({super.key});
@@ -123,6 +124,50 @@ class SearchView extends GetView<SearchPageController> {
                           // 播放按钮
                           Icon(Icons.play_arrow,
                               color: Theme.of(context).colorScheme.primary),
+                          // 更多按钮
+                          IconButton(
+                            icon: Icon(
+                              Icons.more_vert,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant,
+                            ),
+                            onPressed: () {
+                              // 显示更多选项菜单
+                              showModalBottomSheet(
+                                context: context,
+                                builder: (context) {
+                                  return Container(
+                                    padding: const EdgeInsets.all(16),
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        ListTile(
+                                          leading: Icon(Icons.queue_play_next),
+                                          title: Text('下一首播放'),
+                                          onTap: () {
+                                            // 添加到下一首播放
+                                            Get.find<MusicProvider>()
+                                                .insertNextToPlay(song);
+                                            Get.snackbar(
+                                              '成功',
+                                              '已添加到下一首播放',
+                                              backgroundColor: Colors.green,
+                                              colorText: Colors.white,
+                                              icon: Icon(Icons.check_circle,
+                                                  color: Colors.white),
+                                              duration: Duration(seconds: 2),
+                                            );
+                                            Navigator.pop(context);
+                                          },
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                },
+                              );
+                            },
+                          ),
                         ],
                       ),
                     );

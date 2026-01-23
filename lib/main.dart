@@ -13,13 +13,14 @@ Future<void> main() async {
 
   // 确保Flutter绑定已初始化
   WidgetsFlutterBinding.ensureInitialized();
+
+  // 先初始化日志工具
+  AppLogger().initialize();
   AppLogger().d('✅ Flutter绑定初始化完成');
 
-  // 并行初始化不相互依赖的组件
-  await Future.wait([
-    _initializeEnvironment(),
-    _initializeUtilities(),
-  ]);
+  // 初始化其他组件
+  await _initializeEnvironment();
+  await _initializeUtilities();
 
   // 初始化依赖注入
   await _initializeDependencyInjection();
@@ -40,14 +41,11 @@ Future<void> _initializeEnvironment() async {
 
 /// 初始化工具类
 Future<void> _initializeUtilities() async {
-  // 初始化AppLogger日志工具
-  AppLogger().initialize();
-
   // 初始化SpUtil存储工具
   await SpUtil.init();
 
-  // 初始化DatabaseHelper数据库工具
-  await DatabaseHelper().database;
+  // 数据库将在首次使用时自动初始化
+  AppLogger().d('✅ 工具类初始化完成');
 }
 
 /// 初始化依赖注入

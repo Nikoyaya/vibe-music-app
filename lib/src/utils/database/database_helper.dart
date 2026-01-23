@@ -71,6 +71,31 @@ class DatabaseHelper {
         )
       ''');
 
+      // 创建播放列表表
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS playlists (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT,
+          createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+      ''');
+
+      // 创建播放列表歌曲关联表
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS playlist_songs (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          playlist_id INTEGER,
+          song_id TEXT,
+          song_name TEXT,
+          artist_name TEXT,
+          cover_url TEXT,
+          song_url TEXT,
+          duration TEXT,
+          position INTEGER,
+          createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+      ''');
+
       // 创建播放历史表
       await db.execute('''
         CREATE TABLE IF NOT EXISTS play_history (
@@ -81,8 +106,7 @@ class DatabaseHelper {
           coverUrl TEXT,
           songUrl TEXT,
           duration TEXT,
-          playedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          FOREIGN KEY (songId) REFERENCES songs (songId)
+          playedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
       ''');
 
@@ -93,7 +117,8 @@ class DatabaseHelper {
     }
   }
 
-  Future<void> _upgradeDatabase(Database db, int oldVersion, int newVersion) async {
+  Future<void> _upgradeDatabase(
+      Database db, int oldVersion, int newVersion) async {
     try {
       AppLogger().d('升级数据库，从版本 $oldVersion 到 $newVersion');
       // 在这里添加数据库升级逻辑
@@ -107,7 +132,8 @@ class DatabaseHelper {
   Future<int> insert(String table, Map<String, dynamic> data) async {
     try {
       final db = await database;
-      final id = await db.insert(table, data, conflictAlgorithm: ConflictAlgorithm.replace);
+      final id = await db.insert(table, data,
+          conflictAlgorithm: ConflictAlgorithm.replace);
       AppLogger().d('插入数据到表 $table 成功，ID: $id');
       return id;
     } catch (e) {
@@ -117,7 +143,8 @@ class DatabaseHelper {
   }
 
   // 通用查询方法
-  Future<List<Map<String, dynamic>>> query(String table, {
+  Future<List<Map<String, dynamic>>> query(
+    String table, {
     List<String>? columns,
     String? where,
     List<dynamic>? whereArgs,
@@ -149,7 +176,9 @@ class DatabaseHelper {
   }
 
   // 通用更新方法
-  Future<int> update(String table, Map<String, dynamic> data, {
+  Future<int> update(
+    String table,
+    Map<String, dynamic> data, {
     String? where,
     List<dynamic>? whereArgs,
   }) async {
@@ -170,7 +199,8 @@ class DatabaseHelper {
   }
 
   // 通用删除方法
-  Future<int> delete(String table, {
+  Future<int> delete(
+    String table, {
     String? where,
     List<dynamic>? whereArgs,
   }) async {
@@ -190,7 +220,8 @@ class DatabaseHelper {
   }
 
   // 执行原始SQL
-  Future<List<Map<String, dynamic>>> rawQuery(String sql, [List<dynamic>? arguments]) async {
+  Future<List<Map<String, dynamic>>> rawQuery(String sql,
+      [List<dynamic>? arguments]) async {
     try {
       final db = await database;
       final results = await db.rawQuery(sql, arguments);

@@ -137,6 +137,7 @@ class PlayerView extends GetView<PlayerController> {
                       onSongTap: controller.playSongAtIndex,
                       onToggleFavorite: controller.handlePlaylistFavoriteToggle,
                       isSongFavorited: controller.isSongFavorited,
+                      onRemoveSong: controller.removeFromPlaylist,
                     )
                   : const SizedBox()),
           // 音量指示器 - 使用StreamBuilder监听音量变化

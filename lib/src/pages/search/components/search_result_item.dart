@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:get/get.dart';
 import 'package:vibe_music_app/src/models/song_model.dart';
 import 'package:vibe_music_app/src/providers/music_provider.dart';
 import 'package:vibe_music_app/src/providers/auth_provider.dart';
@@ -43,8 +44,13 @@ class SearchResultItem extends StatelessWidget {
             ),
             onPressed: () async {
               if (!authProvider.isAuthenticated) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('请先登录')),
+                Get.snackbar(
+                  '提示',
+                  '请先登录',
+                  backgroundColor: Colors.blue,
+                  colorText: Colors.white,
+                  icon: Icon(Icons.info, color: Colors.white),
+                  duration: Duration(seconds: 2),
                 );
                 return;
               }
@@ -53,15 +59,25 @@ class SearchResultItem extends StatelessWidget {
               if (isFavorited) {
                 success = await musicProvider.removeFromFavorites(song);
                 if (success) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('已取消收藏')),
+                  Get.snackbar(
+                    '成功',
+                    '已取消收藏',
+                    backgroundColor: Colors.green,
+                    colorText: Colors.white,
+                    icon: Icon(Icons.check_circle, color: Colors.white),
+                    duration: Duration(seconds: 2),
                   );
                 }
               } else {
                 success = await musicProvider.addToFavorites(song);
                 if (success) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('已添加到收藏')),
+                  Get.snackbar(
+                    '成功',
+                    '已添加到收藏',
+                    backgroundColor: Colors.green,
+                    colorText: Colors.white,
+                    icon: Icon(Icons.check_circle, color: Colors.white),
+                    duration: Duration(seconds: 2),
                   );
                 }
               }

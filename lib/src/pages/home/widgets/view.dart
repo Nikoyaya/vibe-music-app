@@ -6,7 +6,7 @@ import 'package:vibe_music_app/src/utils/glass_morphism/sidebar_navigation.dart'
 import 'package:vibe_music_app/src/pages/home/components/song_list_page.dart';
 import 'package:vibe_music_app/src/pages/home/components/profile_page.dart';
 import 'package:vibe_music_app/src/pages/home/components/currently_playing_bar.dart';
-import 'package:vibe_music_app/src/pages/search/search_page.dart';
+import 'package:vibe_music_app/src/pages/player/player_page.dart';
 import 'package:vibe_music_app/src/pages/favorites/favorites_page.dart';
 
 class HomeView extends GetView<HomeController> {
@@ -28,13 +28,15 @@ class HomeView extends GetView<HomeController> {
         children: [
           // 显示当前选中的页面
           Obx(() => _getCurrentPage()),
-          // 正在播放音乐的小悬浮组件
-          const Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            child: CurrentlyPlayingBar(),
-          ),
+          // 正在播放音乐的小悬浮组件（在播放页时隐藏）
+          Obx(() => controller.currentPage.value != 1
+              ? const Positioned(
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  child: CurrentlyPlayingBar(),
+                )
+              : const SizedBox.shrink()),
         ],
       ),
       bottomNavigationBar: SafeArea(
@@ -58,7 +60,8 @@ class HomeView extends GetView<HomeController> {
                 destinations: [
                   NavigationDestination(
                       icon: Icon(Icons.music_note), label: '歌曲'),
-                  NavigationDestination(icon: Icon(Icons.search), label: '搜索'),
+                  NavigationDestination(
+                      icon: Icon(Icons.play_circle), label: '播放'),
                   NavigationDestination(
                       icon: Icon(Icons.favorite), label: '收藏'),
                   NavigationDestination(icon: Icon(Icons.person), label: '我的'),
@@ -91,13 +94,15 @@ class HomeView extends GetView<HomeController> {
               children: [
                 // 显示当前选中的页面
                 Obx(() => _getCurrentPage()),
-                // 正在播放音乐的小悬浮组件
-                const Positioned(
-                  bottom: 0,
-                  left: 0,
-                  right: 0,
-                  child: CurrentlyPlayingBar(),
-                ),
+                // 正在播放音乐的小悬浮组件（在播放页时隐藏）
+                Obx(() => controller.currentPage.value != 1
+                    ? const Positioned(
+                        bottom: 0,
+                        left: 0,
+                        right: 0,
+                        child: CurrentlyPlayingBar(),
+                      )
+                    : const SizedBox.shrink()),
               ],
             ),
           ),
@@ -133,6 +138,10 @@ class HomeView extends GetView<HomeController> {
                     title: Obx(() => Text(controller.getCurrentPageTitle())),
                     actions: [
                       IconButton(
+                        icon: Icon(Icons.search, color: Colors.white),
+                        onPressed: () => Get.toNamed('/search'),
+                      ),
+                      IconButton(
                         icon: Icon(Icons.settings, color: Colors.white),
                         onPressed: controller.navigateToSettings,
                       ),
@@ -144,13 +153,15 @@ class HomeView extends GetView<HomeController> {
                   padding: const EdgeInsets.only(top: 70),
                   child: Obx(() => _getCurrentPage()),
                 ),
-                // 正在播放音乐的小悬浮组件
-                const Positioned(
-                  bottom: 0,
-                  left: 0,
-                  right: 0,
-                  child: CurrentlyPlayingBar(),
-                ),
+                // 正在播放音乐的小悬浮组件（在播放页时隐藏）
+                Obx(() => controller.currentPage.value != 1
+                    ? const Positioned(
+                        bottom: 0,
+                        left: 0,
+                        right: 0,
+                        child: CurrentlyPlayingBar(),
+                      )
+                    : const SizedBox.shrink()),
               ],
             ),
           ),
@@ -165,7 +176,7 @@ class HomeView extends GetView<HomeController> {
       case 0:
         return const SongListPage();
       case 1:
-        return const SearchPage();
+        return const PlayerPage();
       case 2:
         return const FavoritesPage();
       case 3:

@@ -7,6 +7,8 @@ import 'package:audio_session/audio_session.dart';
 import 'package:vibe_music_app/src/services/api_service.dart';
 import 'package:vibe_music_app/src/models/song_model.dart';
 import 'package:vibe_music_app/src/utils/app_logger.dart';
+import 'package:vibe_music_app/src/utils/database/database_helper.dart';
+import 'package:vibe_music_app/src/utils/sp_util.dart';
 
 /// 播放器状态枚举
 enum AppPlayerState {
@@ -73,13 +75,14 @@ class MusicProvider with ChangeNotifier {
 
   /// 构造函数
   MusicProvider() {
-    // 异步初始化音频播放器
-    _initializeAudioPlayer();
+    // 异步初始化音频播放器和加载播放状态
+    _initialize();
   }
 
-  /// 异步初始化音频播放器
-  Future<void> _initializeAudioPlayer() async {
+  /// 初始化方法
+  Future<void> _initialize() async {
     await _initAudioPlayer();
+    await _loadPlayState();
   }
 
   /// 初始化音频播放器
@@ -207,6 +210,13 @@ class MusicProvider with ChangeNotifier {
       AppLogger().d('成功开始播放歌曲: ${song.songName}');
       AppLogger().d('播放后音频播放器状态: ${_audioPlayer.playerState}');
       notifyListeners();
+
+      // 保存播放历史
+      if (currentSong != null) {
+        await savePlayHistory(currentSong!);
+      }
+      // 保存播放列表
+      await savePlaylist();
     } catch (e, stackTrace) {
       AppLogger().e('播放歌曲 ${song.songName} 失败: $e');
       AppLogger().e('堆栈跟踪: $stackTrace');
@@ -324,11 +334,17 @@ class MusicProvider with ChangeNotifier {
   /// [index] 要移除的歌曲索引
   void removeFromPlaylist(int index) {
     if (index >= 0 && index < _playlist.length) {
+      final removedSong = _playlist[index];
       _playlist.removeAt(index);
       if (index < _currentIndex) {
         _currentIndex--;
+      } else if (index == _currentIndex && _currentIndex >= _playlist.length) {
+        _currentIndex = _playlist.length - 1;
       }
+      // 保存播放列表
+      savePlaylist();
       notifyListeners();
+      AppLogger().d('✅ 从播放列表移除歌曲: ${removedSong.songName}');
     }
   }
 
@@ -475,15 +491,189 @@ class MusicProvider with ChangeNotifier {
     return false;
   }
 
+  /// 从数据库加载播放状态
+  Future<void> _loadPlayState() async {
+    try {
+      // 检查是否是第一次启动
+      final isFirstLaunch =
+          SpUtil.get<bool>('isFirstLaunch', defaultValue: true);
+
+      if (!isFirstLaunch!) {
+        // 加载最后播放的歌曲
+        final lastPlayedSong = await _loadLastPlayedSong();
+        if (lastPlayedSong != null) {
+          // 加载播放列表
+          await _loadPlaylist();
+          // 恢复播放状态
+          if (_playlist.isNotEmpty) {
+            final index = _playlist
+                .indexWhere((song) => song.songUrl == lastPlayedSong.songUrl);
+            if (index >= 0) {
+              _currentIndex = index;
+              AppLogger().d('✅ 恢复播放状态，最后播放的歌曲: ${lastPlayedSong.songName}');
+
+              // 准备音频播放器但不自动播放
+              final currentSong = _playlist[_currentIndex];
+              if (currentSong.songUrl != null &&
+                  currentSong.songUrl!.isNotEmpty) {
+                try {
+                  // 重置播放器
+                  await _audioPlayer.stop();
+                  // 设置音频源
+                  AppLogger().d('准备音频播放器，设置音频源: ${currentSong.songUrl}');
+                  await _audioPlayer.setUrl(currentSong.songUrl!);
+                  // 不自动播放，保持暂停状态
+                  await _audioPlayer.pause();
+                  _playerState = AppPlayerState.paused;
+                  AppLogger().d('✅ 音频播放器准备完成，状态: 暂停');
+                  notifyListeners();
+                } catch (e) {
+                  AppLogger().e('❌ 准备音频播放器失败: $e');
+                  _playerState = AppPlayerState.stopped;
+                }
+              }
+            }
+          }
+        }
+      } else {
+        // 第一次启动，设置标记
+        await SpUtil.put('isFirstLaunch', false);
+        AppLogger().d('✅ 首次启动应用，初始化播放状态');
+      }
+    } catch (e) {
+      AppLogger().e('❌ 加载播放状态失败: $e');
+    }
+  }
+
+  /// 加载最后播放的歌曲
+  Future<Song?> _loadLastPlayedSong() async {
+    try {
+      final db = DatabaseHelper();
+      final results =
+          await db.query('play_history', orderBy: 'playedAt DESC', limit: 1);
+
+      if (results.isNotEmpty) {
+        final data = results[0];
+        return Song(
+          id: null,
+          songName: data['songName'] as String,
+          artistName: data['artistName'] as String,
+          songUrl: data['songUrl'] as String,
+          coverUrl: data['coverUrl'] as String,
+          duration: data['duration'] as String,
+        );
+      }
+    } catch (e) {
+      AppLogger().e('❌ 加载最后播放歌曲失败: $e');
+    }
+    return null;
+  }
+
+  /// 加载播放列表
+  Future<void> _loadPlaylist() async {
+    try {
+      final db = DatabaseHelper();
+      final results = await db.query('playlist_songs', orderBy: 'position ASC');
+
+      if (results.isNotEmpty) {
+        _playlist.clear();
+        for (final data in results) {
+          final song = Song(
+            id: null,
+            songName: data['song_name'] as String,
+            artistName: data['artist_name'] as String,
+            songUrl: data['song_url'] as String,
+            coverUrl: data['cover_url'] as String,
+            duration: data['duration'] as String,
+          );
+          _playlist.add(song);
+        }
+        AppLogger().d('✅ 从数据库加载播放列表成功，共 ${_playlist.length} 首歌曲');
+        notifyListeners();
+      }
+    } catch (e) {
+      AppLogger().e('❌ 加载播放列表失败: $e');
+    }
+  }
+
+  /// 保存播放列表到数据库
+  Future<void> savePlaylist() async {
+    try {
+      final db = DatabaseHelper();
+
+      // 清空现有播放列表
+      await db.delete('playlist_songs');
+
+      // 保存当前播放列表
+      for (int i = 0; i < _playlist.length; i++) {
+        final song = _playlist[i];
+        await db.insert('playlist_songs', {
+          'playlist_id': 1, // 默认播放列表
+          'song_id': song.id?.toString() ?? '',
+          'song_name': song.songName ?? '',
+          'artist_name': song.artistName ?? '',
+          'cover_url': song.coverUrl ?? '',
+          'song_url': song.songUrl ?? '',
+          'duration': song.duration ?? '',
+          'position': i,
+        });
+      }
+
+      AppLogger().d('✅ 保存播放列表到数据库成功，共 ${_playlist.length} 首歌曲');
+    } catch (e) {
+      AppLogger().e('❌ 保存播放列表失败: $e');
+    }
+  }
+
+  /// 保存播放历史
+  Future<void> savePlayHistory(Song song) async {
+    try {
+      final db = DatabaseHelper();
+      await db.insert('play_history', {
+        'songId': song.id?.toString() ?? '',
+        'songName': song.songName ?? '',
+        'artistName': song.artistName ?? '',
+        'coverUrl': song.coverUrl ?? '',
+        'songUrl': song.songUrl ?? '',
+        'duration': song.duration ?? '',
+      });
+      AppLogger().d('✅ 保存播放历史成功: ${song.songName}');
+    } catch (e) {
+      AppLogger().e('❌ 保存播放历史失败: $e');
+    }
+  }
+
+  /// 下一首播放
+  void insertNextToPlay(Song song) {
+    try {
+      if (_currentIndex < _playlist.length - 1) {
+        // 在当前歌曲后插入
+        _playlist.insert(_currentIndex + 1, song);
+      } else {
+        // 在列表末尾添加
+        _playlist.add(song);
+      }
+      // 保存播放列表
+      savePlaylist();
+      notifyListeners();
+      AppLogger().d('✅ 插入下一首播放: ${song.songName}');
+    } catch (e) {
+      AppLogger().e('❌ 插入下一首播放失败: $e');
+    }
+  }
+
   /// 释放资源
-  @override
   void dispose() {
+    // 保存播放状态
+    if (currentSong != null) {
+      savePlayHistory(currentSong!);
+      savePlaylist();
+    }
     _audioPlayer.dispose();
     _positionStreamController.close();
     _durationStreamController.close();
     _playerStateStreamController.close();
     _volumeStreamController.close();
-    super.dispose();
   }
 }
 
