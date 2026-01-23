@@ -84,8 +84,9 @@ class HomeView extends GetView<HomeController> {
           Container(
             width: 200,
             child: Obx(() => SidebarNavigation(
-                  currentIndex: controller.currentPage.value,
-                  onDestinationSelected: controller.changePage,
+                  currentIndex: _getSidebarIndex(controller.currentPage.value),
+                  onDestinationSelected: (index) =>
+                      controller.changePage(_getMainPageIndex(index)),
                 )),
           ),
           // 主内容区域
@@ -121,8 +122,9 @@ class HomeView extends GetView<HomeController> {
           Container(
             width: 240,
             child: Obx(() => SidebarNavigation(
-                  currentIndex: controller.currentPage.value,
-                  onDestinationSelected: controller.changePage,
+                  currentIndex: _getSidebarIndex(controller.currentPage.value),
+                  onDestinationSelected: (index) =>
+                      controller.changePage(_getMainPageIndex(index)),
                 )),
           ),
           // 主内容区域
@@ -183,6 +185,43 @@ class HomeView extends GetView<HomeController> {
         return const ProfilePage();
       default:
         return const SongListPage();
+    }
+  }
+
+  /// 将主页面索引转换为侧边栏索引
+  int _getSidebarIndex(int mainPageIndex) {
+    switch (mainPageIndex) {
+      case 0: // 音乐库
+        return 0;
+      case 1: // 播放
+        return 0; // 播放页在侧边栏中没有对应项，默认为音乐库
+      case 2: // 我的收藏
+        return 4;
+      case 3: // 个人中心
+        return 5;
+      default:
+        return 0;
+    }
+  }
+
+  /// 将侧边栏索引转换为主页面索引
+  int _getMainPageIndex(int sidebarIndex) {
+    switch (sidebarIndex) {
+      case 0: // 音乐库
+        return 0;
+      case 1: // MV
+        return 0; // MV页未实现，默认为音乐库
+      case 2: // 电台
+        return 0; // 电台页未实现，默认为音乐库
+      case 3: // 搜索
+        Get.toNamed('/search'); // 搜索页使用单独的路由
+        return 0; // 保持当前页面不变
+      case 4: // 我的收藏
+        return 2;
+      case 5: // 个人中心
+        return 3;
+      default:
+        return 0;
     }
   }
 }

@@ -4,7 +4,8 @@ import 'package:get/get.dart';
 import 'package:vibe_music_app/src/routes/app_routes.dart';
 import 'package:vibe_music_app/src/theme/app_theme.dart';
 import 'package:vibe_music_app/src/utils/app_logger.dart';
-import 'package:vibe_music_app/src/utils/database/database_helper.dart';
+import 'package:vibe_music_app/src/utils/database/index.dart';
+
 import 'package:vibe_music_app/src/utils/sp_util.dart';
 import 'package:vibe_music_app/src/utils/di/dependency_injection.dart';
 
@@ -43,6 +44,9 @@ Future<void> _initializeEnvironment() async {
 Future<void> _initializeUtilities() async {
   // 初始化SpUtil存储工具
   await SpUtil.init();
+
+  // 初始化数据库
+  await DatabaseManager().initDatabase();
 
   // 数据库将在首次使用时自动初始化
   AppLogger().d('✅ 工具类初始化完成');

@@ -13,70 +13,78 @@ class FavoritesView extends GetView<FavoritesController> {
         title: Text('我的收藏'),
       ),
       body: Center(
-        child: GetBuilder<FavoritesController>(
-          builder: (controller) {
-            return controller.isAuthenticated
-                ? buildFavoriteSongsList()
-                : buildLoginPrompt();
-          },
-        ),
+        child: Obx(() {
+          if (!controller.isAuthenticated) {
+            return buildLoginPrompt();
+          }
+
+          // 如果是第一页且仍在加载，显示加载指示器
+          if (controller.allSongs.isEmpty && controller.isLoadingMore.value) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (controller.allSongs.isEmpty) {
+            return const Center(
+              child: Text('您还没有收藏任何音乐'),
+            );
+          }
+
+          return ListView.builder(
+            controller: controller.scrollController,
+            itemCount: controller.allSongs.length +
+                (controller.isLoadingMore.value ? 1 : 0),
+            itemBuilder: (context, index) {
+              // 如果已到达末尾且正在加载更多，显示加载指示器
+              if (index == controller.allSongs.length) {
+                return const Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: Center(child: CircularProgressIndicator()),
+                );
+              }
+
+              final song = controller.allSongs[index];
+              final coverUrl = song.coverUrl;
+              return ListTile(
+                leading: CircleAvatar(
+                  backgroundImage: coverUrl != null
+                      ? CachedNetworkImageProvider(
+                          coverUrl,
+                          maxWidth: 100,
+                          maxHeight: 100,
+                          scale: 0.8,
+                        )
+                      : null,
+                  child: coverUrl == null ? Icon(Icons.music_note) : null,
+                ),
+                title: Text(song.songName ?? '未知歌曲'),
+                subtitle: Text(song.artistName ?? '未知艺术家'),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      icon: Icon(
+                        Icons.favorite,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                      onPressed: () =>
+                          controller.handleRemoveFromFavorites(index),
+                    ),
+                    Icon(Icons.play_arrow),
+                  ],
+                ),
+                onTap: () => controller.handleSongTap(index),
+              );
+            },
+          );
+        }),
       ),
     );
   }
 
   /// 构建收藏歌曲列表
   Widget buildFavoriteSongsList() {
-    // 如果是第一页且仍在加载，显示加载指示器
-    if (controller.allSongs.isEmpty && controller.isLoadingMore.value) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    if (controller.allSongs.isEmpty) {
-      return const Center(
-        child: Text('您还没有收藏任何音乐'),
-      );
-    }
-
-    return ListView.builder(
-      controller: controller.scrollController,
-      itemCount:
-          controller.allSongs.length + (controller.isLoadingMore.value ? 1 : 0),
-      itemBuilder: (context, index) {
-        // 如果已到达末尾且正在加载更多，显示加载指示器
-        if (index == controller.allSongs.length) {
-          return const Padding(
-            padding: EdgeInsets.all(16.0),
-            child: Center(child: CircularProgressIndicator()),
-          );
-        }
-
-        final song = controller.allSongs[index];
-        final coverUrl = song.coverUrl;
-        return ListTile(
-          leading: CircleAvatar(
-            backgroundImage:
-                coverUrl != null ? CachedNetworkImageProvider(coverUrl) : null,
-            child: coverUrl == null ? Icon(Icons.music_note) : null,
-          ),
-          title: Text(song.songName ?? '未知歌曲'),
-          subtitle: Text(song.artistName ?? '未知艺术家'),
-          trailing: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              IconButton(
-                icon: Icon(
-                  Icons.favorite,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
-                onPressed: () => controller.handleRemoveFromFavorites(index),
-              ),
-              Icon(Icons.play_arrow),
-            ],
-          ),
-          onTap: () => controller.handleSongTap(index),
-        );
-      },
-    );
+    // 此方法不再使用，已合并到build方法中
+    return Container();
   }
 
   /// 构建登录提示

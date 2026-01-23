@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:vibe_music_app/src/models/song_model.dart';
 import 'package:vibe_music_app/src/providers/music_provider.dart';
 import 'package:vibe_music_app/src/providers/auth_provider.dart';
+import 'package:vibe_music_app/src/utils/snackbar_manager.dart';
 
 /// 搜索结果项组件
 /// 用于显示单个搜索结果
@@ -44,13 +45,12 @@ class SearchResultItem extends StatelessWidget {
             ),
             onPressed: () async {
               if (!authProvider.isAuthenticated) {
-                Get.snackbar(
-                  '提示',
-                  '请先登录',
-                  backgroundColor: Colors.blue,
-                  colorText: Colors.white,
+                SnackbarManager().showSnackbar(
+                  title: '提示',
+                  message: '请先登录',
                   icon: Icon(Icons.info, color: Colors.white),
                   duration: Duration(seconds: 2),
+                  color: Colors.blue,
                 );
                 return;
               }
@@ -59,11 +59,9 @@ class SearchResultItem extends StatelessWidget {
               if (isFavorited) {
                 success = await musicProvider.removeFromFavorites(song);
                 if (success) {
-                  Get.snackbar(
-                    '成功',
-                    '已取消收藏',
-                    backgroundColor: Colors.green,
-                    colorText: Colors.white,
+                  SnackbarManager().showSnackbar(
+                    title: '成功',
+                    message: '已取消收藏',
                     icon: Icon(Icons.check_circle, color: Colors.white),
                     duration: Duration(seconds: 2),
                   );
@@ -71,11 +69,9 @@ class SearchResultItem extends StatelessWidget {
               } else {
                 success = await musicProvider.addToFavorites(song);
                 if (success) {
-                  Get.snackbar(
-                    '成功',
-                    '已添加到收藏',
-                    backgroundColor: Colors.green,
-                    colorText: Colors.white,
+                  SnackbarManager().showSnackbar(
+                    title: '成功',
+                    message: '已添加到收藏',
                     icon: Icon(Icons.check_circle, color: Colors.white),
                     duration: Duration(seconds: 2),
                   );

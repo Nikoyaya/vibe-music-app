@@ -4,10 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:audio_session/audio_session.dart';
+import 'package:vibe_music_app/src/data/database/entity/play_history_entity.dart';
+import 'package:vibe_music_app/src/data/database/entity/playlist_song_entity.dart';
 import 'package:vibe_music_app/src/services/api_service.dart';
 import 'package:vibe_music_app/src/models/song_model.dart';
 import 'package:vibe_music_app/src/utils/app_logger.dart';
-import 'package:vibe_music_app/src/utils/database/database_helper.dart';
+import 'package:vibe_music_app/src/utils/database/database_manager.dart';
 import 'package:vibe_music_app/src/utils/sp_util.dart';
 
 /// 播放器状态枚举
@@ -39,8 +41,17 @@ class MusicProvider with ChangeNotifier {
   RepeatMode _repeatMode = RepeatMode.none;
   // 音量大小（默认50%）
   double _volume = 0.5; // 默认音量设置为50%
-  // 收藏歌曲ID集合
+  /// 收藏歌曲ID集合
   RxSet<int> _favoriteSongIds = <int>{}.obs; // 本地状态，用于跟踪收藏的歌曲ID
+
+  /// 收藏歌曲列表缓存
+  RxList<Song> _favoriteSongsCache = <Song>[].obs;
+
+  /// 缓存时间戳
+  DateTime? _favoriteSongsCacheTimestamp;
+
+  /// 缓存过期时间（分钟）
+  static const int CACHE_EXPIRY_MINUTES = 5;
   // 音频会话
   AudioSession? _audioSession; // 音频会话，用于获取和监听系统音量
 
@@ -418,8 +429,15 @@ class MusicProvider with ChangeNotifier {
   /// 加载用户收藏歌曲
   /// [page] 页码
   /// [size] 每页数量
+  /// [forceRefresh] 是否强制刷新（忽略缓存）
   Future<List<Song>> loadUserFavoriteSongs(
-      {int page = 1, int size = 20}) async {
+      {int page = 1, int size = 20, bool forceRefresh = false}) async {
+    // 检查缓存是否有效（仅当page=1时使用缓存）
+    if (page == 1 && !forceRefresh && _isFavoriteSongsCacheValid()) {
+      AppLogger().d('使用缓存的收藏歌曲列表');
+      return _favoriteSongsCache.toList();
+    }
+
     try {
       final response = await ApiService().getUserFavoriteSongs(page, size);
       if (response.statusCode == 200) {
@@ -427,13 +445,69 @@ class MusicProvider with ChangeNotifier {
             response.data is Map ? response.data : jsonDecode(response.data);
         if (data['code'] == 200 && data['data'] != null) {
           final List<dynamic> items = data['data']['items'] ?? [];
-          return items.map((item) => Song.fromJson(item)).toList();
+          final songs = items.map((item) => Song.fromJson(item)).toList();
+
+          // 如果是第一页，更新缓存
+          if (page == 1) {
+            _updateFavoriteSongsCache(songs);
+          }
+
+          return songs;
         }
       }
     } catch (e) {
       AppLogger().e('加载用户收藏歌曲失败: $e');
     }
     return [];
+  }
+
+  /// 检查收藏歌曲缓存是否有效
+  bool _isFavoriteSongsCacheValid() {
+    if (_favoriteSongsCache.isEmpty) return false;
+    if (_favoriteSongsCacheTimestamp == null) return false;
+
+    final now = DateTime.now();
+    final cacheAge = now.difference(_favoriteSongsCacheTimestamp!);
+    return cacheAge.inMinutes < CACHE_EXPIRY_MINUTES;
+  }
+
+  /// 更新收藏歌曲缓存
+  void _updateFavoriteSongsCache(List<Song> songs) {
+    _favoriteSongsCache.assignAll(songs);
+    _favoriteSongsCacheTimestamp = DateTime.now();
+
+    // 更新收藏歌曲ID集合
+    _favoriteSongIds.clear();
+    for (final song in songs) {
+      if (song.id != null) {
+        _favoriteSongIds.add(song.id!);
+      }
+    }
+
+    // 通知监听器收藏状态已更新
+    notifyListeners();
+  }
+
+  /// 从缓存中移除收藏歌曲
+  void _removeSongFromCache(int songId) {
+    _favoriteSongsCache.removeWhere((song) => song.id == songId);
+    _favoriteSongIds.remove(songId);
+
+    // 通知监听器收藏状态已更新
+    notifyListeners();
+  }
+
+  /// 向缓存中添加收藏歌曲
+  void _addSongToCache(Song song) {
+    if (!_favoriteSongsCache.any((s) => s.id == song.id)) {
+      _favoriteSongsCache.insert(0, song);
+      if (song.id != null) {
+        _favoriteSongIds.add(song.id!);
+      }
+
+      // 通知监听器收藏状态已更新
+      notifyListeners();
+    }
   }
 
   /// 检查歌曲是否已收藏
@@ -457,6 +531,8 @@ class MusicProvider with ChangeNotifier {
         if (data['code'] == 200) {
           // 更新本地状态
           _favoriteSongIds.add(song.id!);
+          // 更新缓存
+          _addSongToCache(song);
           notifyListeners();
           return true;
         }
@@ -481,6 +557,8 @@ class MusicProvider with ChangeNotifier {
         if (data['code'] == 200) {
           // 更新本地状态
           _favoriteSongIds.remove(song.id!);
+          // 更新缓存
+          _removeSongFromCache(song.id!);
           notifyListeners();
           return true;
         }
@@ -548,19 +626,18 @@ class MusicProvider with ChangeNotifier {
   /// 加载最后播放的歌曲
   Future<Song?> _loadLastPlayedSong() async {
     try {
-      final db = DatabaseHelper();
-      final results =
-          await db.query('play_history', orderBy: 'playedAt DESC', limit: 1);
+      final db = await DatabaseManager().database;
+      final playHistory = await db.playHistoryDao.getRecentPlayHistory(1);
 
-      if (results.isNotEmpty) {
-        final data = results[0];
+      if (playHistory.isNotEmpty) {
+        final history = playHistory[0];
         return Song(
           id: null,
-          songName: data['songName'] as String,
-          artistName: data['artistName'] as String,
-          songUrl: data['songUrl'] as String,
-          coverUrl: data['coverUrl'] as String,
-          duration: data['duration'] as String,
+          songName: history.songName,
+          artistName: history.artistName,
+          songUrl: history.songUrl,
+          coverUrl: history.coverUrl,
+          duration: history.duration,
         );
       }
     } catch (e) {
@@ -572,19 +649,19 @@ class MusicProvider with ChangeNotifier {
   /// 加载播放列表
   Future<void> _loadPlaylist() async {
     try {
-      final db = DatabaseHelper();
-      final results = await db.query('playlist_songs', orderBy: 'position ASC');
+      final db = await DatabaseManager().database;
+      final playlistSongs = await db.playlistSongDao.getSongsByPlaylistId(1);
 
-      if (results.isNotEmpty) {
+      if (playlistSongs.isNotEmpty) {
         _playlist.clear();
-        for (final data in results) {
+        for (final playlistSong in playlistSongs) {
           final song = Song(
             id: null,
-            songName: data['song_name'] as String,
-            artistName: data['artist_name'] as String,
-            songUrl: data['song_url'] as String,
-            coverUrl: data['cover_url'] as String,
-            duration: data['duration'] as String,
+            songName: playlistSong.songName,
+            artistName: playlistSong.artistName,
+            songUrl: playlistSong.songUrl,
+            coverUrl: playlistSong.coverUrl,
+            duration: playlistSong.duration,
           );
           _playlist.add(song);
         }
@@ -599,24 +676,27 @@ class MusicProvider with ChangeNotifier {
   /// 保存播放列表到数据库
   Future<void> savePlaylist() async {
     try {
-      final db = DatabaseHelper();
+      final db = await DatabaseManager().database;
 
       // 清空现有播放列表
-      await db.delete('playlist_songs');
+      await db.playlistSongDao.deleteSongsByPlaylistId(1);
 
       // 保存当前播放列表
       for (int i = 0; i < _playlist.length; i++) {
         final song = _playlist[i];
-        await db.insert('playlist_songs', {
-          'playlist_id': 1, // 默认播放列表
-          'song_id': song.id?.toString() ?? '',
-          'song_name': song.songName ?? '',
-          'artist_name': song.artistName ?? '',
-          'cover_url': song.coverUrl ?? '',
-          'song_url': song.songUrl ?? '',
-          'duration': song.duration ?? '',
-          'position': i,
-        });
+        final playlistSong = PlaylistSong(
+          id: 0,
+          playlistId: 1, // 默认播放列表
+          songId: song.id?.toString() ?? '',
+          songName: song.songName ?? '',
+          artistName: song.artistName ?? '',
+          coverUrl: song.coverUrl ?? '',
+          songUrl: song.songUrl ?? '',
+          duration: song.duration ?? '',
+          position: i,
+          createdAt: DateTime.now().toIso8601String(),
+        );
+        await db.playlistSongDao.insertPlaylistSong(playlistSong);
       }
 
       AppLogger().d('✅ 保存播放列表到数据库成功，共 ${_playlist.length} 首歌曲');
@@ -628,15 +708,18 @@ class MusicProvider with ChangeNotifier {
   /// 保存播放历史
   Future<void> savePlayHistory(Song song) async {
     try {
-      final db = DatabaseHelper();
-      await db.insert('play_history', {
-        'songId': song.id?.toString() ?? '',
-        'songName': song.songName ?? '',
-        'artistName': song.artistName ?? '',
-        'coverUrl': song.coverUrl ?? '',
-        'songUrl': song.songUrl ?? '',
-        'duration': song.duration ?? '',
-      });
+      final db = await DatabaseManager().database;
+      final playHistory = PlayHistory(
+        id: 0,
+        songId: song.id?.toString() ?? '',
+        songName: song.songName ?? '',
+        artistName: song.artistName ?? '',
+        coverUrl: song.coverUrl ?? '',
+        songUrl: song.songUrl ?? '',
+        duration: song.duration ?? '',
+        playedAt: DateTime.now().toIso8601String(),
+      );
+      await db.playHistoryDao.insertPlayHistory(playHistory);
       AppLogger().d('✅ 保存播放历史成功: ${song.songName}');
     } catch (e) {
       AppLogger().e('❌ 保存播放历史失败: $e');

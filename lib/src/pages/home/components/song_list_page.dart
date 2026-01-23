@@ -6,6 +6,8 @@ import 'package:vibe_music_app/src/providers/music_provider.dart';
 import 'package:vibe_music_app/src/models/song_model.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:vibe_music_app/src/components/pull_to_refresh.dart';
+import 'package:vibe_music_app/src/services/image_preload_service.dart';
+import 'package:vibe_music_app/src/utils/snackbar_manager.dart';
 
 /// 歌曲列表页面
 class SongListPage extends StatefulWidget {
@@ -111,14 +113,42 @@ class _SongListPageState extends State<SongListPage> {
     _loadSongs();
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // 预加载轮播图和推荐歌单图片
+    _preloadImages();
+  }
+
+  /// 预加载图片
+  void _preloadImages() {
+    // 预加载轮播图图片
+    if (_carouselItems.isNotEmpty) {
+      ImagePreloadService().preloadCarouselImages(_carouselItems, context);
+    }
+    // 预加载推荐歌单图片
+    if (_recommendedPlaylists.isNotEmpty) {
+      ImagePreloadService()
+          .preloadPlaylistImages(_recommendedPlaylists, context);
+    }
+  }
+
   /// 加载歌曲数据
   void _loadSongs() {
     final musicProvider = Get.find<MusicProvider>();
     setState(() {
       if (_currentType == SongListType.recommended) {
-        _futureSongs = musicProvider.loadRecommendedSongs();
+        _futureSongs = musicProvider.loadRecommendedSongs().then((songs) {
+          // 预加载歌曲封面图片
+          ImagePreloadService().preloadSongCovers(songs, context);
+          return songs;
+        });
       } else {
-        _futureSongs = musicProvider.loadUserFavoriteSongs();
+        _futureSongs = musicProvider.loadUserFavoriteSongs().then((songs) {
+          // 预加载歌曲封面图片
+          ImagePreloadService().preloadSongCovers(songs, context);
+          return songs;
+        });
       }
     });
   }
@@ -243,7 +273,12 @@ class _SongListPageState extends State<SongListPage> {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(16.0),
                   image: DecorationImage(
-                    image: CachedNetworkImageProvider(item.imageUrl),
+                    image: CachedNetworkImageProvider(
+                      item.imageUrl,
+                      maxWidth: 800,
+                      maxHeight: 400,
+                      scale: 0.8,
+                    ),
                     fit: BoxFit.cover,
                   ),
                   boxShadow: [
@@ -375,6 +410,10 @@ class _SongListPageState extends State<SongListPage> {
                           width: double.infinity,
                           height: 120,
                           fit: BoxFit.cover,
+                          memCacheWidth: 300,
+                          memCacheHeight: 300,
+                          maxWidthDiskCache: 300,
+                          maxHeightDiskCache: 300,
                           errorWidget: (context, url, error) => Container(
                             width: double.infinity,
                             height: 120,
@@ -532,6 +571,11 @@ class _SongListPageState extends State<SongListPage> {
                                     width: isSmallScreen ? 48 : 56,
                                     height: isSmallScreen ? 48 : 56,
                                     fit: BoxFit.cover,
+                                    memCacheWidth: isSmallScreen ? 96 : 112,
+                                    memCacheHeight: isSmallScreen ? 96 : 112,
+                                    maxWidthDiskCache: isSmallScreen ? 96 : 112,
+                                    maxHeightDiskCache:
+                                        isSmallScreen ? 96 : 112,
                                     placeholder: (context, url) => Container(
                                       width: isSmallScreen ? 48 : 56,
                                       height: isSmallScreen ? 48 : 56,
@@ -651,11 +695,9 @@ class _SongListPageState extends State<SongListPage> {
                                     success = await musicProvider
                                         .removeFromFavorites(song);
                                     if (success && mounted) {
-                                      Get.snackbar(
-                                        '成功',
-                                        '已取消收藏',
-                                        backgroundColor: Colors.green,
-                                        colorText: Colors.white,
+                                      SnackbarManager().showSnackbar(
+                                        title: '成功',
+                                        message: '已取消收藏',
                                         icon: Icon(Icons.check_circle,
                                             color: Colors.white),
                                         duration: Duration(seconds: 2),
@@ -665,11 +707,9 @@ class _SongListPageState extends State<SongListPage> {
                                     success = await musicProvider
                                         .addToFavorites(song);
                                     if (success && mounted) {
-                                      Get.snackbar(
-                                        '成功',
-                                        '已添加到收藏',
-                                        backgroundColor: Colors.green,
-                                        colorText: Colors.white,
+                                      SnackbarManager().showSnackbar(
+                                        title: '成功',
+                                        message: '已添加到收藏',
                                         icon: Icon(Icons.check_circle,
                                             color: Colors.white),
                                         duration: Duration(seconds: 2),

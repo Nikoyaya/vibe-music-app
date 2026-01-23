@@ -33,23 +33,23 @@ class PlayerCoverArt extends StatelessWidget {
               child: CachedNetworkImage(
                 imageUrl: coverUrl!,
                 fit: BoxFit.cover,
+                memCacheWidth: 500,
+                memCacheHeight: 500,
+                maxWidthDiskCache: 500,
+                maxHeightDiskCache: 500,
                 placeholder: (context, url) => Container(
                   decoration: BoxDecoration(
-                    color: Theme.of(context)
-                        .colorScheme
-                        .surfaceContainerHighest,
+                    color:
+                        Theme.of(context).colorScheme.surfaceContainerHighest,
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: const Center(
                     child: CircularProgressIndicator(),
                   ),
                 ),
-                errorWidget: (context, url, error) =>
-                    Container(
+                errorWidget: (context, url, error) => Container(
                   decoration: BoxDecoration(
-                    color: Theme.of(context)
-                        .colorScheme
-                        .primaryContainer,
+                    color: Theme.of(context).colorScheme.primaryContainer,
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Icon(Icons.music_note, size: 100),
@@ -58,9 +58,7 @@ class PlayerCoverArt extends StatelessWidget {
             )
           : Container(
               decoration: BoxDecoration(
-                color: Theme.of(context)
-                    .colorScheme
-                    .primaryContainer,
+                color: Theme.of(context).colorScheme.primaryContainer,
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Icon(Icons.music_note, size: 100),
