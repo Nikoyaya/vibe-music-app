@@ -45,17 +45,11 @@
 
 以下是应用在移动设备上的截图：
 
-#### 首页
+#### 主要页面
 
-![首页截图](screenshots/flutter_01.png)
-
-#### 播放器页面
-
-![播放器页面截图](screenshots/flutter_02.png)
-
-#### 收藏页面
-
-![收藏页面截图](screenshots/flutter_03.png)
+| 首页 | 播放器页面 | 收藏页面 |
+|------|------------|----------|
+| <img src="screenshots/flutter_01.png" width="200" alt="首页截图" /> | <img src="screenshots/flutter_02.png" width="200" alt="播放器页面截图" /> | <img src="screenshots/flutter_03.png" width="200" alt="收藏页面截图" /> |
 
 ## 安装和运行
 
