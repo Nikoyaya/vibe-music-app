@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:get/get.dart';
+import 'package:vibe_music_app/generated/app_localizations.dart';
 import 'package:vibe_music_app/src/routes/app_routes.dart';
 import 'package:vibe_music_app/src/theme/app_theme.dart';
 import 'package:vibe_music_app/src/utils/app_logger.dart';
 import 'package:vibe_music_app/src/utils/database/index.dart';
+import 'package:vibe_music_app/src/providers/language_provider.dart';
+import 'package:vibe_music_app/src/services/localization_service.dart';
 
 import 'package:vibe_music_app/src/utils/sp_util.dart';
 import 'package:vibe_music_app/src/utils/di/dependency_injection.dart';
@@ -71,6 +75,79 @@ class VibeMusicApp extends StatelessWidget {
       initialRoute: AppRoutes.home, // 初始路由为主页
       getPages: AppRoutes.routes, // 应用路由配置
       debugShowCheckedModeBanner: false, // 隐藏调试横幅
+      // 构建器回调，用于初始化本地化服务
+      builder: (context, child) {
+        // 初始化 LanguageProvider
+        if (!Get.isRegistered<LanguageProvider>()) {
+          Get.put(LanguageProvider());
+        }
+        // 初始化本地化服务
+        LocalizationService.init(context);
+        return child!;
+      },
+      // 国际化配置
+      localizationsDelegates: [
+        AppLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: [
+        Locale('en'), // 英语
+        Locale('zh'), // 简体中文
+        Locale('zh', 'TW'), // 繁体中文
+      ],
+      locale: Get.isRegistered<LanguageProvider>()
+          ? Get.find<LanguageProvider>().currentLocale
+          : null,
+      localeResolutionCallback: (locale, supportedLocales) {
+        if (Get.isRegistered<LanguageProvider>()) {
+          final languageProvider = Get.find<LanguageProvider>();
+          // 如果用户选择了系统语言，使用系统语言
+          if (languageProvider.languageCode == 'system') {
+            // 优先使用系统语言
+            if (locale != null) {
+              // 尝试找到与系统语言匹配的支持的语言
+              for (var supportedLocale in supportedLocales) {
+                if (supportedLocale.languageCode == locale.languageCode &&
+                    (supportedLocale.countryCode == null ||
+                        supportedLocale.countryCode == locale.countryCode)) {
+                  return supportedLocale;
+                }
+              }
+              // 如果没有完全匹配的，尝试只匹配语言代码
+              for (var supportedLocale in supportedLocales) {
+                if (supportedLocale.languageCode == locale.languageCode) {
+                  return supportedLocale;
+                }
+              }
+            }
+            // 如果系统语言不支持，返回支持的语言列表中的第一个
+            return supportedLocales.first;
+          }
+          // 否则使用用户选择的语言
+          return languageProvider.currentLocale ?? supportedLocales.first;
+        }
+        // 如果 LanguageProvider 未注册，直接使用系统语言
+        if (locale != null) {
+          // 尝试找到与系统语言匹配的支持的语言
+          for (var supportedLocale in supportedLocales) {
+            if (supportedLocale.languageCode == locale.languageCode &&
+                (supportedLocale.countryCode == null ||
+                    supportedLocale.countryCode == locale.countryCode)) {
+              return supportedLocale;
+            }
+          }
+          // 如果没有完全匹配的，尝试只匹配语言代码
+          for (var supportedLocale in supportedLocales) {
+            if (supportedLocale.languageCode == locale.languageCode) {
+              return supportedLocale;
+            }
+          }
+        }
+        // 如果系统语言不支持，返回支持的语言列表中的第一个
+        return supportedLocales.first;
+      },
     );
   }
 }

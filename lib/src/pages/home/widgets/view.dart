@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:vibe_music_app/generated/app_localizations.dart';
 import 'package:vibe_music_app/src/pages/home/widgets/controller.dart';
 import 'package:vibe_music_app/src/utils/glass_morphism/responsive_layout.dart';
 import 'package:vibe_music_app/src/utils/glass_morphism/sidebar_navigation.dart';
@@ -59,12 +60,17 @@ class HomeView extends GetView<HomeController> {
                 onDestinationSelected: controller.changePage,
                 destinations: [
                   NavigationDestination(
-                      icon: Icon(Icons.music_note), label: '歌曲'),
+                      icon: Icon(Icons.music_note),
+                      label: AppLocalizations.of(context)?.songs ?? '歌曲'),
                   NavigationDestination(
-                      icon: Icon(Icons.play_circle), label: '播放'),
+                      icon: Icon(Icons.play_circle),
+                      label: AppLocalizations.of(context)?.player ?? '播放'),
                   NavigationDestination(
-                      icon: Icon(Icons.favorite), label: '收藏'),
-                  NavigationDestination(icon: Icon(Icons.person), label: '我的'),
+                      icon: Icon(Icons.favorite),
+                      label: AppLocalizations.of(context)?.favorites ?? '收藏'),
+                  NavigationDestination(
+                      icon: Icon(Icons.person),
+                      label: AppLocalizations.of(context)?.my ?? '我的'),
                 ],
                 elevation: 0,
                 backgroundColor: Colors.transparent,

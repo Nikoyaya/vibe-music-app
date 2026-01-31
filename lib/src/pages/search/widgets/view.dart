@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:vibe_music_app/generated/app_localizations.dart';
 import 'package:vibe_music_app/src/pages/search/widgets/controller.dart';
 import 'package:vibe_music_app/src/components/common_button.dart';
 import 'package:vibe_music_app/src/components/common_card.dart';
@@ -14,7 +15,7 @@ class SearchView extends GetView<SearchPageController> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('搜索'),
+        title: Text(AppLocalizations.of(context)?.search ?? '搜索'),
       ),
       body: Column(
         children: [
@@ -32,7 +33,7 @@ class SearchView extends GetView<SearchPageController> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Obx(() => CommonButton(
-                  text: '搜索',
+                  text: AppLocalizations.of(context)?.search ?? '搜索',
                   onPressed: () => controller.searchSongs(),
                   isLoading: controller.isSearching.value,
                   icon: const Icon(Icons.search),
@@ -43,7 +44,8 @@ class SearchView extends GetView<SearchPageController> {
           Expanded(
             child: Obx(() {
               if (controller.isSearching.value) {
-                return const CommonLoading(text: '搜索中...');
+                return CommonLoading(
+                    text: AppLocalizations.of(context)?.loading ?? '搜索中...');
               } else if (controller.searchResults.isEmpty) {
                 return Center(
                   child: Column(
@@ -56,7 +58,7 @@ class SearchView extends GetView<SearchPageController> {
                       ),
                       const SizedBox(height: 16),
                       Text(
-                        '搜索歌曲',
+                        AppLocalizations.of(context)?.search ?? '搜索歌曲',
                         style: Theme.of(context).textTheme.bodyLarge,
                       ),
                     ],
@@ -101,7 +103,9 @@ class SearchView extends GetView<SearchPageController> {
                                   overflow: TextOverflow.ellipsis,
                                 ),
                                 Text(
-                                  song.artistName ?? '未知艺术家',
+                                  song.artistName ??
+                                      (AppLocalizations.of(context)?.artist ??
+                                          '未知艺术家'),
                                   style: Theme.of(context).textTheme.bodyMedium,
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
@@ -144,14 +148,21 @@ class SearchView extends GetView<SearchPageController> {
                                       children: [
                                         ListTile(
                                           leading: Icon(Icons.queue_play_next),
-                                          title: Text('下一首播放'),
+                                          title: Text(
+                                              AppLocalizations.of(context)
+                                                      ?.playNext ??
+                                                  '下一首播放'),
                                           onTap: () {
                                             // 添加到下一首播放
                                             Get.find<MusicProvider>()
                                                 .insertNextToPlay(song);
                                             Get.snackbar(
-                                              '成功',
-                                              '已添加到下一首播放',
+                                              AppLocalizations.of(context)
+                                                      ?.success ??
+                                                  '成功',
+                                              AppLocalizations.of(context)
+                                                      ?.addedToNextPlay ??
+                                                  '已添加到下一首播放',
                                               backgroundColor: Colors.green,
                                               colorText: Colors.white,
                                               icon: Icon(Icons.check_circle,

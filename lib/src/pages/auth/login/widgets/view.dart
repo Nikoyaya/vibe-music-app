@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:vibe_music_app/generated/app_localizations.dart';
 import 'package:vibe_music_app/src/pages/auth/login/widgets/controller.dart';
 
 class LoginView extends StatefulWidget {
@@ -180,7 +181,7 @@ class _LoginViewState extends State<LoginView> {
 
                     // 标题
                     Text(
-                      'Login In',
+                      AppLocalizations.of(context)?.login ?? 'Login In',
                       style:
                           Theme.of(context).textTheme.headlineMedium?.copyWith(
                                 fontWeight: FontWeight.bold,
@@ -194,7 +195,7 @@ class _LoginViewState extends State<LoginView> {
                       key: controller.formKey,
                       child: Column(
                         children: [
-                          // 用户名/邮箱输入框
+                          // 邮箱输入框
                           Container(
                             margin: const EdgeInsets.only(bottom: 16),
                             decoration: BoxDecoration(
@@ -213,41 +214,38 @@ class _LoginViewState extends State<LoginView> {
                                       ),
                                     ],
                             ),
-                            child: Obx(() => TextFormField(
-                                  controller:
-                                      controller.usernameOrEmailController,
-                                  decoration: InputDecoration(
-                                    labelText: controller.isAdmin.value
-                                        ? 'Username'
-                                        : 'Email',
-                                    prefixIcon: Icon(
-                                      controller.isAdmin.value
-                                          ? Icons.person
-                                          : Icons.email,
-                                      color: isDarkMode
-                                          ? Colors.grey
-                                          : Colors.black,
-                                    ),
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                      borderSide: BorderSide.none,
-                                    ),
-                                    filled: true,
-                                    fillColor: Colors.transparent,
-                                  ),
-                                  validator: (value) {
-                                    if (value == null || value.isEmpty) {
-                                      return controller.isAdmin.value
-                                          ? 'Please enter username'
-                                          : 'Please enter email';
-                                    }
-                                    if (!controller.isAdmin.value &&
-                                        !value.contains('@')) {
-                                      return 'Please enter a valid email';
-                                    }
-                                    return null;
-                                  },
-                                )),
+                            child: TextFormField(
+                              controller: controller.usernameOrEmailController,
+                              decoration: InputDecoration(
+                                labelText:
+                                    AppLocalizations.of(context)?.email ??
+                                        'Email',
+                                prefixIcon: Icon(
+                                  Icons.email,
+                                  color:
+                                      isDarkMode ? Colors.grey : Colors.black,
+                                ),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide.none,
+                                ),
+                                filled: true,
+                                fillColor: Colors.transparent,
+                              ),
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return AppLocalizations.of(context)
+                                          ?.enterEmail ??
+                                      'Please enter email';
+                                }
+                                if (!value.contains('@')) {
+                                  return AppLocalizations.of(context)
+                                          ?.validEmail ??
+                                      'Please enter a valid email';
+                                }
+                                return null;
+                              },
+                            ),
                           ),
 
                           // 密码输入框
@@ -272,7 +270,9 @@ class _LoginViewState extends State<LoginView> {
                             child: TextFormField(
                               controller: controller.passwordController,
                               decoration: InputDecoration(
-                                labelText: 'Password',
+                                labelText:
+                                    AppLocalizations.of(context)?.password ??
+                                        'Password',
                                 prefixIcon: Icon(
                                   Icons.lock,
                                   color:
@@ -288,29 +288,14 @@ class _LoginViewState extends State<LoginView> {
                               obscureText: true,
                               validator: (value) {
                                 if (value == null || value.isEmpty) {
-                                  return 'Please enter password';
+                                  return AppLocalizations.of(context)
+                                          ?.enterPassword ??
+                                      'Please enter password';
                                 }
                                 return null;
                               },
                             ),
                           ),
-
-                          // 管理员登录切换
-                          Obx(() => SwitchListTile(
-                                title: Text(
-                                  'Admin Login',
-                                  style: TextStyle(
-                                    color: isDarkMode
-                                        ? Colors.white
-                                        : Colors.black,
-                                  ),
-                                ),
-                                value: controller.isAdmin.value,
-                                onChanged: controller.toggleAdminMode,
-                                activeColor:
-                                    Theme.of(context).colorScheme.primary,
-                              )),
-                          const SizedBox(height: 24),
 
                           // 登录按钮
                           SizedBox(
@@ -333,7 +318,9 @@ class _LoginViewState extends State<LoginView> {
                                       ? const CircularProgressIndicator(
                                           color: Colors.white,
                                         )
-                                      : const Text('Login'),
+                                      : Text(
+                                          AppLocalizations.of(context)?.login ??
+                                              'Login'),
                                 )),
                           ),
                           const SizedBox(height: 32),
@@ -382,7 +369,8 @@ class _LoginViewState extends State<LoginView> {
                           TextButton(
                             onPressed: controller.navigateToRegister,
                             child: Text(
-                              'Don\'t have an account? Register',
+                              AppLocalizations.of(context)?.dontHaveAccount ??
+                                  'Don\'t have an account? Register',
                               style: TextStyle(
                                 color: isDarkMode ? Colors.grey : Colors.black,
                               ),

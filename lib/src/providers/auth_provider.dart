@@ -55,9 +55,6 @@ class AuthProvider with ChangeNotifier {
   /// 是否已认证
   bool get isAuthenticated => _status == AuthStatus.authenticated;
 
-  /// 是否为管理员
-  bool get isAdmin => _user?.role == 1;
-
   /// 构造函数
   AuthProvider() {
     _loadAuthData();
@@ -148,19 +145,15 @@ class AuthProvider with ChangeNotifier {
   }
 
   /// 用户登录
-  Future<bool> login(String usernameOrEmail, String password,
-      {bool isAdmin = false}) async {
+  Future<bool> login(String usernameOrEmail, String password) async {
     _status = AuthStatus.loading;
     _errorMessage = null;
     notifyListeners();
 
     try {
-      AppLogger()
-          .d('🔍 开始登录: isAdmin=$isAdmin, usernameOrEmail=$usernameOrEmail');
+      AppLogger().d('🔍 开始登录: usernameOrEmail=$usernameOrEmail');
 
-      final response = isAdmin
-          ? await ApiService().adminLogin(usernameOrEmail, password)
-          : await ApiService().login(usernameOrEmail, password);
+      final response = await ApiService().login(usernameOrEmail, password);
 
       AppLogger().d('📊 登录响应状态码: ${response.statusCode}');
       AppLogger().d('📋 登录响应体: ${response.data}');

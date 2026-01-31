@@ -2,6 +2,7 @@ import 'package:get/get.dart';
 import 'package:vibe_music_app/src/providers/music_provider.dart';
 import 'package:vibe_music_app/src/providers/auth_provider.dart';
 import 'package:vibe_music_app/src/models/song_model.dart';
+import 'package:vibe_music_app/src/services/localization_service.dart';
 
 class PlayerController extends GetxController {
   // 状态
@@ -72,7 +73,8 @@ class PlayerController extends GetxController {
     if (_musicProvider.currentSong == null) return;
 
     if (!_authProvider.isAuthenticated) {
-      Get.snackbar('提示', '请先登录');
+      Get.snackbar(LocalizationService.instance.tip,
+          LocalizationService.instance.pleaseLogin);
       Get.toNamed('/login');
       return;
     }
@@ -83,12 +85,14 @@ class PlayerController extends GetxController {
     if (_musicProvider.isSongFavorited(song)) {
       success = await _musicProvider.removeFromFavorites(song);
       if (success) {
-        Get.snackbar('成功', '已取消收藏');
+        Get.snackbar(LocalizationService.instance.success,
+            LocalizationService.instance.removedFromFavorites);
       }
     } else {
       success = await _musicProvider.addToFavorites(song);
       if (success) {
-        Get.snackbar('成功', '已添加到收藏');
+        Get.snackbar(LocalizationService.instance.success,
+            LocalizationService.instance.addedToFavorites);
       }
     }
   }
@@ -130,7 +134,8 @@ class PlayerController extends GetxController {
   /// 处理播放列表中歌曲的收藏状态切换
   Future<void> handlePlaylistFavoriteToggle(Song song) async {
     if (!_authProvider.isAuthenticated) {
-      Get.snackbar('提示', '请先登录');
+      Get.snackbar(LocalizationService.instance.tip,
+          LocalizationService.instance.pleaseLogin);
       Get.toNamed('/login');
       return;
     }
@@ -139,12 +144,14 @@ class PlayerController extends GetxController {
     if (_musicProvider.isSongFavorited(song)) {
       success = await _musicProvider.removeFromFavorites(song);
       if (success) {
-        Get.snackbar('成功', '已取消收藏');
+        Get.snackbar(LocalizationService.instance.success,
+            LocalizationService.instance.removedFromFavorites);
       }
     } else {
       success = await _musicProvider.addToFavorites(song);
       if (success) {
-        Get.snackbar('成功', '已添加到收藏');
+        Get.snackbar(LocalizationService.instance.success,
+            LocalizationService.instance.addedToFavorites);
       }
     }
   }

@@ -12,7 +12,6 @@ class LoginController extends GetxController {
   final passwordController = TextEditingController();
 
   // 状态
-  var isAdmin = false.obs;
   var isLoading = false.obs;
 
   // 认证提供者
@@ -46,7 +45,6 @@ class LoginController extends GetxController {
         final success = await _authProvider.login(
           usernameOrEmailController.text,
           passwordController.text,
-          isAdmin: isAdmin.value,
         );
 
         if (success) {
@@ -63,11 +61,6 @@ class LoginController extends GetxController {
         isLoading.value = false;
       }
     }
-  }
-
-  /// 切换管理员登录模式
-  void toggleAdminMode(bool value) {
-    isAdmin.value = value;
   }
 
   /// 导航到注册页面

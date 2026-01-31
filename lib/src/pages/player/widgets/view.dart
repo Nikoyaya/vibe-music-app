@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:vibe_music_app/generated/app_localizations.dart';
 import 'package:vibe_music_app/src/pages/player/widgets/controller.dart';
 import 'package:vibe_music_app/src/pages/player/components/player_cover_art.dart';
 import 'package:vibe_music_app/src/pages/player/components/player_song_info.dart';
@@ -15,7 +16,7 @@ class PlayerView extends GetView<PlayerController> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('正在播放'),
+        title: Text(AppLocalizations.of(context)?.nowPlaying ?? '正在播放'),
         actions: [
           Obx(() => IconButton(
                 icon: Icon(

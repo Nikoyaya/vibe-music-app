@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:vibe_music_app/generated/app_localizations.dart';
 import 'package:vibe_music_app/src/providers/auth_provider.dart';
+import 'package:vibe_music_app/src/providers/language_provider.dart';
+import 'package:vibe_music_app/src/components/language_selector.dart';
 import 'package:vibe_music_app/src/utils/app_logger.dart';
 
 /// 个人中心页面
@@ -76,10 +79,11 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   Widget build(BuildContext context) {
     final authProvider = Get.find<AuthProvider>();
+    final languageProvider = Get.find<LanguageProvider>();
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('个人中心'),
+        title: Text(AppLocalizations.of(context)?.profile ?? '个人中心'),
         actions: authProvider.isAuthenticated && !_isEditing
             ? [
                 IconButton(
@@ -93,12 +97,21 @@ class _ProfilePageState extends State<ProfilePage> {
               ]
             : [],
       ),
-      body: Center(
-        child: authProvider.isAuthenticated
-            ? _isEditing
-                ? _buildEditProfileForm(authProvider)
-                : _buildProfileView(authProvider)
-            : _buildLoginPrompt(),
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            Center(
+              child: authProvider.isAuthenticated
+                  ? _isEditing
+                      ? _buildEditProfileForm(authProvider)
+                      : _buildProfileView(authProvider)
+                  : _buildLoginPrompt(),
+            ),
+            const SizedBox(height: 32),
+            LanguageSelector(),
+            const SizedBox(height: 32),
+          ],
+        ),
       ),
     );
   }
@@ -152,7 +165,7 @@ class _ProfilePageState extends State<ProfilePage> {
             authProvider.user!.phone!.isNotEmpty) ...[
           const SizedBox(height: 8),
           Text(
-            '手机号: ${authProvider.user!.phone!}',
+            '${AppLocalizations.of(context)?.phone ?? '手机号'}: ${authProvider.user!.phone!}',
             style: Theme.of(context).textTheme.bodyMedium,
           ),
         ],
@@ -169,14 +182,6 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
         ],
         const SizedBox(height: 24),
-        if (authProvider.isAdmin)
-          ElevatedButton.icon(
-            onPressed: () {
-              Get.toNamed('/admin');
-            },
-            icon: const Icon(Icons.admin_panel_settings),
-            label: const Text('管理员面板'),
-          ),
         const SizedBox(height: 16),
         ElevatedButton.icon(
           onPressed: () async {
@@ -188,7 +193,7 @@ class _ProfilePageState extends State<ProfilePage> {
             }
           },
           icon: const Icon(Icons.logout),
-          label: const Text('退出登录'),
+          label: Text(AppLocalizations.of(context)?.logout ?? '退出登录'),
         ),
       ],
     );
@@ -205,16 +210,18 @@ class _ProfilePageState extends State<ProfilePage> {
             const SizedBox(height: 16),
             TextFormField(
               controller: _usernameController,
-              decoration: const InputDecoration(
-                labelText: '用户名',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: AppLocalizations.of(context)?.username ?? '用户名',
+                border: const OutlineInputBorder(),
               ),
               validator: (value) {
                 if (value == null || value.isEmpty) {
-                  return '请输入用户名';
+                  return AppLocalizations.of(context)?.enterUsername ??
+                      '请输入用户名';
                 }
                 if (!RegExp(r'^[a-zA-Z0-9_-]{4,16}$').hasMatch(value)) {
-                  return '用户名必须是4-16个字符（字母、数字、_、-）';
+                  return AppLocalizations.of(context)?.usernameFormat ??
+                      '用户名必须是4-16个字符（字母、数字、_、-）';
                 }
                 return null;
               },
@@ -222,16 +229,17 @@ class _ProfilePageState extends State<ProfilePage> {
             const SizedBox(height: 16),
             TextFormField(
               controller: _emailController,
-              decoration: const InputDecoration(
-                labelText: '邮箱',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: AppLocalizations.of(context)?.email ?? '邮箱',
+                border: const OutlineInputBorder(),
               ),
               validator: (value) {
                 if (value == null || value.isEmpty) {
-                  return '请输入邮箱';
+                  return AppLocalizations.of(context)?.enterEmail ?? '请输入邮箱';
                 }
                 if (!RegExp(r'^[^@]+@[^@]+\.[^@]+$').hasMatch(value)) {
-                  return '请输入有效的邮箱地址';
+                  return AppLocalizations.of(context)?.validEmail ??
+                      '请输入有效的邮箱地址';
                 }
                 return null;
               },
@@ -239,15 +247,16 @@ class _ProfilePageState extends State<ProfilePage> {
             const SizedBox(height: 16),
             TextFormField(
               controller: _phoneController,
-              decoration: const InputDecoration(
-                labelText: '手机号',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: AppLocalizations.of(context)?.phone ?? '手机号',
+                border: const OutlineInputBorder(),
               ),
               validator: (value) {
                 if (value != null &&
                     value.isNotEmpty &&
                     !RegExp(r'^1[3456789]\d{9}$').hasMatch(value)) {
-                  return '请输入有效的手机号';
+                  return AppLocalizations.of(context)?.validPhone ??
+                      '请输入有效的手机号';
                 }
                 return null;
               },
@@ -255,16 +264,17 @@ class _ProfilePageState extends State<ProfilePage> {
             const SizedBox(height: 16),
             TextFormField(
               controller: _introductionController,
-              decoration: const InputDecoration(
-                labelText: '个人简介',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: AppLocalizations.of(context)?.introduction ?? '个人简介',
+                border: const OutlineInputBorder(),
                 alignLabelWithHint: true,
               ),
               maxLines: 3,
               maxLength: 100,
               validator: (value) {
                 if (value != null && value.length > 100) {
-                  return '个人简介不能超过100个字符';
+                  return AppLocalizations.of(context)?.introductionLimit ??
+                      '个人简介不能超过100个字符';
                 }
                 return null;
               },
@@ -289,7 +299,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     });
                   },
                   icon: const Icon(Icons.cancel),
-                  label: const Text('取消'),
+                  label: Text(AppLocalizations.of(context)?.cancel ?? '取消'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.grey,
                   ),
@@ -315,8 +325,9 @@ class _ProfilePageState extends State<ProfilePage> {
                           _isEditing = false;
                         });
                         Get.snackbar(
-                          '成功',
-                          '个人资料更新成功',
+                          AppLocalizations.of(context)?.success ?? '成功',
+                          AppLocalizations.of(context)?.profileUpdateSuccess ??
+                              '个人资料更新成功',
                           backgroundColor: Colors.green,
                           colorText: Colors.white,
                           icon: Icon(Icons.check_circle, color: Colors.white),
@@ -324,8 +335,9 @@ class _ProfilePageState extends State<ProfilePage> {
                         );
                       } else if (mounted) {
                         Get.snackbar(
-                          '错误',
-                          '更新个人资料失败',
+                          AppLocalizations.of(context)?.error ?? '错误',
+                          AppLocalizations.of(context)?.profileUpdateFailed ??
+                              '更新个人资料失败',
                           backgroundColor: Colors.red,
                           colorText: Colors.white,
                           icon: Icon(Icons.error, color: Colors.white),
@@ -335,7 +347,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     }
                   },
                   icon: const Icon(Icons.save),
-                  label: const Text('保存'),
+                  label: Text(AppLocalizations.of(context)?.save ?? '保存'),
                 ),
               ],
             ),
@@ -352,14 +364,14 @@ class _ProfilePageState extends State<ProfilePage> {
       children: [
         const Icon(Icons.person, size: 64),
         const SizedBox(height: 16),
-        const Text('请先登录'),
+        Text(AppLocalizations.of(context)?.pleaseLogin ?? '请先登录'),
         const SizedBox(height: 24),
         ElevatedButton.icon(
           onPressed: () {
             Get.toNamed('/login');
           },
           icon: const Icon(Icons.login),
-          label: const Text('登录'),
+          label: Text(AppLocalizations.of(context)?.login ?? '登录'),
         ),
       ],
     );
@@ -375,7 +387,7 @@ class _ProfilePageState extends State<ProfilePage> {
           children: [
             ListTile(
               leading: const Icon(Icons.camera),
-              title: const Text('拍照'),
+              title: Text(AppLocalizations.of(context)?.takePhoto ?? '拍照'),
               onTap: () {
                 Navigator.pop(context);
                 _pickImage(ImageSource.camera);
@@ -383,7 +395,8 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
             ListTile(
               leading: const Icon(Icons.photo_library),
-              title: const Text('从相册选择'),
+              title: Text(
+                  AppLocalizations.of(context)?.chooseFromGallery ?? '从相册选择'),
               onTap: () {
                 Navigator.pop(context);
                 _pickImage(ImageSource.gallery);
@@ -414,8 +427,8 @@ class _ProfilePageState extends State<ProfilePage> {
 
         if (success && mounted) {
           Get.snackbar(
-            '成功',
-            '头像更新成功',
+            AppLocalizations.of(context)?.success ?? '成功',
+            AppLocalizations.of(context)?.avatarUpdateSuccess ?? '头像更新成功',
             backgroundColor: Colors.green,
             colorText: Colors.white,
             icon: Icon(Icons.check_circle, color: Colors.white),
@@ -423,8 +436,8 @@ class _ProfilePageState extends State<ProfilePage> {
           );
         } else if (mounted) {
           Get.snackbar(
-            '错误',
-            '更新头像失败',
+            AppLocalizations.of(context)?.error ?? '错误',
+            AppLocalizations.of(context)?.avatarUpdateFailed ?? '更新头像失败',
             backgroundColor: Colors.red,
             colorText: Colors.white,
             icon: Icon(Icons.error, color: Colors.white),
@@ -436,8 +449,8 @@ class _ProfilePageState extends State<ProfilePage> {
       AppLogger().e('选择图片错误: $e');
       if (mounted) {
         Get.snackbar(
-          '错误',
-          '选择图片失败',
+          AppLocalizations.of(context)?.error ?? '错误',
+          AppLocalizations.of(context)?.imagePickFailed ?? '选择图片失败',
           backgroundColor: Colors.red,
           colorText: Colors.white,
           icon: Icon(Icons.error, color: Colors.white),

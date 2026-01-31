@@ -163,13 +163,6 @@ class ApiService {
     });
   }
 
-  Future<Response> adminLogin(String username, String password) async {
-    return await _request('POST', '/admin/login', body: {
-      'username': username,
-      'password': password,
-    });
-  }
-
   Future<Response> register(String email, String username, String password,
       String verificationCode) async {
     return await _request('POST', '/user/register', body: {
@@ -256,22 +249,6 @@ class ApiService {
       AppLogger().e('=================\n');
       rethrow;
     }
-  }
-
-  Future<Response> adminLogout() async {
-    return await _request('POST', '/admin/logout');
-  }
-
-  Future<Response> getAllUsersCount() async {
-    return await _request('GET', '/admin/getAllUsersCount');
-  }
-
-  Future<Response> getAllUsers(int page, int size, String? keyword) async {
-    return await _request('POST', '/admin/getAllUsers', body: {
-      'page': page,
-      'size': size,
-      'keyword': keyword,
-    });
   }
 
   // Song endpoints

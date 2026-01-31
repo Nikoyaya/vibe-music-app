@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:vibe_music_app/generated/app_localizations.dart';
 import 'package:vibe_music_app/src/pages/auth/register/widgets/controller.dart';
 
 class RegisterView extends StatefulWidget {
@@ -181,7 +182,7 @@ class _RegisterViewState extends State<RegisterView> {
 
                     // 标题
                     Text(
-                      'Register',
+                      AppLocalizations.of(context)?.register ?? 'Register',
                       style:
                           Theme.of(context).textTheme.headlineMedium?.copyWith(
                                 fontWeight: FontWeight.bold,
@@ -217,7 +218,9 @@ class _RegisterViewState extends State<RegisterView> {
                             child: TextFormField(
                               controller: controller.emailController,
                               decoration: InputDecoration(
-                                labelText: 'Email',
+                                labelText:
+                                    AppLocalizations.of(context)?.email ??
+                                        'Email',
                                 prefixIcon: Icon(
                                   Icons.email,
                                   color:
@@ -233,10 +236,14 @@ class _RegisterViewState extends State<RegisterView> {
                               keyboardType: TextInputType.emailAddress,
                               validator: (value) {
                                 if (value == null || value.isEmpty) {
-                                  return 'Please enter email';
+                                  return AppLocalizations.of(context)
+                                          ?.enterEmail ??
+                                      'Please enter email';
                                 }
                                 if (!value.contains('@')) {
-                                  return 'Please enter a valid email';
+                                  return AppLocalizations.of(context)
+                                          ?.validEmail ??
+                                      'Please enter a valid email';
                                 }
                                 return null;
                               },
@@ -270,10 +277,17 @@ class _RegisterViewState extends State<RegisterView> {
                                             color: Colors.white),
                                 label: controller.countdown.value > 0
                                     ? Text(
-                                        'Resend Code (${controller.countdown.value}s)',
+                                        AppLocalizations.of(context)
+                                                ?.resendVerificationCode(
+                                                    controller
+                                                        .countdown.value) ??
+                                            'Resend Code (${controller.countdown.value}s)',
                                         style: const TextStyle(
                                             color: Colors.white))
-                                    : const Text('Send Verification Code',
+                                    : Text(
+                                        AppLocalizations.of(context)
+                                                ?.sendVerificationCode ??
+                                            'Send Verification Code',
                                         style: const TextStyle(
                                             color: Colors.white)),
                                 style: ElevatedButton.styleFrom(
@@ -316,7 +330,10 @@ class _RegisterViewState extends State<RegisterView> {
                                         controller: controller
                                             .verificationCodeController,
                                         decoration: InputDecoration(
-                                          labelText: 'Verification Code',
+                                          labelText:
+                                              AppLocalizations.of(context)
+                                                      ?.verificationCode ??
+                                                  'Verification Code',
                                           prefixIcon: Icon(
                                             Icons.verified_user,
                                             color: isDarkMode
@@ -341,10 +358,14 @@ class _RegisterViewState extends State<RegisterView> {
                                         maxLength: 6,
                                         validator: (value) {
                                           if (value == null || value.isEmpty) {
-                                            return 'Please enter verification code';
+                                            return AppLocalizations.of(context)
+                                                    ?.verificationCodeRequired ??
+                                                'Please enter verification code';
                                           }
                                           if (value.length != 6) {
-                                            return 'Verification code must be 6 digits';
+                                            return AppLocalizations.of(context)
+                                                    ?.verificationCodeLength ??
+                                                'Verification code must be 6 digits';
                                           }
                                           return null;
                                         },
@@ -376,7 +397,9 @@ class _RegisterViewState extends State<RegisterView> {
                             child: TextFormField(
                               controller: controller.usernameController,
                               decoration: InputDecoration(
-                                labelText: 'Username',
+                                labelText:
+                                    AppLocalizations.of(context)?.username ??
+                                        'Username',
                                 prefixIcon: Icon(
                                   Icons.person,
                                   color:
@@ -391,7 +414,9 @@ class _RegisterViewState extends State<RegisterView> {
                               ),
                               validator: (value) {
                                 if (value == null || value.isEmpty) {
-                                  return 'Please enter username';
+                                  return AppLocalizations.of(context)
+                                          ?.enterUsername ??
+                                      'Please enter username';
                                 }
                                 return null;
                               },
@@ -420,7 +445,9 @@ class _RegisterViewState extends State<RegisterView> {
                             child: TextFormField(
                               controller: controller.passwordController,
                               decoration: InputDecoration(
-                                labelText: 'Password',
+                                labelText:
+                                    AppLocalizations.of(context)?.password ??
+                                        'Password',
                                 prefixIcon: Icon(
                                   Icons.lock,
                                   color:
@@ -436,10 +463,14 @@ class _RegisterViewState extends State<RegisterView> {
                               obscureText: true,
                               validator: (value) {
                                 if (value == null || value.isEmpty) {
-                                  return 'Please enter password';
+                                  return AppLocalizations.of(context)
+                                          ?.enterPassword ??
+                                      'Please enter password';
                                 }
                                 if (value.length < 6) {
-                                  return 'Password must be at least 6 characters';
+                                  return AppLocalizations.of(context)
+                                          ?.passwordLength ??
+                                      'Password must be at least 6 characters';
                                 }
                                 return null;
                               },
@@ -468,7 +499,9 @@ class _RegisterViewState extends State<RegisterView> {
                             child: TextFormField(
                               controller: controller.confirmPasswordController,
                               decoration: InputDecoration(
-                                labelText: 'Confirm Password',
+                                labelText: AppLocalizations.of(context)
+                                        ?.confirmPassword ??
+                                    'Confirm Password',
                                 prefixIcon: Icon(
                                   Icons.lock_reset,
                                   color:
@@ -484,7 +517,9 @@ class _RegisterViewState extends State<RegisterView> {
                               obscureText: true,
                               validator: (value) {
                                 if (value == null || value.isEmpty) {
-                                  return 'Please confirm password';
+                                  return AppLocalizations.of(context)
+                                          ?.enterConfirmPassword ??
+                                      'Please confirm password';
                                 }
                                 return null;
                               },
@@ -512,7 +547,9 @@ class _RegisterViewState extends State<RegisterView> {
                                       ? const CircularProgressIndicator(
                                           color: Colors.white,
                                         )
-                                      : const Text('Register'),
+                                      : Text(AppLocalizations.of(context)
+                                              ?.register ??
+                                          'Register'),
                                 )),
                           ),
                           const SizedBox(height: 32),
@@ -561,7 +598,9 @@ class _RegisterViewState extends State<RegisterView> {
                           TextButton(
                             onPressed: controller.navigateToLogin,
                             child: Text(
-                              'Already have an account? Login',
+                              AppLocalizations.of(context)
+                                      ?.alreadyHaveAccount ??
+                                  'Already have an account? Login',
                               style: TextStyle(
                                 color: isDarkMode ? Colors.grey : Colors.black,
                               ),

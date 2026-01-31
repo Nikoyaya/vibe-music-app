@@ -4,7 +4,6 @@ import 'package:vibe_music_app/src/pages/player/player_page.dart';
 import 'package:vibe_music_app/src/pages/search/search_page.dart';
 import 'package:vibe_music_app/src/pages/auth/login/login_page.dart';
 import 'package:vibe_music_app/src/pages/auth/register/register_page.dart';
-import 'package:vibe_music_app/src/pages/admin/admin_page.dart';
 import 'package:vibe_music_app/src/pages/favorites/favorites_page.dart';
 
 /// 应用路由管理类
@@ -24,9 +23,6 @@ class AppRoutes {
 
   /// 注册页路由
   static const String register = '/register';
-
-  /// 管理员页路由
-  static const String admin = '/admin';
 
   /// 收藏页路由
   static const String favorites = '/favorites';
@@ -56,11 +52,6 @@ class AppRoutes {
     GetPage(
       name: register,
       page: () => const RegisterPage(),
-      transition: Transition.fade,
-    ),
-    GetPage(
-      name: admin,
-      page: () => const AdminPage(),
       transition: Transition.fade,
     ),
     GetPage(

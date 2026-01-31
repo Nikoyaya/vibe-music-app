@@ -5,7 +5,6 @@ import 'package:vibe_music_app/src/pages/home/widgets/controller.dart';
 import 'package:vibe_music_app/src/pages/favorites/widgets/controller.dart';
 import 'package:vibe_music_app/src/pages/search/widgets/controller.dart';
 import 'package:vibe_music_app/src/pages/player/widgets/controller.dart';
-import 'package:vibe_music_app/src/pages/admin/widgets/controller.dart';
 
 /// 依赖注入管理类
 /// 用于集中管理所有GetX依赖注入
@@ -21,7 +20,6 @@ class DependencyInjection {
     Get.put(FavoritesController(), permanent: true);
     Get.put(SearchPageController(), permanent: true);
     Get.put(PlayerController(), permanent: true);
-    Get.put(AdminController(), permanent: true);
     // 认证页面控制器不在这里注册，而是在页面中使用Get.create
 
     // 可以在这里添加更多的依赖注入
