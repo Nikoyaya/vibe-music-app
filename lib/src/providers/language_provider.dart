@@ -7,7 +7,11 @@ class LanguageProvider extends ChangeNotifier {
   String _languageCode = 'system';
 
   LanguageProvider() {
-    _loadSavedLanguage();
+    // 异步加载语言设置，但不阻塞构造函数
+    _loadSavedLanguage().then((_) {
+      // 加载完成后通知监听器
+      notifyListeners();
+    });
   }
 
   Locale? get currentLocale => _currentLocale;
@@ -16,6 +20,14 @@ class LanguageProvider extends ChangeNotifier {
   Future<void> _loadSavedLanguage() async {
     _languageCode = SpUtil.get<String>('language_code') ?? 'system';
     _updateLocale();
+    // 加载完成后更新应用的语言
+    if (_currentLocale != null) {
+      Get.updateLocale(_currentLocale!);
+    } else {
+      // 如果选择了系统语言，获取当前的系统语言并更新
+      final systemLocale = WidgetsBinding.instance.platformDispatcher.locale;
+      Get.updateLocale(systemLocale);
+    }
   }
 
   Future<void> changeLanguage(String code) async {

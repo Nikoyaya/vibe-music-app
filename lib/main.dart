@@ -67,6 +67,11 @@ class VibeMusicApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // 在构建 GetMaterialApp 之前先注册 LanguageProvider
+    if (!Get.isRegistered<LanguageProvider>()) {
+      Get.put(LanguageProvider());
+    }
+
     return GetMaterialApp(
       title: 'Vibe Music', // 应用标题
       theme: AppTheme.lightTheme, // 亮色主题
@@ -77,10 +82,6 @@ class VibeMusicApp extends StatelessWidget {
       debugShowCheckedModeBanner: false, // 隐藏调试横幅
       // 构建器回调，用于初始化本地化服务
       builder: (context, child) {
-        // 初始化 LanguageProvider
-        if (!Get.isRegistered<LanguageProvider>()) {
-          Get.put(LanguageProvider());
-        }
         // 初始化本地化服务
         LocalizationService.init(context);
         return child!;
