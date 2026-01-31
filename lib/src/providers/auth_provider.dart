@@ -1,6 +1,4 @@
 import 'dart:convert';
-import 'dart:typed_data';
-import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:vibe_music_app/src/services/api_service.dart';
 import 'package:vibe_music_app/src/models/user_model.dart';

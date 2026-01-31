@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:get/get.dart';
 import 'package:vibe_music_app/src/models/song_model.dart';
 import 'package:vibe_music_app/src/providers/music_provider.dart';
 import 'package:vibe_music_app/src/providers/auth_provider.dart';

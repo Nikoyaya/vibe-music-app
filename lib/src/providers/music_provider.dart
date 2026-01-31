@@ -259,6 +259,12 @@ class MusicProvider with ChangeNotifier {
     await _audioPlayer.pause();
     _playerState = AppPlayerState.paused;
     notifyListeners();
+
+    // 保存播放状态
+    if (currentSong != null) {
+      await savePlayHistory(currentSong!);
+      await savePlaylist();
+    }
   }
 
   /// 停止播放
@@ -584,31 +590,43 @@ class MusicProvider with ChangeNotifier {
           await _loadPlaylist();
           // 恢复播放状态
           if (_playlist.isNotEmpty) {
-            final index = _playlist
+            // 首先尝试通过 songUrl 查找歌曲
+            var index = _playlist
                 .indexWhere((song) => song.songUrl == lastPlayedSong.songUrl);
-            if (index >= 0) {
-              _currentIndex = index;
-              AppLogger().d('✅ 恢复播放状态，最后播放的歌曲: ${lastPlayedSong.songName}');
 
-              // 准备音频播放器但不自动播放
-              final currentSong = _playlist[_currentIndex];
-              if (currentSong.songUrl != null &&
-                  currentSong.songUrl!.isNotEmpty) {
-                try {
-                  // 重置播放器
-                  await _audioPlayer.stop();
-                  // 设置音频源
-                  AppLogger().d('准备音频播放器，设置音频源: ${currentSong.songUrl}');
-                  await _audioPlayer.setUrl(currentSong.songUrl!);
-                  // 不自动播放，保持暂停状态
-                  await _audioPlayer.pause();
-                  _playerState = AppPlayerState.paused;
-                  AppLogger().d('✅ 音频播放器准备完成，状态: 暂停');
-                  notifyListeners();
-                } catch (e) {
-                  AppLogger().e('❌ 准备音频播放器失败: $e');
-                  _playerState = AppPlayerState.stopped;
-                }
+            // 如果找不到，尝试通过 songName 和 artistName 查找
+            if (index < 0) {
+              index = _playlist.indexWhere((song) =>
+                  song.songName == lastPlayedSong.songName &&
+                  song.artistName == lastPlayedSong.artistName);
+            }
+
+            // 如果还是找不到，使用第一个歌曲
+            if (index < 0) {
+              index = 0;
+            }
+
+            _currentIndex = index;
+            AppLogger().d('✅ 恢复播放状态，最后播放的歌曲: ${lastPlayedSong.songName}');
+
+            // 准备音频播放器但不自动播放
+            final currentSong = _playlist[_currentIndex];
+            if (currentSong.songUrl != null &&
+                currentSong.songUrl!.isNotEmpty) {
+              try {
+                // 重置播放器
+                await _audioPlayer.stop();
+                // 设置音频源
+                AppLogger().d('准备音频播放器，设置音频源: ${currentSong.songUrl}');
+                await _audioPlayer.setUrl(currentSong.songUrl!);
+                // 不自动播放，保持暂停状态
+                await _audioPlayer.pause();
+                _playerState = AppPlayerState.paused;
+                AppLogger().d('✅ 音频播放器准备完成，状态: 暂停');
+                notifyListeners();
+              } catch (e) {
+                AppLogger().e('❌ 准备音频播放器失败: $e');
+                _playerState = AppPlayerState.stopped;
               }
             }
           }

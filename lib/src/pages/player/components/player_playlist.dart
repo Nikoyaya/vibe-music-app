@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:vibe_music_app/generated/app_localizations.dart';
 import 'package:vibe_music_app/src/models/song_model.dart';
 
 /// 播放列表组件
@@ -71,7 +72,7 @@ class PlayerPlaylist extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    '播放列表',
+                    AppLocalizations.of(context)?.playlist ?? 'Playlist',
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -79,7 +80,8 @@ class PlayerPlaylist extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    '${playlist.length} 首歌曲',
+                    AppLocalizations.of(context)?.songsCount(playlist.length) ??
+                        '${playlist.length} songs',
                     style: TextStyle(
                       fontSize: 14,
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
