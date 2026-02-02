@@ -1,9 +1,13 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:audio_session/audio_session.dart';
+
+// 导入 audioplayers 库，并添加前缀以避免命名冲突
+import 'package:audioplayers/audioplayers.dart' as audioplayers;
 import 'package:vibe_music_app/src/data/database/entity/play_history_entity.dart';
 import 'package:vibe_music_app/src/data/database/entity/playlist_song_entity.dart';
 import 'package:vibe_music_app/src/services/api_service.dart';
@@ -23,8 +27,11 @@ enum AppPlayerState {
 
 /// 音乐提供者类，管理音频播放相关功能
 class MusicProvider with ChangeNotifier {
-  // 音频播放器实例
-  final AudioPlayer _audioPlayer = AudioPlayer();
+  // 音频播放器实例（非桌面端使用）
+  AudioPlayer? _audioPlayer;
+
+  // 桌面端音频播放器实例
+  audioplayers.AudioPlayer? _desktopAudioPlayer;
   // 当前播放器状态
   AppPlayerState _playerState = AppPlayerState.stopped;
   // 当前音频时长
@@ -96,12 +103,87 @@ class MusicProvider with ChangeNotifier {
 
   /// 初始化方法
   Future<void> _initialize() async {
-    await _initAudioPlayer();
-    await _loadPlayState();
+    try {
+      // 检查是否为桌面端平台（不包括web）
+      final isDesktop = !kIsWeb &&
+          (defaultTargetPlatform == TargetPlatform.windows ||
+              defaultTargetPlatform == TargetPlatform.macOS ||
+              defaultTargetPlatform == TargetPlatform.linux);
+      AppLogger().d(
+          '初始化平台检测: isDesktop=$isDesktop, kIsWeb=$kIsWeb, defaultTargetPlatform=$defaultTargetPlatform');
+
+      if (!isDesktop) {
+        // 非桌面端平台（移动端和web），初始化 just_audio 播放器
+        await _initAudioPlayer();
+      } else {
+        // 桌面端平台，初始化 audioplayers 播放器
+        await _initDesktopAudioPlayer();
+      }
+
+      await _loadPlayState();
+    } catch (e) {
+      AppLogger().e('❌ 初始化失败: $e');
+      // 即使初始化失败，也要确保应用能够正常启动
+    }
+  }
+
+  /// 初始化桌面端音频播放器
+  Future<void> _initDesktopAudioPlayer() async {
+    try {
+      // 初始化 audioplayers 播放器
+      _desktopAudioPlayer = audioplayers.AudioPlayer();
+      AppLogger().d('✅ 桌面端音频播放器初始化成功');
+
+      // 监听播放状态
+      _desktopAudioPlayer?.onPlayerStateChanged.listen((state) {
+        AppPlayerState newState;
+        switch (state) {
+          case audioplayers.PlayerState.stopped:
+            newState = AppPlayerState.stopped;
+            break;
+          case audioplayers.PlayerState.playing:
+            newState = AppPlayerState.playing;
+            break;
+          case audioplayers.PlayerState.paused:
+            newState = AppPlayerState.paused;
+            break;
+          case audioplayers.PlayerState.completed:
+            _onSongComplete();
+            return;
+          default:
+            newState = AppPlayerState.loading;
+            break;
+        }
+
+        if (_playerState != newState) {
+          _playerState = newState;
+          _playerStateStreamController.add(newState);
+          notifyListeners();
+        }
+      });
+
+      // 监听播放位置
+      _desktopAudioPlayer?.onPositionChanged.listen((position) {
+        _position = position;
+        _positionStreamController.add(position);
+      });
+
+      // 监听音频时长
+      _desktopAudioPlayer?.onDurationChanged.listen((duration) {
+        _duration = duration;
+        _durationStreamController.add(duration);
+        notifyListeners();
+      });
+    } catch (e) {
+      AppLogger().e('❌ 桌面端音频播放器初始化失败: $e');
+    }
   }
 
   /// 初始化音频播放器
   Future<void> _initAudioPlayer() async {
+    // 创建 just_audio 播放器实例
+    _audioPlayer = AudioPlayer();
+
     // 初始化音频会话
     _audioSession = await AudioSession.instance;
     await _audioSession!.configure(const AudioSessionConfiguration.music());
@@ -109,10 +191,10 @@ class MusicProvider with ChangeNotifier {
     // 注意：audio_session 0.2.x 版本的方法名可能不同，这里使用兼容的方式
     // 当用户调整系统音量时，音频会话会自动更新播放器音量
     // 设置初始音量
-    _audioPlayer.setVolume(_volume);
+    _audioPlayer!.setVolume(_volume);
 
     // 监听音频时长变化
-    _audioPlayer.durationStream.listen((d) {
+    _audioPlayer!.durationStream.listen((d) {
       AppLogger().d('durationStream 收到数据: $d');
       if (d != null) {
         _duration = d;
@@ -124,14 +206,14 @@ class MusicProvider with ChangeNotifier {
     });
 
     // 监听播放位置变化 - 使用流而不是 notifyListeners
-    _audioPlayer.positionStream.listen((p) {
+    _audioPlayer!.positionStream.listen((p) {
       _position = p;
       _positionStreamController.add(p);
       // 不要在这里调用 notifyListeners() 以避免频繁重建
     });
 
     // 监听播放器状态变化
-    _audioPlayer.playerStateStream.listen((state) {
+    _audioPlayer!.playerStateStream.listen((state) {
       AppPlayerState newState;
       switch (state.processingState) {
         case ProcessingState.idle:
@@ -158,7 +240,7 @@ class MusicProvider with ChangeNotifier {
     });
 
     // 设置默认循环模式
-    _audioPlayer.setLoopMode(LoopMode.off);
+    _audioPlayer!.setLoopMode(LoopMode.off);
   }
 
   /// 歌曲播放完成时的处理
@@ -191,11 +273,11 @@ class MusicProvider with ChangeNotifier {
       return;
     }
 
-    AppLogger().d('尝试播放歌曲: ${song.songName}');
-    AppLogger().d('歌手: ${song.artistName}');
-    AppLogger().d('歌曲URL: ${song.songUrl}');
-    AppLogger().d('URL长度: ${song.songUrl!.length}');
-    AppLogger().d('URL有效性: ${Uri.tryParse(song.songUrl!)?.isAbsolute}');
+    // AppLogger().d('尝试播放歌曲: ${song.songName}');
+    // AppLogger().d('歌手: ${song.artistName}');
+    // AppLogger().d('歌曲URL: ${song.songUrl}');
+    // AppLogger().d('URL长度: ${song.songUrl!.length}');
+    // AppLogger().d('URL有效性: ${Uri.tryParse(song.songUrl!)?.isAbsolute}');
 
     _playerState = AppPlayerState.loading;
     notifyListeners();
@@ -213,18 +295,22 @@ class MusicProvider with ChangeNotifier {
       }
     }
 
+    // 检查是否为桌面端平台（不包括web）
+    final isDesktop = !kIsWeb &&
+        (defaultTargetPlatform == TargetPlatform.windows ||
+            defaultTargetPlatform == TargetPlatform.macOS ||
+            defaultTargetPlatform == TargetPlatform.linux);
+    AppLogger().d(
+        'playSong 平台检测: isDesktop=$isDesktop, kIsWeb=$kIsWeb, defaultTargetPlatform=$defaultTargetPlatform');
+
     try {
-      // 重置播放器
-      await _audioPlayer.stop();
-      // 设置音频源
-      AppLogger().d('准备从URL播放音频');
-      await _audioPlayer.setUrl(song.songUrl!);
-      // 播放歌曲
-      await _audioPlayer.play();
-      _playerState = AppPlayerState.playing;
-      AppLogger().d('成功开始播放歌曲: ${song.songName}');
-      AppLogger().d('播放后音频播放器状态: ${_audioPlayer.playerState}');
-      notifyListeners();
+      if (!isDesktop) {
+        // 非桌面端平台，使用 just_audio 播放器
+        await _playSongWithJustAudio(song);
+      } else {
+        // 桌面端平台，使用 audioplayers 播放器
+        await _playSongWithAudioPlayers(song);
+      }
 
       // 保存播放历史
       if (currentSong != null) {
@@ -240,6 +326,43 @@ class MusicProvider with ChangeNotifier {
     }
   }
 
+  /// 使用 just_audio 播放歌曲
+  Future<void> _playSongWithJustAudio(Song song) async {
+    if (_audioPlayer == null) {
+      throw Exception('音频播放器未初始化');
+    }
+
+    // 重置播放器
+    await _audioPlayer!.stop();
+    // 设置音频源
+    AppLogger().d('使用 just_audio 准备从URL播放音频');
+    await _audioPlayer!.setUrl(song.songUrl!);
+    // 播放歌曲
+    await _audioPlayer!.play();
+    _playerState = AppPlayerState.playing;
+    AppLogger().d('使用 just_audio 成功开始播放歌曲: ${song.songName}');
+    AppLogger().d('播放后音频播放器状态: ${_audioPlayer!.playerState}');
+    notifyListeners();
+  }
+
+  /// 使用 audioplayers 播放歌曲
+  Future<void> _playSongWithAudioPlayers(Song song) async {
+    if (_desktopAudioPlayer == null) {
+      throw Exception('桌面端音频播放器未初始化');
+    }
+
+    // 重置播放器
+    await _desktopAudioPlayer!.stop();
+    // 设置音频源
+    AppLogger().d('使用 audioplayers 准备从URL播放音频');
+    await _desktopAudioPlayer!.setSourceUrl(song.songUrl!);
+    // 播放歌曲
+    await _desktopAudioPlayer!.resume();
+    _playerState = AppPlayerState.playing;
+    AppLogger().d('使用 audioplayers 成功开始播放歌曲: ${song.songName}');
+    notifyListeners();
+  }
+
   /// 播放当前歌曲
   Future<void> play() async {
     if (currentSong == null || currentSong!.songUrl == null) {
@@ -247,9 +370,30 @@ class MusicProvider with ChangeNotifier {
       return;
     }
 
+    // 检查是否为桌面端平台（不包括web）
+    final isDesktop = !kIsWeb &&
+        (defaultTargetPlatform == TargetPlatform.windows ||
+            defaultTargetPlatform == TargetPlatform.macOS ||
+            defaultTargetPlatform == TargetPlatform.linux);
+
     try {
-      await _audioPlayer.play();
-      _playerState = AppPlayerState.playing;
+      if (!isDesktop) {
+        // 非桌面端平台，使用 just_audio 播放器
+        if (_audioPlayer == null) {
+          throw Exception('音频播放器未初始化');
+        }
+        await _audioPlayer!.play();
+        _playerState = AppPlayerState.playing;
+        AppLogger().d('使用 just_audio 播放当前歌曲');
+      } else {
+        // 桌面端平台，使用 audioplayers 播放器
+        if (_desktopAudioPlayer == null) {
+          throw Exception('桌面端音频播放器未初始化');
+        }
+        await _desktopAudioPlayer!.resume();
+        _playerState = AppPlayerState.playing;
+        AppLogger().d('使用 audioplayers 播放当前歌曲');
+      }
       notifyListeners();
     } catch (e) {
       AppLogger().e('播放歌曲失败: $e');
@@ -260,29 +404,89 @@ class MusicProvider with ChangeNotifier {
 
   /// 暂停当前歌曲
   Future<void> pause() async {
-    await _audioPlayer.pause();
-    _playerState = AppPlayerState.paused;
-    notifyListeners();
+    // 检查是否为桌面端平台（不包括web）
+    final isDesktop = !kIsWeb &&
+        (defaultTargetPlatform == TargetPlatform.windows ||
+            defaultTargetPlatform == TargetPlatform.macOS ||
+            defaultTargetPlatform == TargetPlatform.linux);
 
-    // 保存播放状态
-    if (currentSong != null) {
-      await savePlayHistory(currentSong!);
-      await savePlaylist();
+    try {
+      if (!isDesktop) {
+        // 非桌面端平台，使用 just_audio 播放器
+        if (_audioPlayer != null) {
+          await _audioPlayer!.pause();
+        }
+      } else {
+        // 桌面端平台，使用 audioplayers 播放器
+        if (_desktopAudioPlayer != null) {
+          await _desktopAudioPlayer!.pause();
+        }
+      }
+      _playerState = AppPlayerState.paused;
+      notifyListeners();
+
+      // 保存播放状态
+      if (currentSong != null) {
+        await savePlayHistory(currentSong!);
+        await savePlaylist();
+      }
+    } catch (e) {
+      AppLogger().e('暂停播放失败: $e');
     }
   }
 
   /// 停止播放
   Future<void> stop() async {
-    await _audioPlayer.stop();
-    _playerState = AppPlayerState.stopped;
-    _position = Duration.zero;
-    notifyListeners();
+    // 检查是否为桌面端平台（不包括web）
+    final isDesktop = !kIsWeb &&
+        (defaultTargetPlatform == TargetPlatform.windows ||
+            defaultTargetPlatform == TargetPlatform.macOS ||
+            defaultTargetPlatform == TargetPlatform.linux);
+
+    try {
+      if (!isDesktop) {
+        // 非桌面端平台，使用 just_audio 播放器
+        if (_audioPlayer != null) {
+          await _audioPlayer!.stop();
+        }
+      } else {
+        // 桌面端平台，使用 audioplayers 播放器
+        if (_desktopAudioPlayer != null) {
+          await _desktopAudioPlayer!.stop();
+        }
+      }
+      _playerState = AppPlayerState.stopped;
+      _position = Duration.zero;
+      notifyListeners();
+    } catch (e) {
+      AppLogger().e('停止播放失败: $e');
+    }
   }
 
   /// 跳转到指定位置
   /// [position] 要跳转到的位置
   Future<void> seekTo(Duration position) async {
-    await _audioPlayer.seek(position);
+    // 检查是否为桌面端平台（不包括web）
+    final isDesktop = !kIsWeb &&
+        (defaultTargetPlatform == TargetPlatform.windows ||
+            defaultTargetPlatform == TargetPlatform.macOS ||
+            defaultTargetPlatform == TargetPlatform.linux);
+
+    try {
+      if (!isDesktop) {
+        // 非桌面端平台，使用 just_audio 播放器
+        if (_audioPlayer != null) {
+          await _audioPlayer!.seek(position);
+        }
+      } else {
+        // 桌面端平台，使用 audioplayers 播放器
+        if (_desktopAudioPlayer != null) {
+          await _desktopAudioPlayer!.seek(position);
+        }
+      }
+    } catch (e) {
+      AppLogger().e('跳转播放位置失败: $e');
+    }
   }
 
   /// 播放下一首歌曲
@@ -315,21 +519,33 @@ class MusicProvider with ChangeNotifier {
 
   /// 切换重复模式
   void toggleRepeat() {
+    // 检查是否为桌面端平台（不包括web）
+    final isDesktop = !kIsWeb &&
+        (defaultTargetPlatform == TargetPlatform.windows ||
+            defaultTargetPlatform == TargetPlatform.macOS ||
+            defaultTargetPlatform == TargetPlatform.linux);
+
     switch (_repeatMode) {
       case RepeatMode.none:
         // 切换到全部循环
         _repeatMode = RepeatMode.all;
-        _audioPlayer.setLoopMode(LoopMode.all);
+        if (!isDesktop && _audioPlayer != null) {
+          _audioPlayer!.setLoopMode(LoopMode.all);
+        }
         break;
       case RepeatMode.all:
         // 切换到单曲循环
         _repeatMode = RepeatMode.one;
-        _audioPlayer.setLoopMode(LoopMode.one);
+        if (!isDesktop && _audioPlayer != null) {
+          _audioPlayer!.setLoopMode(LoopMode.one);
+        }
         break;
       case RepeatMode.one:
         // 切换到不循环
         _repeatMode = RepeatMode.none;
-        _audioPlayer.setLoopMode(LoopMode.off);
+        if (!isDesktop && _audioPlayer != null) {
+          _audioPlayer!.setLoopMode(LoopMode.off);
+        }
         break;
     }
     notifyListeners();
@@ -337,11 +553,31 @@ class MusicProvider with ChangeNotifier {
 
   /// 设置音量
   /// [volume] 音量大小（0.0-1.0）
-  void setVolume(double volume) {
-    _volume = volume;
-    _audioPlayer.setVolume(volume);
-    _volumeStreamController.add(volume);
-    notifyListeners();
+  Future<void> setVolume(double volume) async {
+    // 检查是否为桌面端平台（不包括web）
+    final isDesktop = !kIsWeb &&
+        (defaultTargetPlatform == TargetPlatform.windows ||
+            defaultTargetPlatform == TargetPlatform.macOS ||
+            defaultTargetPlatform == TargetPlatform.linux);
+
+    try {
+      _volume = volume;
+      if (!isDesktop) {
+        // 非桌面端平台，使用 just_audio 播放器
+        if (_audioPlayer != null) {
+          _audioPlayer!.setVolume(volume);
+        }
+      } else {
+        // 桌面端平台，使用 audioplayers 播放器
+        if (_desktopAudioPlayer != null) {
+          await _desktopAudioPlayer!.setVolume(volume);
+        }
+      }
+      _volumeStreamController.add(volume);
+      notifyListeners();
+    } catch (e) {
+      AppLogger().e('设置音量失败: $e');
+    }
   }
 
   /// 添加歌曲到播放列表
@@ -646,14 +882,38 @@ class MusicProvider with ChangeNotifier {
             if (currentSong.songUrl != null &&
                 currentSong.songUrl!.isNotEmpty) {
               try {
-                // 重置播放器
-                await _audioPlayer.stop();
-                // 设置音频源
-                AppLogger().d('准备音频播放器，设置音频源: ${currentSong.songUrl}');
-                await _audioPlayer.setUrl(currentSong.songUrl!);
-                // 不自动播放，保持暂停状态
-                await _audioPlayer.pause();
-                _playerState = AppPlayerState.paused;
+                // 检查是否为桌面端平台（不包括web）
+                final isDesktop = !kIsWeb &&
+                    (defaultTargetPlatform == TargetPlatform.windows ||
+                        defaultTargetPlatform == TargetPlatform.macOS ||
+                        defaultTargetPlatform == TargetPlatform.linux);
+
+                if (!isDesktop) {
+                  // 非桌面端平台，使用 just_audio 播放器
+                  if (_audioPlayer != null) {
+                    // 重置播放器
+                    await _audioPlayer!.stop();
+                    // 设置音频源
+                    AppLogger().d('准备音频播放器，设置音频源: ${currentSong.songUrl}');
+                    await _audioPlayer!.setUrl(currentSong.songUrl!);
+                    // 不自动播放，保持暂停状态
+                    await _audioPlayer!.pause();
+                    _playerState = AppPlayerState.paused;
+                  }
+                } else {
+                  // 桌面端平台，使用 audioplayers 播放器
+                  if (_desktopAudioPlayer != null) {
+                    // 重置播放器
+                    await _desktopAudioPlayer!.stop();
+                    // 设置音频源
+                    AppLogger().d('准备桌面端音频播放器，设置音频源: ${currentSong.songUrl}');
+                    await _desktopAudioPlayer!
+                        .setSourceUrl(currentSong.songUrl!);
+                    // 不自动播放，保持暂停状态
+                    // audioplayers 在设置源后默认是暂停状态
+                    _playerState = AppPlayerState.paused;
+                  }
+                }
                 AppLogger().d('✅ 音频播放器准备完成，状态: 暂停');
                 notifyListeners();
               } catch (e) {
@@ -663,10 +923,12 @@ class MusicProvider with ChangeNotifier {
             }
           }
         }
-      } else {
+      } else if (isFirstLaunch) {
         // 第一次启动，设置标记
         await SpUtil.put('isFirstLaunch', false);
-        AppLogger().d('✅ 首次启动应用，初始化播放状态');
+        AppLogger().d('✅ 首次启动应用，跳过加载上次播放状态');
+        // 首次启动时，不加载上次播放的歌曲，直接返回
+        return;
       }
     } catch (e) {
       AppLogger().e('❌ 加载播放状态失败: $e');
@@ -676,19 +938,33 @@ class MusicProvider with ChangeNotifier {
   /// 加载最后播放的歌曲
   Future<Song?> _loadLastPlayedSong() async {
     try {
-      final db = await DatabaseManager().database;
-      final playHistory = await db.playHistoryDao.getRecentPlayHistory(1);
+      // 优先使用数据库
+      try {
+        final db = await DatabaseManager().database;
+        final playHistory = await db.playHistoryDao.getRecentPlayHistory(1);
 
-      if (playHistory.isNotEmpty) {
-        final history = playHistory[0];
-        return Song(
-          id: null,
-          songName: history.songName,
-          artistName: history.artistName,
-          songUrl: history.songUrl,
-          coverUrl: history.coverUrl,
-          duration: history.duration,
-        );
+        if (playHistory.isNotEmpty) {
+          final history = playHistory[0];
+          AppLogger().d('✅ 从数据库加载最后播放歌曲成功');
+          return Song(
+            id: null,
+            songName: history.songName,
+            artistName: history.artistName,
+            songUrl: history.songUrl,
+            coverUrl: history.coverUrl,
+            duration: history.duration,
+          );
+        }
+      } catch (dbError) {
+        AppLogger().e('⚠️  数据库不可用，尝试使用 PlatformStorage: $dbError');
+
+        // 数据库不可用时，尝试使用 PlatformStorage
+        final lastPlayedSongJson = SpUtil.get('lastPlayedSong');
+        if (lastPlayedSongJson != null) {
+          final Map<String, dynamic> json = jsonDecode(lastPlayedSongJson);
+          AppLogger().d('✅ 从 PlatformStorage 加载最后播放歌曲成功');
+          return Song.fromJson(json);
+        }
       }
     } catch (e) {
       AppLogger().e('❌ 加载最后播放歌曲失败: $e');
@@ -699,57 +975,87 @@ class MusicProvider with ChangeNotifier {
   /// 加载播放列表
   Future<void> _loadPlaylist() async {
     try {
-      final db = await DatabaseManager().database;
-      final playlistSongs = await db.playlistSongDao.getSongsByPlaylistId(1);
+      // 优先使用数据库
+      try {
+        final db = await DatabaseManager().database;
+        final playlistSongs = await db.playlistSongDao.getSongsByPlaylistId(1);
 
-      if (playlistSongs.isNotEmpty) {
-        _playlist.clear();
-        for (final playlistSong in playlistSongs) {
-          final song = Song(
-            id: null,
-            songName: playlistSong.songName,
-            artistName: playlistSong.artistName,
-            songUrl: playlistSong.songUrl,
-            coverUrl: playlistSong.coverUrl,
-            duration: playlistSong.duration,
-          );
-          _playlist.add(song);
+        if (playlistSongs.isNotEmpty) {
+          _playlist.clear();
+          for (final playlistSong in playlistSongs) {
+            final song = Song(
+              id: null,
+              songName: playlistSong.songName,
+              artistName: playlistSong.artistName,
+              songUrl: playlistSong.songUrl,
+              coverUrl: playlistSong.coverUrl,
+              duration: playlistSong.duration,
+            );
+            _playlist.add(song);
+          }
+          AppLogger().d('✅ 从数据库加载播放列表成功，共 ${_playlist.length} 首歌曲');
+          notifyListeners();
+          return;
         }
-        AppLogger().d('✅ 从数据库加载播放列表成功，共 ${_playlist.length} 首歌曲');
-        notifyListeners();
+      } catch (dbError) {
+        AppLogger().e('⚠️  数据库不可用，尝试使用 PlatformStorage: $dbError');
+
+        // 数据库不可用时，尝试使用 PlatformStorage
+        final playlistJson = SpUtil.get('playlist');
+        if (playlistJson != null) {
+          final List<dynamic> jsonList = jsonDecode(playlistJson);
+          _playlist.clear();
+          for (final item in jsonList) {
+            _playlist.add(Song.fromJson(item));
+          }
+          AppLogger()
+              .d('✅ 从 PlatformStorage 加载播放列表成功，共 ${_playlist.length} 首歌曲');
+          notifyListeners();
+        }
       }
     } catch (e) {
       AppLogger().e('❌ 加载播放列表失败: $e');
     }
   }
 
-  /// 保存播放列表到数据库
+  /// 保存播放列表
   Future<void> savePlaylist() async {
     try {
-      final db = await DatabaseManager().database;
+      // 优先保存到数据库
+      try {
+        final db = await DatabaseManager().database;
 
-      // 清空现有播放列表
-      await db.playlistSongDao.deleteSongsByPlaylistId(1);
+        // 清空现有播放列表
+        await db.playlistSongDao.deleteSongsByPlaylistId(1);
 
-      // 保存当前播放列表
-      for (int i = 0; i < _playlist.length; i++) {
-        final song = _playlist[i];
-        final playlistSong = PlaylistSong(
-          id: 0,
-          playlistId: 1, // 默认播放列表
-          songId: song.id?.toString() ?? '',
-          songName: song.songName ?? '',
-          artistName: song.artistName ?? '',
-          coverUrl: song.coverUrl ?? '',
-          songUrl: song.songUrl ?? '',
-          duration: song.duration ?? '',
-          position: i,
-          createdAt: DateTime.now().toIso8601String(),
-        );
-        await db.playlistSongDao.insertPlaylistSong(playlistSong);
+        // 保存当前播放列表
+        for (int i = 0; i < _playlist.length; i++) {
+          final song = _playlist[i];
+          final playlistSong = PlaylistSong(
+            id: 0,
+            playlistId: 1, // 默认播放列表
+            songId: song.id?.toString() ?? '',
+            songName: song.songName ?? '',
+            artistName: song.artistName ?? '',
+            coverUrl: song.coverUrl ?? '',
+            songUrl: song.songUrl ?? '',
+            duration: song.duration ?? '',
+            position: i,
+            createdAt: DateTime.now().toIso8601String(),
+          );
+          await db.playlistSongDao.insertPlaylistSong(playlistSong);
+        }
+
+        AppLogger().d('✅ 保存播放列表到数据库成功，共 ${_playlist.length} 首歌曲');
+      } catch (dbError) {
+        AppLogger().e('⚠️  数据库不可用，尝试保存到 PlatformStorage: $dbError');
+
+        // 数据库不可用时，保存到 PlatformStorage
+        final playlistJson =
+            jsonEncode(_playlist.map((song) => song.toJson()).toList());
+        SpUtil.put('playlist', playlistJson);
+        AppLogger().d('✅ 保存播放列表到 PlatformStorage 成功，共 ${_playlist.length} 首歌曲');
       }
-
-      AppLogger().d('✅ 保存播放列表到数据库成功，共 ${_playlist.length} 首歌曲');
     } catch (e) {
       AppLogger().e('❌ 保存播放列表失败: $e');
     }
@@ -758,19 +1064,29 @@ class MusicProvider with ChangeNotifier {
   /// 保存播放历史
   Future<void> savePlayHistory(Song song) async {
     try {
-      final db = await DatabaseManager().database;
-      final playHistory = PlayHistory(
-        id: 0,
-        songId: song.id?.toString() ?? '',
-        songName: song.songName ?? '',
-        artistName: song.artistName ?? '',
-        coverUrl: song.coverUrl ?? '',
-        songUrl: song.songUrl ?? '',
-        duration: song.duration ?? '',
-        playedAt: DateTime.now().toIso8601String(),
-      );
-      await db.playHistoryDao.insertPlayHistory(playHistory);
-      AppLogger().d('✅ 保存播放历史成功: ${song.songName}');
+      // 优先保存到数据库
+      try {
+        final db = await DatabaseManager().database;
+        final playHistory = PlayHistory(
+          id: 0,
+          songId: song.id?.toString() ?? '',
+          songName: song.songName ?? '',
+          artistName: song.artistName ?? '',
+          coverUrl: song.coverUrl ?? '',
+          songUrl: song.songUrl ?? '',
+          duration: song.duration ?? '',
+          playedAt: DateTime.now().toIso8601String(),
+        );
+        await db.playHistoryDao.insertPlayHistory(playHistory);
+        AppLogger().d('✅ 保存播放历史到数据库成功: ${song.songName}');
+      } catch (dbError) {
+        AppLogger().e('⚠️  数据库不可用，尝试保存到 PlatformStorage: $dbError');
+
+        // 数据库不可用时，保存到 PlatformStorage
+        final lastPlayedSongJson = jsonEncode(song.toJson());
+        SpUtil.put('lastPlayedSong', lastPlayedSongJson);
+        AppLogger().d('✅ 保存播放历史到 PlatformStorage 成功: ${song.songName}');
+      }
     } catch (e) {
       AppLogger().e('❌ 保存播放历史失败: $e');
     }
@@ -802,7 +1118,14 @@ class MusicProvider with ChangeNotifier {
       savePlayHistory(currentSong!);
       savePlaylist();
     }
-    _audioPlayer.dispose();
+    // 释放音频播放器资源
+    if (_audioPlayer != null) {
+      _audioPlayer!.dispose();
+    }
+    // 释放桌面端音频播放器资源
+    if (_desktopAudioPlayer != null) {
+      _desktopAudioPlayer!.dispose();
+    }
     _positionStreamController.close();
     _durationStreamController.close();
     _playerStateStreamController.close();

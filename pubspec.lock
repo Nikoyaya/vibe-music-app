@@ -62,6 +62,102 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "0.2.2"
+  audioplayers:
+    dependency: "direct main"
+    description:
+      name: audioplayers
+      sha256: "5441fa0ceb8807a5ad701199806510e56afde2b4913d9d17c2f19f2902cf0ae4"
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "6.5.1"
+  audioplayers_android:
+    dependency: transitive
+    description:
+      name: audioplayers_android
+      sha256: "60a6728277228413a85755bd3ffd6fab98f6555608923813ce383b190a360605"
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "5.2.1"
+  audioplayers_darwin:
+    dependency: transitive
+    description:
+      name: audioplayers_darwin
+      sha256: "0811d6924904ca13f9ef90d19081e4a87f7297ddc19fc3d31f60af1aaafee333"
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "6.3.0"
+  audioplayers_linux:
+    dependency: transitive
+    description:
+      name: audioplayers_linux
+      sha256: f75bce1ce864170ef5e6a2c6a61cd3339e1a17ce11e99a25bae4474ea491d001
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "4.2.1"
+  audioplayers_platform_interface:
+    dependency: transitive
+    description:
+      name: audioplayers_platform_interface
+      sha256: "0e2f6a919ab56d0fec272e801abc07b26ae7f31980f912f24af4748763e5a656"
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "7.1.1"
+  audioplayers_web:
+    dependency: transitive
+    description:
+      name: audioplayers_web
+      sha256: "1c0f17cec68455556775f1e50ca85c40c05c714a99c5eb1d2d57cc17ba5522d7"
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "5.1.1"
+  audioplayers_windows:
+    dependency: transitive
+    description:
+      name: audioplayers_windows
+      sha256: "4048797865105b26d47628e6abb49231ea5de84884160229251f37dfcbe52fd7"
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "4.2.1"
+  bitsdojo_window:
+    dependency: "direct main"
+    description:
+      name: bitsdojo_window
+      sha256: "88ef7765dafe52d97d7a3684960fb5d003e3151e662c18645c1641c22b873195"
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "0.1.6"
+  bitsdojo_window_linux:
+    dependency: transitive
+    description:
+      name: bitsdojo_window_linux
+      sha256: "9519c0614f98be733e0b1b7cb15b827007886f6fe36a4fb62cf3d35b9dd578ab"
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "0.1.4"
+  bitsdojo_window_macos:
+    dependency: transitive
+    description:
+      name: bitsdojo_window_macos
+      sha256: f7c5be82e74568c68c5b8449e2c5d8fd12ec195ecd70745a7b9c0f802bb0268f
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "0.1.4"
+  bitsdojo_window_platform_interface:
+    dependency: transitive
+    description:
+      name: bitsdojo_window_platform_interface
+      sha256: "65daa015a0c6dba749bdd35a0f092e7a8ba8b0766aa0480eb3ef808086f6e27c"
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "0.1.2"
+  bitsdojo_window_windows:
+    dependency: transitive
+    description:
+      name: bitsdojo_window_windows
+      sha256: fa982cf61ede53f483e50b257344a1c250af231a3cdc93a7064dd6dc0d720b68
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "0.1.6"
   boolean_selector:
     dependency: transitive
     description:
@@ -1112,7 +1208,7 @@ packages:
     source: hosted
     version: "2.5.6"
   sqflite_common_ffi:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: sqflite_common_ffi
       sha256: "9faa2fedc5385ef238ce772589f7718c24cdddd27419b609bb9c6f703ea27988"

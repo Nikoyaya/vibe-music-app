@@ -234,6 +234,24 @@ class Song with _$Song {
       return '$minutes:${seconds.toString().padLeft(2, '0')}';
     }
   }
+
+  /// 将 Song 对象转换为 JSON 字符串
+  /// 返回一个包含歌曲所有属性的 JSON 映射
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'songName': songName,
+      'artistName': artistName,
+      'albumName': albumName,
+      'coverUrl': coverUrl,
+      'songUrl': songUrl,
+      'duration': duration,
+      'playCount': playCount,
+      'likeCount': likeCount,
+      'createTime': createTime?.toIso8601String(),
+      'likeStatus': likeStatus,
+    };
+  }
 }
 
 /// 分页结果模型类
