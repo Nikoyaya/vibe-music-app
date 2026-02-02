@@ -137,30 +137,33 @@ class HomeView extends GetView<HomeController> {
           Expanded(
             child: Stack(
               children: [
-                // 顶部导航栏
-                Positioned(
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  child: TopNavigationBar(
-                    title: Text(controller.getCurrentPageTitle()),
-                    actions: [
-                      // IconButton(
-                      //   icon: Icon(Icons.search, color: Colors.white),
-                      //   onPressed: () => Get.toNamed(AppRoutes.search),
-                      // ),
-                      IconButton(
-                        icon: Icon(Icons.settings, color: Colors.white),
-                        onPressed: controller.navigateToSettings,
-                      ),
-                    ],
-                  ),
-                ),
+                // 顶部导航栏（仅在主页显示）
+                Obx(() => controller.currentPage.value == 0
+                    ? Positioned(
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        child: TopNavigationBar(
+                          title: Text(''),
+                          actions: [
+                            IconButton(
+                              icon: Icon(Icons.search, color: Colors.white),
+                              onPressed: () => Get.toNamed(AppRoutes.search),
+                            ),
+                            IconButton(
+                              icon: Icon(Icons.settings, color: Colors.white),
+                              onPressed: controller.navigateToSettings,
+                            ),
+                          ],
+                        ),
+                      )
+                    : SizedBox.shrink()),
                 // 显示当前选中的页面
-                Padding(
-                  padding: const EdgeInsets.only(top: 70),
-                  child: Obx(() => _getCurrentPage()),
-                ),
+                Obx(() => Padding(
+                      padding: EdgeInsets.only(
+                          top: controller.currentPage.value == 0 ? 70 : 0),
+                      child: _getCurrentPage(),
+                    )),
                 // 正在播放音乐的小悬浮组件（在播放页时隐藏）
                 Obx(() => controller.currentPage.value != 1
                     ? const Positioned(
@@ -200,7 +203,7 @@ class HomeView extends GetView<HomeController> {
       case 0: // 音乐库
         return 0;
       case 1: // 播放
-        return 0; // 播放页在侧边栏中没有对应项，默认为音乐库
+        return 1; // 播放页对应侧边栏的播放器项
       case 2: // 我的收藏
         return 2;
       case 3: // 个人中心
@@ -215,9 +218,8 @@ class HomeView extends GetView<HomeController> {
     switch (sidebarIndex) {
       case 0: // 音乐库
         return 0;
-      case 1: // 搜索
-        Get.toNamed(AppRoutes.search); // 搜索页使用单独的路由
-        return 0; // 保持当前页面不变
+      case 1: // 播放器
+        return 1;
       case 2: // 我的收藏
         return 2;
       case 3: // 个人中心

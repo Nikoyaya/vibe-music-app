@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:vibe_music_app/generated/app_localizations.dart';
+import 'package:vibe_music_app/src/providers/auth_provider.dart';
 import 'package:vibe_music_app/src/utils/glass_morphism/glass_morphism.dart';
 
 /// 侧边栏导航组件
@@ -26,6 +28,9 @@ class SidebarNavigation extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final localizations = AppLocalizations.of(context);
+    final authProvider = Get.find<AuthProvider>();
+    final isAuthenticated = authProvider.isAuthenticated;
+    final user = authProvider.user;
 
     return GlassMorphism.glassCard(
       child: Container(
@@ -49,7 +54,10 @@ class SidebarNavigation extends StatelessWidget {
             // 导航项
             ...[
               {'icon': Icons.music_note, 'label': localizations?.home ?? '音乐库'},
-              {'icon': Icons.search, 'label': localizations?.search ?? '搜索'},
+              {
+                'icon': Icons.play_circle,
+                'label': localizations?.player ?? '播放器'
+              },
               {
                 'icon': Icons.favorite,
                 'label': localizations?.favorites ?? '我的收藏'
@@ -66,7 +74,7 @@ class SidebarNavigation extends StatelessWidget {
                 selectedTileColor: Colors.white.withOpacity(0.1),
                 onTap: () => onDestinationSelected(index),
               );
-            }).toList(),
+            }),
 
             const Spacer(),
 
@@ -75,14 +83,22 @@ class SidebarNavigation extends StatelessWidget {
               padding: const EdgeInsets.all(16),
               child: Row(
                 children: [
-                  CircleAvatar(
-                    backgroundColor: Colors.white.withOpacity(0.2),
-                    child: const Icon(Icons.person, color: Colors.white),
-                  ),
+                  if (isAuthenticated && user?.userAvatar != null)
+                    CircleAvatar(
+                      backgroundImage: NetworkImage(user!.userAvatar!),
+                      radius: 20,
+                    )
+                  else
+                    CircleAvatar(
+                      backgroundColor: Colors.white.withOpacity(0.2),
+                      child: const Icon(Icons.person, color: Colors.white),
+                    ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      localizations?.username ?? '用户名',
+                      isAuthenticated && user?.username != null
+                          ? user!.username!
+                          : localizations?.pleaseLogin ?? '未登录',
                       style: const TextStyle(color: Colors.white),
                       overflow: TextOverflow.ellipsis,
                       maxLines: 1,
