@@ -10,6 +10,7 @@ import 'package:vibe_music_app/src/components/pull_to_refresh.dart';
 import 'package:vibe_music_app/src/services/image_preload_service.dart';
 import 'package:vibe_music_app/src/utils/snackbar_manager.dart';
 import 'package:vibe_music_app/src/routes/app_routes.dart';
+import 'package:vibe_music_app/src/utils/glass_morphism/responsive_layout.dart';
 
 /// 歌曲列表页面
 class SongListPage extends StatefulWidget {
@@ -177,54 +178,56 @@ class _SongListPageState extends State<SongListPage> {
           SliverPadding(
             padding: const EdgeInsets.all(16),
             sliver: SliverToBoxAdapter(
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.surfaceContainer,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
-                      blurRadius: 10,
-                      spreadRadius: 2,
-                    ),
-                  ],
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    // 标题
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Vibe Music',
-                          style: Theme.of(context)
-                              .textTheme
-                              .headlineMedium
-                              ?.copyWith(
-                                fontWeight: FontWeight.bold,
+              child: !ScreenSize.isDesktop(context)
+                  ? Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 16),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.surfaceContainer,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 10,
+                            spreadRadius: 2,
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          // 标题
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Vibe Music',
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .headlineMedium
+                                    ?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                    ),
                               ),
-                        ),
-                      ],
-                    ),
-                    // 操作按钮组
-                    Row(
-                      children: [
-                        const SizedBox(width: 12),
-                        // 搜索按钮
-                        IconButton(
-                          onPressed: () {
-                            Get.toNamed(AppRoutes.search);
-                          },
-                          icon: Icon(Icons.search),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
+                            ],
+                          ),
+                          // 操作按钮组
+                          Row(
+                            children: [
+                              const SizedBox(width: 12),
+                              // 搜索按钮
+                              IconButton(
+                                onPressed: () {
+                                  Get.toNamed(AppRoutes.search);
+                                },
+                                icon: Icon(Icons.search),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    )
+                  : SizedBox.shrink(),
             ),
           ),
 

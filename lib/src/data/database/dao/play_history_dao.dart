@@ -9,7 +9,8 @@ abstract class PlayHistoryDao {
   Future<List<PlayHistory>> getAllPlayHistory();
 
   /// 根据歌曲ID获取播放历史
-  @Query('SELECT * FROM play_history WHERE songId = :songId ORDER BY playedAt DESC')
+  @Query(
+      'SELECT * FROM play_history WHERE songId = :songId ORDER BY playedAt DESC')
   Future<List<PlayHistory>> getPlayHistoryBySongId(String songId);
 
   /// 根据ID获取播放历史
@@ -41,6 +42,7 @@ abstract class PlayHistoryDao {
   Future<void> clearAllPlayHistory();
 
   /// 清除旧的播放历史（保留最近的N条）
-  @Query('DELETE FROM play_history WHERE id NOT IN (SELECT id FROM play_history ORDER BY playedAt DESC LIMIT :keepCount)')
+  @Query(
+      'DELETE FROM play_history WHERE id NOT IN (SELECT id FROM play_history ORDER BY playedAt DESC LIMIT :keepCount)')
   Future<void> clearOldPlayHistory(int keepCount);
 }

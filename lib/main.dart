@@ -37,16 +37,13 @@ Future<void> main() async {
   stopwatch.stop();
   AppLogger().d('🚀 应用初始化完成，耗时: ${stopwatch.elapsedMilliseconds}ms');
 
-  // 只在桌面端初始化窗口设置
-  if (!kIsWeb &&
-      (defaultTargetPlatform == TargetPlatform.windows ||
-          defaultTargetPlatform == TargetPlatform.macOS ||
-          defaultTargetPlatform == TargetPlatform.linux)) {
-    _initializeWindow();
-    AppLogger().d('✅ 桌面端窗口初始化完成');
-  } else {
-    AppLogger().d('✅ 非桌面端，跳过窗口初始化');
-  }
+  // // 只在桌面端初始化窗口设置
+  // if (!kIsWeb &&
+  //     (defaultTargetPlatform == TargetPlatform.windows ||
+  //         defaultTargetPlatform == TargetPlatform.macOS ||
+  //         defaultTargetPlatform == TargetPlatform.linux)) {
+  //   _initializeWindow();
+  // }
 
   runApp(const VibeMusicApp());
 }
@@ -87,8 +84,13 @@ Future<void> _initializeUtilities() async {
   // 初始化SpUtil存储工具
   await SpUtil.init();
 
-  // 初始化数据库
-  await DatabaseManager().initDatabase();
+  try {
+    // 初始化数据库
+    await DatabaseManager().initDatabase();
+  } catch (e) {
+    AppLogger().e('数据库初始化失败: $e');
+  }
+
   // 工具类初始化完成
   AppLogger().d('✅ 工具类初始化完成');
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:vibe_music_app/generated/app_localizations.dart';
 import 'package:vibe_music_app/src/utils/glass_morphism/glass_morphism.dart';
 
 /// 侧边栏导航组件
@@ -7,9 +8,10 @@ import 'package:vibe_music_app/src/utils/glass_morphism/glass_morphism.dart';
 class SidebarNavigation extends StatelessWidget {
   /// 当前选中的导航项索引
   final int currentIndex;
+
   /// 导航项选择回调函数
   final Function(int) onDestinationSelected;
-  
+
   /// 侧边栏导航构造函数
   ///
   /// [参数说明]:
@@ -23,6 +25,8 @@ class SidebarNavigation extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context);
+
     return GlassMorphism.glassCard(
       child: Container(
         width: 240,
@@ -32,38 +36,40 @@ class SidebarNavigation extends StatelessWidget {
             // Logo和标题
             Container(
               padding: const EdgeInsets.symmetric(vertical: 20),
-              child: const Text(
-                'Vibe Music Player',
-                style: TextStyle(
+              child: Text(
+                localizations?.appTitle ?? 'Vibe Music Player',
+                style: const TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
                 ),
               ),
             ),
-            
+
             // 导航项
             ...[
-              { 'icon': Icons.music_note, 'label': '音乐库' },
-              { 'icon': Icons.movie, 'label': 'MV' },
-              { 'icon': Icons.radio, 'label': '电台' },
-              { 'icon': Icons.search, 'label': '搜索' },
-              { 'icon': Icons.favorite, 'label': '我的收藏' },
-              { 'icon': Icons.person, 'label': '个人中心' },
+              {'icon': Icons.music_note, 'label': localizations?.home ?? '音乐库'},
+              {'icon': Icons.search, 'label': localizations?.search ?? '搜索'},
+              {
+                'icon': Icons.favorite,
+                'label': localizations?.favorites ?? '我的收藏'
+              },
+              {'icon': Icons.person, 'label': localizations?.my ?? '个人中心'},
             ].asMap().entries.map((entry) {
               int index = entry.key;
               Map<String, dynamic> item = entry.value;
               return ListTile(
                 leading: Icon(item['icon'] as IconData, color: Colors.white),
-                title: Text(item['label'] as String, style: const TextStyle(color: Colors.white)),
+                title: Text(item['label'] as String,
+                    style: const TextStyle(color: Colors.white)),
                 selected: currentIndex == index,
                 selectedTileColor: Colors.white.withOpacity(0.1),
                 onTap: () => onDestinationSelected(index),
               );
             }).toList(),
-            
+
             const Spacer(),
-            
+
             // 用户信息
             Container(
               padding: const EdgeInsets.all(16),
@@ -74,7 +80,14 @@ class SidebarNavigation extends StatelessWidget {
                     child: const Icon(Icons.person, color: Colors.white),
                   ),
                   const SizedBox(width: 12),
-                  const Text('用户名', style: TextStyle(color: Colors.white)),
+                  Expanded(
+                    child: Text(
+                      localizations?.username ?? '用户名',
+                      style: const TextStyle(color: Colors.white),
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -91,9 +104,10 @@ class SidebarNavigation extends StatelessWidget {
 class TopNavigationBar extends StatelessWidget {
   /// 页面标题
   final String title;
+
   /// 操作按钮列表
   final List<Widget>? actions;
-  
+
   /// 顶部导航栏构造函数
   ///
   /// [参数说明]:
@@ -137,11 +151,13 @@ class TopNavigationBar extends StatelessWidget {
 class BottomNavigationBarGlass extends StatelessWidget {
   /// 当前选中的导航项索引
   final int currentIndex;
+
   /// 导航项选择回调函数
   final Function(int) onDestinationSelected;
+
   /// 导航项列表
   final List<NavigationDestination> items;
-  
+
   /// 玻璃拟态底部导航栏构造函数
   ///
   /// [参数说明]:

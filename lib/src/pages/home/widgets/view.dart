@@ -10,8 +10,6 @@ import 'package:vibe_music_app/src/pages/home/components/profile_page.dart';
 import 'package:vibe_music_app/src/pages/home/components/currently_playing_bar.dart';
 import 'package:vibe_music_app/src/pages/player/player_page.dart';
 import 'package:vibe_music_app/src/pages/favorites/favorites_page.dart';
-import 'package:vibe_music_app/src/components/custom_title_bar.dart';
-import 'package:flutter/foundation.dart';
 
 class HomeView extends GetView<HomeController> {
   const HomeView({super.key});
@@ -139,56 +137,29 @@ class HomeView extends GetView<HomeController> {
           Expanded(
             child: Stack(
               children: [
-                // 自定义标题栏（仅在桌面端显示）
-                if (kIsWeb ||
-                    (defaultTargetPlatform == TargetPlatform.windows ||
-                        defaultTargetPlatform == TargetPlatform.macOS ||
-                        defaultTargetPlatform == TargetPlatform.linux))
-                  Positioned(
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    child: CustomTitleBar(
-                      title: controller.getCurrentPageTitle(),
-                      showIcon: true,
-                    ),
+                // 顶部导航栏
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  child: TopNavigationBar(
+                    title: Text(controller.getCurrentPageTitle()),
+                    actions: [
+                      // IconButton(
+                      //   icon: Icon(Icons.search, color: Colors.white),
+                      //   onPressed: () => Get.toNamed(AppRoutes.search),
+                      // ),
+                      IconButton(
+                        icon: Icon(Icons.settings, color: Colors.white),
+                        onPressed: controller.navigateToSettings,
+                      ),
+                    ],
                   ),
-                // 顶部导航栏（非桌面端使用）
-                if (!(kIsWeb ||
-                    (defaultTargetPlatform == TargetPlatform.windows ||
-                        defaultTargetPlatform == TargetPlatform.macOS ||
-                        defaultTargetPlatform == TargetPlatform.linux)))
-                  Positioned(
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    child: TopNavigationBar(
-                      title: Obx(() => Text(controller.getCurrentPageTitle())),
-                      actions: [
-                        IconButton(
-                          icon: Icon(Icons.search, color: Colors.white),
-                          onPressed: () => Get.toNamed(AppRoutes.search),
-                        ),
-                        IconButton(
-                          icon: Icon(Icons.settings, color: Colors.white),
-                          onPressed: controller.navigateToSettings,
-                        ),
-                      ],
-                    ),
-                  ),
+                ),
                 // 显示当前选中的页面
                 Padding(
-                  padding: EdgeInsets.only(
-                    top: (kIsWeb ||
-                            (defaultTargetPlatform == TargetPlatform.windows ||
-                                defaultTargetPlatform == TargetPlatform.macOS ||
-                                defaultTargetPlatform == TargetPlatform.linux))
-                        ? 50
-                        : 70,
-                  ),
-                  child: AdaptiveContainer(
-                    child: Obx(() => _getCurrentPage()),
-                  ),
+                  padding: const EdgeInsets.only(top: 70),
+                  child: Obx(() => _getCurrentPage()),
                 ),
                 // 正在播放音乐的小悬浮组件（在播放页时隐藏）
                 Obx(() => controller.currentPage.value != 1
@@ -231,9 +202,9 @@ class HomeView extends GetView<HomeController> {
       case 1: // 播放
         return 0; // 播放页在侧边栏中没有对应项，默认为音乐库
       case 2: // 我的收藏
-        return 4;
+        return 2;
       case 3: // 个人中心
-        return 5;
+        return 3;
       default:
         return 0;
     }
@@ -244,16 +215,12 @@ class HomeView extends GetView<HomeController> {
     switch (sidebarIndex) {
       case 0: // 音乐库
         return 0;
-      case 1: // MV
-        return 0; // MV页未实现，默认为音乐库
-      case 2: // 电台
-        return 0; // 电台页未实现，默认为音乐库
-      case 3: // 搜索
+      case 1: // 搜索
         Get.toNamed(AppRoutes.search); // 搜索页使用单独的路由
         return 0; // 保持当前页面不变
-      case 4: // 我的收藏
+      case 2: // 我的收藏
         return 2;
-      case 5: // 个人中心
+      case 3: // 个人中心
         return 3;
       default:
         return 0;

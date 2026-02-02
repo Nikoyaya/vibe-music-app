@@ -76,8 +76,6 @@ class Song with _$Song {
           processedAudioUrl =
               processedAudioUrl.substring(0, processedAudioUrl.length - 1);
         }
-
-        AppLogger().d('处理后的音频URL: $processedAudioUrl');
       } catch (e) {
         AppLogger().e('处理音频URL失败: $e');
         // 如果解析失败，尝试手动修复明显问题
@@ -101,7 +99,6 @@ class Song with _$Song {
     for (var field in durationFields) {
       if (json.containsKey(field) && json[field] != null) {
         durationValue = json[field]?.toString().trim();
-        AppLogger().d('从字段$field获取到duration值: $durationValue');
         break;
       }
     }
