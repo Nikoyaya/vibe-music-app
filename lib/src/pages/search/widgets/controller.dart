@@ -1,8 +1,10 @@
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
+import 'package:vibe_music_app/generated/app_localizations.dart';
 import 'package:vibe_music_app/src/providers/music_provider.dart';
 import 'package:vibe_music_app/src/providers/auth_provider.dart';
 import 'package:vibe_music_app/src/models/song_model.dart';
+import 'package:vibe_music_app/src/routes/app_routes.dart';
 import 'package:vibe_music_app/src/utils/app_logger.dart';
 
 class SearchPageController extends GetxController {
@@ -18,6 +20,7 @@ class SearchPageController extends GetxController {
 
   // 常量
   static const int pageSize = 20;
+  static const int debounceDelay = 300; // 搜索防抖延迟时间
 
   // 提供者
   late MusicProvider _musicProvider;
@@ -36,6 +39,15 @@ class SearchPageController extends GetxController {
         loadMore();
       }
     });
+
+    // 添加搜索关键词防抖
+    debounce(searchKeyword, (value) {
+      if (value.isNotEmpty) {
+        searchSongs(loadMore: false);
+      } else {
+        searchResults.clear();
+      }
+    }, time: Duration(milliseconds: debounceDelay));
   }
 
   @override
@@ -69,7 +81,9 @@ class SearchPageController extends GetxController {
       }
     } catch (e, stackTrace) {
       AppLogger().e('搜索歌曲错误: $e', stackTrace: stackTrace);
-      Get.snackbar('Error', '搜索失败，请重试');
+      final localizations = AppLocalizations.of(Get.context!);
+      Get.snackbar(localizations?.error ?? 'Error',
+          localizations?.searchFailed ?? '搜索失败，请重试');
     } finally {
       isSearching.value = false;
     }
@@ -92,13 +106,15 @@ class SearchPageController extends GetxController {
   /// 处理搜索结果点击
   void handleResultTap(Song song) {
     _musicProvider.playSong(song, playlist: searchResults);
-    Get.toNamed('/player');
+    Get.toNamed(AppRoutes.player);
   }
 
   /// 处理收藏按钮点击
   Future<void> handleFavoriteTap(Song song) async {
+    final localizations = AppLocalizations.of(Get.context!);
     if (!_authProvider.isAuthenticated) {
-      Get.snackbar('提示', '请先登录');
+      Get.snackbar(
+          localizations?.tip ?? '提示', localizations?.pleaseLogin ?? '请先登录');
       return;
     }
 
@@ -108,12 +124,14 @@ class SearchPageController extends GetxController {
     if (isFavorited) {
       success = await _musicProvider.removeFromFavorites(song);
       if (success) {
-        Get.snackbar('成功', '已取消收藏');
+        Get.snackbar(localizations?.success ?? '成功',
+            localizations?.removedFromFavorites ?? '已取消收藏');
       }
     } else {
       success = await _musicProvider.addToFavorites(song);
       if (success) {
-        Get.snackbar('成功', '已添加到收藏');
+        Get.snackbar(localizations?.success ?? '成功',
+            localizations?.addedToFavorites ?? '已添加到收藏');
       }
     }
   }

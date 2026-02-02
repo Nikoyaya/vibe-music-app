@@ -107,5 +107,11 @@
   "removedFromFavorites": "Removed from favorites",
   "addedToFavorites": "Added to favorites",
   "playNext": "Play Next",
-  "addedToNextPlay": "Added to next play"
+  "addedToNextPlay": "Added to next play",
+  "searchFailed": "Search failed, please try again",
+  "alreadyFavorited": "Already in favorites",
+  "verificationCodeSent": "Verification code sent!",
+  "failedToSendVerificationCode": "Failed to send verification code",
+  "registrationSuccessful": "Registration successful! Please login.",
+  "settingsPageComingSoon": "Settings page will be implemented soon"
 }

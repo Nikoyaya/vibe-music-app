@@ -329,7 +329,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get tip => '提示';
 
   @override
-  String get removedFromFavorites => '已取消收藏';
+  String get removedFromFavorites => '已从收藏中移除';
 
   @override
   String get addedToFavorites => '已添加到收藏';
@@ -339,6 +339,24 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get addedToNextPlay => '已添加到下一首播放';
+
+  @override
+  String get searchFailed => '搜索失败，请重试';
+
+  @override
+  String get alreadyFavorited => '已在收藏中';
+
+  @override
+  String get verificationCodeSent => '验证码已发送！';
+
+  @override
+  String get failedToSendVerificationCode => '发送验证码失败';
+
+  @override
+  String get registrationSuccessful => '注册成功！请登录。';
+
+  @override
+  String get settingsPageComingSoon => '设置页面即将上线';
 }
 
 /// The translations for Chinese, as used in Taiwan (`zh_TW`).
@@ -666,7 +684,7 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get tip => '提示';
 
   @override
-  String get removedFromFavorites => '已取消收藏';
+  String get removedFromFavorites => '已從收藏中移除';
 
   @override
   String get addedToFavorites => '已添加到收藏';
@@ -676,4 +694,22 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get addedToNextPlay => '已添加到下一首播放';
+
+  @override
+  String get searchFailed => '搜索失敗，請重試';
+
+  @override
+  String get alreadyFavorited => '已在收藏中';
+
+  @override
+  String get verificationCodeSent => '驗證碼已發送！';
+
+  @override
+  String get failedToSendVerificationCode => '發送驗證碼失敗';
+
+  @override
+  String get registrationSuccessful => '註冊成功！請登錄。';
+
+  @override
+  String get settingsPageComingSoon => '設置頁面即將上線';
 }

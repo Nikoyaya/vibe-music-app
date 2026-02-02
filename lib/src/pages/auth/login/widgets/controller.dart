@@ -1,6 +1,8 @@
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
+import 'package:vibe_music_app/generated/app_localizations.dart';
 import 'package:vibe_music_app/src/providers/auth_provider.dart';
+import 'package:vibe_music_app/src/routes/app_routes.dart';
 import 'package:vibe_music_app/src/utils/app_logger.dart';
 
 class LoginController extends GetxController {
@@ -47,16 +49,20 @@ class LoginController extends GetxController {
           passwordController.text,
         );
 
+        final localizations = AppLocalizations.of(Get.context!);
         if (success) {
           // 登录成功，跳转到首页
-          Get.offAllNamed('/');
+          Get.offAllNamed(AppRoutes.home);
         } else if (_authProvider.errorMessage != null) {
           // 登录失败，显示错误信息
-          Get.snackbar('Error', _authProvider.errorMessage!);
+          Get.snackbar(
+              localizations?.error ?? 'Error', _authProvider.errorMessage!);
         }
       } catch (e, stackTrace) {
         AppLogger().e('登录错误: $e', stackTrace: stackTrace);
-        Get.snackbar('Error', 'An unexpected error occurred');
+        final localizations = AppLocalizations.of(Get.context!);
+        Get.snackbar(localizations?.error ?? 'Error',
+            localizations?.error ?? 'An unexpected error occurred');
       } finally {
         isLoading.value = false;
       }
@@ -65,7 +71,7 @@ class LoginController extends GetxController {
 
   /// 导航到注册页面
   void navigateToRegister() {
-    Get.toNamed('/register');
+    Get.toNamed(AppRoutes.register);
   }
 
   /// 返回上一页或导航到首页
@@ -73,7 +79,7 @@ class LoginController extends GetxController {
     if (Navigator.canPop(Get.context!)) {
       Get.back();
     } else {
-      Get.offAllNamed('/');
+      Get.offAllNamed(AppRoutes.home);
     }
   }
 }

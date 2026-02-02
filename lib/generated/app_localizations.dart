@@ -746,6 +746,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Added to next play'**
   String get addedToNextPlay;
+
+  /// No description provided for @searchFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Search failed, please try again'**
+  String get searchFailed;
+
+  /// No description provided for @alreadyFavorited.
+  ///
+  /// In en, this message translates to:
+  /// **'Already in favorites'**
+  String get alreadyFavorited;
+
+  /// No description provided for @verificationCodeSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Verification code sent!'**
+  String get verificationCodeSent;
+
+  /// No description provided for @failedToSendVerificationCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to send verification code'**
+  String get failedToSendVerificationCode;
+
+  /// No description provided for @registrationSuccessful.
+  ///
+  /// In en, this message translates to:
+  /// **'Registration successful! Please login.'**
+  String get registrationSuccessful;
+
+  /// No description provided for @settingsPageComingSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings page will be implemented soon'**
+  String get settingsPageComingSoon;
 }
 
 class _AppLocalizationsDelegate

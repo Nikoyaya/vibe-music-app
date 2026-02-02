@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:vibe_music_app/src/providers/music_provider.dart';
+import 'package:vibe_music_app/src/routes/app_routes.dart';
 import 'package:vibe_music_app/src/models/song_model.dart';
 import 'package:vibe_music_app/src/utils/glass_morphism/glass_morphism.dart';
 
@@ -151,7 +152,7 @@ class _CurrentlyPlayingBarContentState
                         if (_offset == 0 &&
                             !_isSwiping &&
                             !_isShowingCloseDialog) {
-                          Get.toNamed('/player');
+                          Get.toNamed(AppRoutes.player);
                         }
                       },
                       child: Container(

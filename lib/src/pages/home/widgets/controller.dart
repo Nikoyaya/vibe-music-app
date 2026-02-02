@@ -1,4 +1,5 @@
 import 'package:get/get.dart';
+import 'package:vibe_music_app/generated/app_localizations.dart';
 
 class HomeController extends GetxController {
   // 当前选中的页面索引
@@ -25,6 +26,10 @@ class HomeController extends GetxController {
   /// 导航到设置页面
   void navigateToSettings() {
     // 实现设置页面导航逻辑
-    Get.snackbar('Settings', 'Settings page will be implemented soon');
+    final localizations = AppLocalizations.of(Get.context!);
+    Get.snackbar(
+        localizations?.settings ?? 'Settings',
+        localizations?.settingsPageComingSoon ??
+            'Settings page will be implemented soon');
   }
 }

@@ -2,6 +2,7 @@ import 'package:get/get.dart';
 import 'package:vibe_music_app/src/providers/music_provider.dart';
 import 'package:vibe_music_app/src/providers/auth_provider.dart';
 import 'package:vibe_music_app/src/models/song_model.dart';
+import 'package:vibe_music_app/src/routes/app_routes.dart';
 import 'package:vibe_music_app/src/services/localization_service.dart';
 
 class PlayerController extends GetxController {
@@ -75,7 +76,7 @@ class PlayerController extends GetxController {
     if (!_authProvider.isAuthenticated) {
       Get.snackbar(LocalizationService.instance.tip,
           LocalizationService.instance.pleaseLogin);
-      Get.toNamed('/login');
+      Get.toNamed(AppRoutes.login);
       return;
     }
 
@@ -136,7 +137,7 @@ class PlayerController extends GetxController {
     if (!_authProvider.isAuthenticated) {
       Get.snackbar(LocalizationService.instance.tip,
           LocalizationService.instance.pleaseLogin);
-      Get.toNamed('/login');
+      Get.toNamed(AppRoutes.login);
       return;
     }
 

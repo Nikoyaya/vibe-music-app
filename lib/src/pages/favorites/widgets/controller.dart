@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:vibe_music_app/src/providers/auth_provider.dart';
 import 'package:vibe_music_app/src/providers/music_provider.dart';
 import 'package:vibe_music_app/src/models/song_model.dart';
+import 'package:vibe_music_app/src/routes/app_routes.dart';
 import 'package:vibe_music_app/src/utils/app_logger.dart';
 import 'package:vibe_music_app/src/utils/snackbar_manager.dart';
 
@@ -169,12 +170,12 @@ class FavoritesController extends GetxController {
   Future<void> handleSongTap(int index) async {
     final song = allSongs[index];
     await _musicProvider.playSong(song, playlist: allSongs);
-    Get.toNamed('/player');
+    Get.toNamed(AppRoutes.player);
   }
 
   /// 导航到登录页面
   void navigateToLogin() {
-    Get.toNamed('/login');
+    Get.toNamed(AppRoutes.login);
   }
 
   /// 检查是否已登录（兼容旧代码）

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:vibe_music_app/generated/app_localizations.dart';
 import 'package:vibe_music_app/src/pages/home/widgets/controller.dart';
+import 'package:vibe_music_app/src/routes/app_routes.dart';
 import 'package:vibe_music_app/src/utils/glass_morphism/responsive_layout.dart';
 import 'package:vibe_music_app/src/utils/glass_morphism/sidebar_navigation.dart';
 import 'package:vibe_music_app/src/pages/home/components/song_list_page.dart';
@@ -147,7 +148,7 @@ class HomeView extends GetView<HomeController> {
                     actions: [
                       IconButton(
                         icon: Icon(Icons.search, color: Colors.white),
-                        onPressed: () => Get.toNamed('/search'),
+                        onPressed: () => Get.toNamed(AppRoutes.search),
                       ),
                       IconButton(
                         icon: Icon(Icons.settings, color: Colors.white),
@@ -220,7 +221,7 @@ class HomeView extends GetView<HomeController> {
       case 2: // 电台
         return 0; // 电台页未实现，默认为音乐库
       case 3: // 搜索
-        Get.toNamed('/search'); // 搜索页使用单独的路由
+        Get.toNamed(AppRoutes.search); // 搜索页使用单独的路由
         return 0; // 保持当前页面不变
       case 4: // 我的收藏
         return 2;

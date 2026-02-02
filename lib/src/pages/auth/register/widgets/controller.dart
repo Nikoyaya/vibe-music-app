@@ -1,7 +1,9 @@
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
+import 'package:vibe_music_app/generated/app_localizations.dart';
 import 'package:vibe_music_app/src/providers/auth_provider.dart';
+import 'package:vibe_music_app/src/routes/app_routes.dart';
 import 'package:vibe_music_app/src/utils/app_logger.dart';
 
 class RegisterController extends GetxController {
@@ -53,8 +55,10 @@ class RegisterController extends GetxController {
 
   /// 发送验证码
   Future<void> sendVerificationCode() async {
+    final localizations = AppLocalizations.of(Get.context!);
     if (emailController.text.isEmpty || !emailController.text.contains('@')) {
-      Get.snackbar('Error', 'Please enter a valid email');
+      Get.snackbar(localizations?.error ?? 'Error',
+          localizations?.emailFormat ?? 'Please enter a valid email');
       return;
     }
 
@@ -70,13 +74,18 @@ class RegisterController extends GetxController {
 
       if (success) {
         verificationSent.value = true;
-        Get.snackbar('Success', 'Verification code sent!');
+        Get.snackbar(localizations?.success ?? 'Success',
+            localizations?.verificationCodeSent ?? 'Verification code sent!');
       } else {
-        Get.snackbar('Error', 'Failed to send verification code');
+        Get.snackbar(
+            localizations?.error ?? 'Error',
+            localizations?.failedToSendVerificationCode ??
+                'Failed to send verification code');
       }
     } catch (e, stackTrace) {
       AppLogger().e('发送验证码错误: $e', stackTrace: stackTrace);
-      Get.snackbar('Error', 'An unexpected error occurred');
+      Get.snackbar(localizations?.error ?? 'Error',
+          localizations?.error ?? 'An unexpected error occurred');
     } finally {
       isSendingCode.value = false;
       startCountdown();
@@ -97,14 +106,17 @@ class RegisterController extends GetxController {
 
   /// 处理注册
   Future<void> handleRegister() async {
+    final localizations = AppLocalizations.of(Get.context!);
     if (formKey.currentState?.validate() ?? false) {
       if (passwordController.text != confirmPasswordController.text) {
-        Get.snackbar('Error', 'Passwords do not match');
+        Get.snackbar(localizations?.error ?? 'Error',
+            localizations?.confirmPasswordMatch ?? 'Passwords do not match');
         return;
       }
 
       if (!verificationSent.value || verificationCodeController.text.isEmpty) {
-        Get.snackbar('Error', 'Please verify your email first');
+        Get.snackbar(
+            localizations?.error ?? 'Error', 'Please verify your email first');
         return;
       }
 
@@ -119,14 +131,19 @@ class RegisterController extends GetxController {
         );
 
         if (success) {
-          Get.snackbar('Success', 'Registration successful! Please login.');
-          Get.offAllNamed('/login');
+          Get.snackbar(
+              localizations?.success ?? 'Success',
+              localizations?.registrationSuccessful ??
+                  'Registration successful! Please login.');
+          Get.offAllNamed(AppRoutes.login);
         } else if (_authProvider.errorMessage != null) {
-          Get.snackbar('Error', _authProvider.errorMessage!);
+          Get.snackbar(
+              localizations?.error ?? 'Error', _authProvider.errorMessage!);
         }
       } catch (e, stackTrace) {
         AppLogger().e('注册错误: $e', stackTrace: stackTrace);
-        Get.snackbar('Error', 'An unexpected error occurred');
+        Get.snackbar(localizations?.error ?? 'Error',
+            localizations?.error ?? 'An unexpected error occurred');
       } finally {
         isLoading.value = false;
       }
@@ -138,12 +155,12 @@ class RegisterController extends GetxController {
     if (Navigator.canPop(Get.context!)) {
       Get.back();
     } else {
-      Get.offAllNamed('/login');
+      Get.offAllNamed(AppRoutes.login);
     }
   }
 
   /// 导航到登录页面
   void navigateToLogin() {
-    Get.offAllNamed('/login');
+    Get.offAllNamed(AppRoutes.login);
   }
 }

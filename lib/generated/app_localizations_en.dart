@@ -340,4 +340,22 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get addedToNextPlay => 'Added to next play';
+
+  @override
+  String get searchFailed => 'Search failed, please try again';
+
+  @override
+  String get alreadyFavorited => 'Already in favorites';
+
+  @override
+  String get verificationCodeSent => 'Verification code sent!';
+
+  @override
+  String get failedToSendVerificationCode => 'Failed to send verification code';
+
+  @override
+  String get registrationSuccessful => 'Registration successful! Please login.';
+
+  @override
+  String get settingsPageComingSoon => 'Settings page will be implemented soon';
 }

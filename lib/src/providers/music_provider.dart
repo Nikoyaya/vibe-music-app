@@ -50,6 +50,10 @@ class MusicProvider with ChangeNotifier {
   /// 缓存时间戳
   DateTime? _favoriteSongsCacheTimestamp;
 
+  /// 收藏操作节流控制
+  final _favoriteOperation = false.obs;
+  static const int throttleDelay = 500; // 收藏操作节流延迟时间
+
   /// 缓存过期时间（分钟）
   static const int CACHE_EXPIRY_MINUTES = 5;
   // 音频会话
@@ -528,7 +532,16 @@ class MusicProvider with ChangeNotifier {
   Future<bool> addToFavorites(Song song) async {
     if (song.id == null) return false;
 
+    // 节流控制
+    if (_favoriteOperation.value) {
+      AppLogger().d('收藏操作过于频繁，请稍后再试');
+      return false;
+    }
+
     try {
+      // 设置操作状态为进行中
+      _favoriteOperation.value = true;
+
       // 调用API添加收藏歌曲
       final response = await ApiService().collectSong(song.id!);
       if (response.statusCode == 200) {
@@ -545,6 +558,11 @@ class MusicProvider with ChangeNotifier {
       }
     } catch (e) {
       AppLogger().e('添加歌曲到收藏失败: $e');
+    } finally {
+      // 延迟重置操作状态
+      Future.delayed(Duration(milliseconds: throttleDelay), () {
+        _favoriteOperation.value = false;
+      });
     }
     return false;
   }
@@ -554,7 +572,16 @@ class MusicProvider with ChangeNotifier {
   Future<bool> removeFromFavorites(Song song) async {
     if (song.id == null) return false;
 
+    // 节流控制
+    if (_favoriteOperation.value) {
+      AppLogger().d('取消收藏操作过于频繁，请稍后再试');
+      return false;
+    }
+
     try {
+      // 设置操作状态为进行中
+      _favoriteOperation.value = true;
+
       // 调用API移除收藏歌曲
       final response = await ApiService().cancelCollectSong(song.id!);
       if (response.statusCode == 200) {
@@ -571,6 +598,11 @@ class MusicProvider with ChangeNotifier {
       }
     } catch (e) {
       AppLogger().e('从收藏中移除歌曲失败: $e');
+    } finally {
+      // 延迟重置操作状态
+      Future.delayed(Duration(milliseconds: throttleDelay), () {
+        _favoriteOperation.value = false;
+      });
     }
     return false;
   }

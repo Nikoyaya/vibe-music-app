@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:vibe_music_app/generated/app_localizations.dart';
 import 'package:vibe_music_app/src/providers/auth_provider.dart';
 import 'package:vibe_music_app/src/providers/music_provider.dart';
 import 'package:vibe_music_app/src/models/song_model.dart';
@@ -8,6 +9,7 @@ import 'package:carousel_slider/carousel_slider.dart';
 import 'package:vibe_music_app/src/components/pull_to_refresh.dart';
 import 'package:vibe_music_app/src/services/image_preload_service.dart';
 import 'package:vibe_music_app/src/utils/snackbar_manager.dart';
+import 'package:vibe_music_app/src/routes/app_routes.dart';
 
 /// 歌曲列表页面
 class SongListPage extends StatefulWidget {
@@ -52,6 +54,7 @@ class PlaylistItem {
 class _SongListPageState extends State<SongListPage> {
   late Future<List<Song>> _futureSongs; // 歌曲数据未来
   final SongListType _currentType = SongListType.recommended; // 当前歌曲列表类型
+  final Map<int, bool> _favoriteLoadingStates = {}; // 收藏操作加载状态
 
   /// 轮播图数据
   final List<CarouselItem> _carouselItems = [
@@ -213,7 +216,7 @@ class _SongListPageState extends State<SongListPage> {
                         // 搜索按钮
                         IconButton(
                           onPressed: () {
-                            Get.toNamed('/search');
+                            Get.toNamed(AppRoutes.search);
                           },
                           icon: Icon(Icons.search),
                         ),
@@ -671,62 +674,97 @@ class _SongListPageState extends State<SongListPage> {
                               // 访问可观察变量以触发重建
                               final isFavorited = musicProvider.favoriteSongIds
                                   .contains(song.id);
-                              return IconButton(
-                                onPressed: () async {
-                                  final authProvider = Get.find<AuthProvider>();
-                                  if (!authProvider.isAuthenticated) {
-                                    // 提示用户登录
-                                    Get.snackbar(
-                                      '提示',
-                                      '请先登录',
-                                      backgroundColor: Colors.blue,
-                                      colorText: Colors.white,
-                                      icon:
-                                          Icon(Icons.info, color: Colors.white),
-                                      duration: Duration(seconds: 2),
-                                    );
-                                    // 导航到登录页面
-                                    Get.toNamed('/login');
-                                    return;
-                                  }
+                              final isLoading =
+                                  _favoriteLoadingStates[song.id] ?? false;
 
-                                  bool success;
-                                  if (isFavorited) {
-                                    success = await musicProvider
-                                        .removeFromFavorites(song);
-                                    if (success && mounted) {
-                                      SnackbarManager().showSnackbar(
-                                        title: '成功',
-                                        message: '已取消收藏',
-                                        icon: Icon(Icons.check_circle,
-                                            color: Colors.white),
-                                        duration: Duration(seconds: 2),
-                                      );
-                                    }
-                                  } else {
-                                    success = await musicProvider
-                                        .addToFavorites(song);
-                                    if (success && mounted) {
-                                      SnackbarManager().showSnackbar(
-                                        title: '成功',
-                                        message: '已添加到收藏',
-                                        icon: Icon(Icons.check_circle,
-                                            color: Colors.white),
-                                        duration: Duration(seconds: 2),
-                                      );
-                                    }
-                                  }
-                                },
-                                icon: Icon(
-                                  isFavorited
-                                      ? Icons.favorite
-                                      : Icons.favorite_border,
-                                  color: isFavorited
-                                      ? Colors.red
-                                      : Theme.of(context)
-                                          .colorScheme
-                                          .onSurfaceVariant,
-                                ),
+                              return IconButton(
+                                onPressed: isLoading
+                                    ? null
+                                    : () async {
+                                        final authProvider =
+                                            Get.find<AuthProvider>();
+                                        final localizations =
+                                            AppLocalizations.of(context);
+                                        if (!authProvider.isAuthenticated) {
+                                          // 提示用户登录
+                                          Get.snackbar(
+                                            localizations?.tip ?? '提示',
+                                            localizations?.pleaseLogin ??
+                                                '请先登录',
+                                            backgroundColor: Colors.blue,
+                                            colorText: Colors.white,
+                                            icon: Icon(Icons.info,
+                                                color: Colors.white),
+                                            duration: Duration(seconds: 2),
+                                          );
+                                          // 导航到登录页面
+                                          Get.toNamed(AppRoutes.login);
+                                          return;
+                                        }
+
+                                        // 设置加载状态
+                                        setState(() {
+                                          _favoriteLoadingStates[song.id!] =
+                                              true;
+                                        });
+
+                                        bool success;
+                                        if (isFavorited) {
+                                          success = await musicProvider
+                                              .removeFromFavorites(song);
+                                          if (success && mounted) {
+                                            SnackbarManager().showSnackbar(
+                                              title: '成功',
+                                              message: '已取消收藏',
+                                              icon: Icon(Icons.check_circle,
+                                                  color: Colors.white),
+                                              duration: Duration(seconds: 2),
+                                            );
+                                          }
+                                        } else {
+                                          success = await musicProvider
+                                              .addToFavorites(song);
+                                          if (success && mounted) {
+                                            SnackbarManager().showSnackbar(
+                                              title: '成功',
+                                              message: '已添加到收藏',
+                                              icon: Icon(Icons.check_circle,
+                                                  color: Colors.white),
+                                              duration: Duration(seconds: 2),
+                                            );
+                                          }
+                                        }
+
+                                        // 重置加载状态
+                                        setState(() {
+                                          _favoriteLoadingStates[song.id!] =
+                                              false;
+                                        });
+                                      },
+                                icon: isLoading
+                                    ? SizedBox(
+                                        width: 20,
+                                        height: 20,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          valueColor:
+                                              AlwaysStoppedAnimation<Color>(
+                                            Theme.of(context)
+                                                .colorScheme
+                                                .primary,
+                                          ),
+                                        ),
+                                      )
+                                    : Icon(
+                                        isFavorited
+                                            ? Icons.favorite
+                                            : Icons.favorite_border,
+                                        color: isFavorited
+                                            ? Colors.red
+                                            : Theme.of(context)
+                                                .colorScheme
+                                                .onSurfaceVariant,
+                                      ),
                               );
                             }),
                             // 播放按钮
@@ -737,7 +775,7 @@ class _SongListPageState extends State<SongListPage> {
                                     .playSong(song, playlist: songs);
                                 // 导航到播放器页面
                                 if (mounted) {
-                                  Get.toNamed('/player');
+                                  Get.toNamed(AppRoutes.player);
                                 }
                               },
                               icon: Icon(
@@ -766,9 +804,13 @@ class _SongListPageState extends State<SongListPage> {
                                               // 添加到下一首播放
                                               Get.find<MusicProvider>()
                                                   .insertNextToPlay(song);
+                                              final localizations =
+                                                  AppLocalizations.of(context);
                                               Get.snackbar(
-                                                '成功',
-                                                '已添加到下一首播放',
+                                                localizations?.success ?? '成功',
+                                                localizations
+                                                        ?.addedToNextPlay ??
+                                                    '已添加到下一首播放',
                                                 backgroundColor: Colors.green,
                                                 colorText: Colors.white,
                                                 icon: Icon(Icons.check_circle,

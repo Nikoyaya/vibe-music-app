@@ -5,6 +5,7 @@ import 'package:vibe_music_app/generated/app_localizations.dart';
 import 'package:vibe_music_app/src/providers/auth_provider.dart';
 import 'package:vibe_music_app/src/providers/language_provider.dart';
 import 'package:vibe_music_app/src/components/language_selector.dart';
+import 'package:vibe_music_app/src/routes/app_routes.dart';
 import 'package:vibe_music_app/src/utils/app_logger.dart';
 
 /// 个人中心页面
@@ -368,7 +369,7 @@ class _ProfilePageState extends State<ProfilePage> {
         const SizedBox(height: 24),
         ElevatedButton.icon(
           onPressed: () {
-            Get.toNamed('/login');
+            Get.toNamed(AppRoutes.login);
           },
           icon: const Icon(Icons.login),
           label: Text(AppLocalizations.of(context)?.login ?? '登录'),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:vibe_music_app/generated/app_localizations.dart';
 import 'package:vibe_music_app/src/models/song_model.dart';
 import 'package:vibe_music_app/src/providers/music_provider.dart';
 import 'package:vibe_music_app/src/providers/auth_provider.dart';
@@ -43,10 +44,11 @@ class SearchResultItem extends StatelessWidget {
               color: isFavorited ? Theme.of(context).colorScheme.primary : null,
             ),
             onPressed: () async {
+              final localizations = AppLocalizations.of(context);
               if (!authProvider.isAuthenticated) {
                 SnackbarManager().showSnackbar(
-                  title: '提示',
-                  message: '请先登录',
+                  title: localizations?.tip ?? '提示',
+                  message: localizations?.pleaseLogin ?? '请先登录',
                   icon: Icon(Icons.info, color: Colors.white),
                   duration: Duration(seconds: 2),
                   color: Colors.blue,
@@ -59,8 +61,8 @@ class SearchResultItem extends StatelessWidget {
                 success = await musicProvider.removeFromFavorites(song);
                 if (success) {
                   SnackbarManager().showSnackbar(
-                    title: '成功',
-                    message: '已取消收藏',
+                    title: localizations?.success ?? '成功',
+                    message: localizations?.removedFromFavorites ?? '已取消收藏',
                     icon: Icon(Icons.check_circle, color: Colors.white),
                     duration: Duration(seconds: 2),
                   );
@@ -69,8 +71,8 @@ class SearchResultItem extends StatelessWidget {
                 success = await musicProvider.addToFavorites(song);
                 if (success) {
                   SnackbarManager().showSnackbar(
-                    title: '成功',
-                    message: '已添加到收藏',
+                    title: localizations?.success ?? '成功',
+                    message: localizations?.addedToFavorites ?? '已添加到收藏',
                     icon: Icon(Icons.check_circle, color: Colors.white),
                     duration: Duration(seconds: 2),
                   );

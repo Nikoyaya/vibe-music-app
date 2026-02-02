@@ -104,8 +104,14 @@
   "unknownSong": "未知歌曲",
   "unknownArtist": "未知歌手",
   "tip": "提示",
-  "removedFromFavorites": "已取消收藏",
+  "removedFromFavorites": "已从收藏中移除",
   "addedToFavorites": "已添加到收藏",
   "playNext": "下一首播放",
-  "addedToNextPlay": "已添加到下一首播放"
+  "addedToNextPlay": "已添加到下一首播放",
+  "searchFailed": "搜索失败，请重试",
+  "alreadyFavorited": "已在收藏中",
+  "verificationCodeSent": "验证码已发送！",
+  "failedToSendVerificationCode": "发送验证码失败",
+  "registrationSuccessful": "注册成功！请登录。",
+  "settingsPageComingSoon": "设置页面即将上线"
 }
