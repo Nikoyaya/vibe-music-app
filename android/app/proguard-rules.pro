@@ -134,3 +134,7 @@
 -keep class com.flutternativesplash.** {
     *;
 }
+
+# 保留 Google Play Core 相关类
+-dontwarn com.google.android.play.core.**
+-keep class com.google.android.play.core.** { *; }
