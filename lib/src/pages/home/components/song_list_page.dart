@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:vibe_music_app/generated/app_localizations.dart';
 import 'package:vibe_music_app/src/providers/auth_provider.dart';
-import 'package:vibe_music_app/src/providers/music_provider.dart';
+import 'package:vibe_music_app/src/providers/music_controller.dart';
 import 'package:vibe_music_app/src/models/song_model.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:vibe_music_app/src/components/pull_to_refresh.dart';
@@ -54,8 +54,8 @@ class PlaylistItem {
 
 class _SongListPageState extends State<SongListPage> {
   late Future<List<Song>> _futureSongs; // 歌曲数据未来
-  final SongListType _currentType = SongListType.recommended; // 当前歌曲列表类型
   final Map<int, bool> _favoriteLoadingStates = {}; // 收藏操作加载状态
+  int _currentCarouselIndex = 0; // 当前轮播图索引
 
   /// 轮播图数据
   final List<CarouselItem> _carouselItems = [
@@ -139,21 +139,14 @@ class _SongListPageState extends State<SongListPage> {
 
   /// 加载歌曲数据
   void _loadSongs() {
-    final musicProvider = Get.find<MusicProvider>();
+    final musicController = Get.find<MusicController>();
     setState(() {
-      if (_currentType == SongListType.recommended) {
-        _futureSongs = musicProvider.loadRecommendedSongs().then((songs) {
-          // 预加载歌曲封面图片
-          ImagePreloadService().preloadSongCovers(songs, context);
-          return songs;
-        });
-      } else {
-        _futureSongs = musicProvider.loadUserFavoriteSongs().then((songs) {
-          // 预加载歌曲封面图片
-          ImagePreloadService().preloadSongCovers(songs, context);
-          return songs;
-        });
-      }
+      final future = musicController.loadRecommendedSongs();
+      _futureSongs = future.then((songs) {
+        // 预加载歌曲封面图片
+        ImagePreloadService().preloadSongCovers(songs, context);
+        return songs;
+      });
     });
   }
 
@@ -169,6 +162,7 @@ class _SongListPageState extends State<SongListPage> {
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final isSmallScreen = screenWidth < 380;
+    final isDesktop = ScreenSize.isDesktop(context);
 
     return PullToRefresh(
       onRefresh: _handleRefresh,
@@ -178,56 +172,7 @@ class _SongListPageState extends State<SongListPage> {
           SliverPadding(
             padding: const EdgeInsets.all(16),
             sliver: SliverToBoxAdapter(
-              child: !ScreenSize.isDesktop(context)
-                  ? Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 16),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.surfaceContainer,
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
-                            blurRadius: 10,
-                            spreadRadius: 2,
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          // 标题
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Vibe Music',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .headlineMedium
-                                    ?.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                              ),
-                            ],
-                          ),
-                          // 操作按钮组
-                          Row(
-                            children: [
-                              const SizedBox(width: 12),
-                              // 搜索按钮
-                              IconButton(
-                                onPressed: () {
-                                  Get.toNamed(AppRoutes.search);
-                                },
-                                icon: Icon(Icons.search),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    )
-                  : SizedBox.shrink(),
+              child: isDesktop ? _buildDesktopHeader() : _buildMobileHeader(),
             ),
           ),
 
@@ -259,6 +204,59 @@ class _SongListPageState extends State<SongListPage> {
     );
   }
 
+  /// 构建桌面端头部
+  Widget _buildDesktopHeader() {
+    return SizedBox.shrink();
+  }
+
+  /// 构建移动端头部
+  Widget _buildMobileHeader() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainer,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 10,
+            spreadRadius: 2,
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          // 标题
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Vibe Music',
+                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+              ),
+            ],
+          ),
+          // 操作按钮组
+          Row(
+            children: [
+              const SizedBox(width: 12),
+              // 搜索按钮
+              IconButton(
+                onPressed: () {
+                  Get.toNamed(AppRoutes.search);
+                },
+                icon: Icon(Icons.search),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
   /// 构建轮播图
   Widget _buildCarousel() {
     return Padding(
@@ -279,6 +277,11 @@ class _SongListPageState extends State<SongListPage> {
               enableInfiniteScroll: true,
               pauseAutoPlayOnTouch: true,
               scrollDirection: Axis.horizontal,
+              onPageChanged: (index, reason) {
+                setState(() {
+                  _currentCarouselIndex = index;
+                });
+              },
             ),
             items: _carouselItems.map((item) {
               return Builder(
@@ -411,13 +414,16 @@ class _SongListPageState extends State<SongListPage> {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: _carouselItems.asMap().entries.map((entry) {
+              final int index = entry.key;
               return Container(
                 width: 8.0,
                 height: 8.0,
                 margin: const EdgeInsets.symmetric(horizontal: 4.0),
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Colors.white.withOpacity(0.5),
+                  color: index == _currentCarouselIndex
+                      ? Colors.white
+                      : Colors.white.withOpacity(0.5),
                 ),
               );
             }).toList(),
@@ -459,7 +465,16 @@ class _SongListPageState extends State<SongListPage> {
                     ),
               ),
               TextButton(
-                onPressed: null,
+                onPressed: () {
+                  // 这里可以添加查看更多歌单的逻辑
+                  Get.snackbar(
+                    '功能开发中',
+                    '查看更多歌单功能即将上线',
+                    backgroundColor: Colors.blue,
+                    colorText: Colors.white,
+                    duration: Duration(seconds: 2),
+                  );
+                },
                 child: Text(
                   '查看更多 >',
                   style: TextStyle(
@@ -608,9 +623,70 @@ class _SongListPageState extends State<SongListPage> {
     );
   }
 
+  /// 构建歌曲封面
+  Widget _buildSongCover(String? coverUrl, bool isSmallScreen, bool isDesktop) {
+    final double size = isSmallScreen ? 48 : (isDesktop ? 72 : 56);
+    final int cacheSize = isSmallScreen ? 96 : (isDesktop ? 144 : 112);
+    final double iconSize = isSmallScreen ? 24 : (isDesktop ? 36 : 28);
+
+    Widget placeholder = Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainer,
+        borderRadius: BorderRadius.circular(12.0),
+      ),
+      child: const Center(
+        child: CircularProgressIndicator(),
+      ),
+    );
+
+    Widget errorWidget = Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainer,
+        borderRadius: BorderRadius.circular(12.0),
+      ),
+      child: Icon(
+        Icons.music_note,
+        size: iconSize,
+        color: Theme.of(context).colorScheme.primary,
+      ),
+    );
+
+    if (coverUrl != null) {
+      return CachedNetworkImage(
+        imageUrl: coverUrl,
+        width: size,
+        height: size,
+        fit: BoxFit.cover,
+        memCacheWidth: cacheSize,
+        memCacheHeight: cacheSize,
+        maxWidthDiskCache: cacheSize,
+        maxHeightDiskCache: cacheSize,
+        placeholder: (context, url) => placeholder,
+        errorWidget: (context, url, error) => errorWidget,
+      );
+    } else {
+      return Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surfaceContainer,
+          borderRadius: BorderRadius.circular(12.0),
+        ),
+        child: Icon(
+          Icons.music_note,
+          size: iconSize,
+          color: Theme.of(context).colorScheme.primary,
+        ),
+      );
+    }
+  }
+
   /// 构建热门歌曲
   Widget _buildPopularSongs(bool isSmallScreen) {
-    final screenWidth = MediaQuery.of(context).size.width;
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Column(
@@ -626,7 +702,16 @@ class _SongListPageState extends State<SongListPage> {
                     ),
               ),
               TextButton(
-                onPressed: null,
+                onPressed: () {
+                  // 这里可以添加查看更多热门歌曲的逻辑
+                  Get.snackbar(
+                    '功能开发中',
+                    '查看更多热门歌曲功能即将上线',
+                    backgroundColor: Colors.blue,
+                    colorText: Colors.white,
+                    duration: Duration(seconds: 2),
+                  );
+                },
                 child: Text(
                   '查看更多 >',
                   style: TextStyle(
@@ -734,97 +819,8 @@ class _SongListPageState extends State<SongListPage> {
                               margin: const EdgeInsets.only(right: 16.0),
                               child: ClipRRect(
                                 borderRadius: BorderRadius.circular(12.0),
-                                child: coverUrl != null
-                                    ? CachedNetworkImage(
-                                        imageUrl: coverUrl,
-                                        width: isSmallScreen
-                                            ? 48
-                                            : (isDesktop ? 72 : 56),
-                                        height: isSmallScreen
-                                            ? 48
-                                            : (isDesktop ? 72 : 56),
-                                        fit: BoxFit.cover,
-                                        memCacheWidth: isSmallScreen
-                                            ? 96
-                                            : (isDesktop ? 144 : 112),
-                                        memCacheHeight: isSmallScreen
-                                            ? 96
-                                            : (isDesktop ? 144 : 112),
-                                        maxWidthDiskCache: isSmallScreen
-                                            ? 96
-                                            : (isDesktop ? 144 : 112),
-                                        maxHeightDiskCache: isSmallScreen
-                                            ? 96
-                                            : (isDesktop ? 144 : 112),
-                                        placeholder: (context, url) =>
-                                            Container(
-                                          width: isSmallScreen
-                                              ? 48
-                                              : (isDesktop ? 72 : 56),
-                                          height: isSmallScreen
-                                              ? 48
-                                              : (isDesktop ? 72 : 56),
-                                          decoration: BoxDecoration(
-                                            color: Theme.of(context)
-                                                .colorScheme
-                                                .surfaceContainer,
-                                            borderRadius:
-                                                BorderRadius.circular(12.0),
-                                          ),
-                                          child: const Center(
-                                            child: CircularProgressIndicator(),
-                                          ),
-                                        ),
-                                        errorWidget: (context, url, error) =>
-                                            Container(
-                                          width: isSmallScreen
-                                              ? 48
-                                              : (isDesktop ? 72 : 56),
-                                          height: isSmallScreen
-                                              ? 48
-                                              : (isDesktop ? 72 : 56),
-                                          decoration: BoxDecoration(
-                                            color: Theme.of(context)
-                                                .colorScheme
-                                                .surfaceContainer,
-                                            borderRadius:
-                                                BorderRadius.circular(12.0),
-                                          ),
-                                          child: Icon(
-                                            Icons.music_note,
-                                            size: isSmallScreen
-                                                ? 24
-                                                : (isDesktop ? 36 : 28),
-                                            color: Theme.of(context)
-                                                .colorScheme
-                                                .primary,
-                                          ),
-                                        ),
-                                      )
-                                    : Container(
-                                        width: isSmallScreen
-                                            ? 48
-                                            : (isDesktop ? 72 : 56),
-                                        height: isSmallScreen
-                                            ? 48
-                                            : (isDesktop ? 72 : 56),
-                                        decoration: BoxDecoration(
-                                          color: Theme.of(context)
-                                              .colorScheme
-                                              .surfaceContainer,
-                                          borderRadius:
-                                              BorderRadius.circular(12.0),
-                                        ),
-                                        child: Icon(
-                                          Icons.music_note,
-                                          size: isSmallScreen
-                                              ? 24
-                                              : (isDesktop ? 36 : 28),
-                                          color: Theme.of(context)
-                                              .colorScheme
-                                              .primary,
-                                        ),
-                                      ),
+                                child: _buildSongCover(
+                                    coverUrl, isSmallScreen, isDesktop),
                               ),
                             ),
                             // 使用Expanded来确保文本部分适应剩余空间
@@ -907,7 +903,7 @@ class _SongListPageState extends State<SongListPage> {
                                 // 收藏按钮
                                 Obx(() {
                                   final musicProvider =
-                                      Get.find<MusicProvider>();
+                                      Get.find<MusicController>();
                                   // 访问可观察变量以触发重建
                                   final isFavorited = musicProvider
                                       .favoriteSongIds
@@ -1012,7 +1008,7 @@ class _SongListPageState extends State<SongListPage> {
                                 IconButton(
                                   onPressed: () async {
                                     // 将整个热门歌曲列表添加到播放列表
-                                    await Get.find<MusicProvider>()
+                                    await Get.find<MusicController>()
                                         .playSong(song, playlist: songs);
                                     // 导航到播放器页面
                                     if (mounted) {
@@ -1044,7 +1040,7 @@ class _SongListPageState extends State<SongListPage> {
                                                 title: Text('下一首播放'),
                                                 onTap: () {
                                                   // 添加到下一首播放
-                                                  Get.find<MusicProvider>()
+                                                  Get.find<MusicController>()
                                                       .insertNextToPlay(song);
                                                   final localizations =
                                                       AppLocalizations.of(

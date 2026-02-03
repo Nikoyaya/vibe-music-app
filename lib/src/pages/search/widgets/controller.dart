@@ -1,7 +1,7 @@
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 import 'package:vibe_music_app/generated/app_localizations.dart';
-import 'package:vibe_music_app/src/providers/music_provider.dart';
+import 'package:vibe_music_app/src/providers/music_controller.dart';
 import 'package:vibe_music_app/src/providers/auth_provider.dart';
 import 'package:vibe_music_app/src/models/song_model.dart';
 import 'package:vibe_music_app/src/routes/app_routes.dart';
@@ -23,13 +23,13 @@ class SearchPageController extends GetxController {
   static const int debounceDelay = 300; // 搜索防抖延迟时间
 
   // 提供者
-  late MusicProvider _musicProvider;
+  late MusicController _musicController;
   late AuthProvider _authProvider;
 
   @override
   void onInit() {
     super.onInit();
-    _musicProvider = Get.find<MusicProvider>();
+    _musicController = Get.find<MusicController>();
     _authProvider = Get.find<AuthProvider>();
 
     // 监听滚动事件，实现下拉加载更多
@@ -68,7 +68,7 @@ class SearchPageController extends GetxController {
     }
 
     try {
-      final songs = await _musicProvider.loadSongs(
+      final songs = await _musicController.loadSongs(
         page: currentPage.value,
         size: pageSize,
         songName: searchKeyword.value,
@@ -105,7 +105,7 @@ class SearchPageController extends GetxController {
 
   /// 处理搜索结果点击
   void handleResultTap(Song song) {
-    _musicProvider.playSong(song, playlist: searchResults);
+    _musicController.playSong(song, playlist: searchResults);
     Get.toNamed(AppRoutes.player);
   }
 
@@ -119,16 +119,16 @@ class SearchPageController extends GetxController {
     }
 
     bool success;
-    final isFavorited = _musicProvider.isSongFavorited(song);
+    final isFavorited = _musicController.isSongFavorited(song);
 
     if (isFavorited) {
-      success = await _musicProvider.removeFromFavorites(song);
+      success = await _musicController.removeFromFavorites(song);
       if (success) {
         Get.snackbar(localizations?.success ?? '成功',
             localizations?.removedFromFavorites ?? '已取消收藏');
       }
     } else {
-      success = await _musicProvider.addToFavorites(song);
+      success = await _musicController.addToFavorites(song);
       if (success) {
         Get.snackbar(localizations?.success ?? '成功',
             localizations?.addedToFavorites ?? '已添加到收藏');
@@ -138,6 +138,6 @@ class SearchPageController extends GetxController {
 
   /// 检查歌曲是否已收藏
   bool isSongFavorited(Song song) {
-    return _musicProvider.isSongFavorited(song);
+    return _musicController.isSongFavorited(song);
   }
 }

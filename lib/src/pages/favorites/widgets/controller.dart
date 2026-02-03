@@ -1,7 +1,7 @@
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 import 'package:vibe_music_app/src/providers/auth_provider.dart';
-import 'package:vibe_music_app/src/providers/music_provider.dart';
+import 'package:vibe_music_app/src/providers/music_controller.dart';
 import 'package:vibe_music_app/src/models/song_model.dart';
 import 'package:vibe_music_app/src/routes/app_routes.dart';
 import 'package:vibe_music_app/src/utils/app_logger.dart';
@@ -23,13 +23,13 @@ class FavoritesController extends GetxController {
 
   // 提供者
   late AuthProvider _authProvider;
-  late MusicProvider _musicProvider;
+  late MusicController _musicController;
 
   @override
   void onInit() {
     super.onInit();
     _authProvider = Get.find<AuthProvider>();
-    _musicProvider = Get.find<MusicProvider>();
+    _musicController = Get.find<MusicController>();
 
     // 初始设置认证状态
     isAuthenticated.value = _authProvider.isAuthenticated;
@@ -54,11 +54,13 @@ class FavoritesController extends GetxController {
     });
 
     // 监听收藏状态变化
-    _musicProvider.addListener(() {
+    _musicController.addListener(() {
       // 当收藏状态变化时，更新收藏页数据
       if (_authProvider.isAuthenticated) {
-        // 从MusicProvider获取最新的收藏歌曲缓存
-        _musicProvider.loadUserFavoriteSongs(forceRefresh: false).then((songs) {
+        // 从MusicController获取最新的收藏歌曲缓存
+        _musicController
+            .loadUserFavoriteSongs(forceRefresh: false)
+            .then((songs) {
           if (songs.isNotEmpty) {
             // 去重处理
             final uniqueSongs = removeDuplicateSongs(songs);
@@ -103,7 +105,7 @@ class FavoritesController extends GetxController {
 
     isLoadingMore.value = true;
 
-    _musicProvider
+    _musicController
         .loadUserFavoriteSongs(
       page: currentPage.value,
       size: pageSize,
@@ -152,7 +154,7 @@ class FavoritesController extends GetxController {
   /// 处理取消收藏
   Future<void> handleRemoveFromFavorites(int index) async {
     final song = allSongs[index];
-    final success = await _musicProvider.removeFromFavorites(song);
+    final success = await _musicController.removeFromFavorites(song);
 
     if (success) {
       SnackbarManager().showSnackbar(
@@ -169,7 +171,7 @@ class FavoritesController extends GetxController {
   /// 处理歌曲点击
   Future<void> handleSongTap(int index) async {
     final song = allSongs[index];
-    await _musicProvider.playSong(song, playlist: allSongs);
+    await _musicController.playSong(song, playlist: allSongs);
     Get.toNamed(AppRoutes.player);
   }
 
@@ -185,10 +187,10 @@ class FavoritesController extends GetxController {
 
   /// 更新收藏歌曲列表
   void _updateFavoritesList() {
-    // 从MusicProvider获取最新的收藏歌曲缓存
-    // 注意：这里我们需要确保MusicProvider暴露了收藏歌曲缓存
+    // 从MusicController获取最新的收藏歌曲缓存
+    // 注意：这里我们需要确保MusicController暴露了收藏歌曲缓存
     // 由于我们没有直接访问权限，我们重新加载数据但使用缓存
-    _musicProvider.loadUserFavoriteSongs(forceRefresh: false).then((songs) {
+    _musicController.loadUserFavoriteSongs(forceRefresh: false).then((songs) {
       if (songs.isNotEmpty) {
         // 去重处理
         final uniqueSongs = removeDuplicateSongs(songs);

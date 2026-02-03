@@ -44,7 +44,7 @@ class DatabaseManager {
       AppLogger().d('非 Web 平台初始化数据库');
       // 获取数据库路径
       final databasePath = await sqflite.getDatabasesPath();
-      final path = join(databasePath, 'vibe_music.db');
+      final path = join(databasePath, 'vibe_music_app.db');
 
       AppLogger().d('初始化数据库，路径: $path');
 

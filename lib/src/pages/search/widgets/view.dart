@@ -6,7 +6,7 @@ import 'package:vibe_music_app/src/components/common_button.dart';
 import 'package:vibe_music_app/src/components/common_card.dart';
 import 'package:vibe_music_app/src/components/common_loading.dart';
 import 'package:vibe_music_app/src/pages/search/components/search_bar.dart';
-import 'package:vibe_music_app/src/providers/music_provider.dart';
+import 'package:vibe_music_app/src/providers/music_controller.dart';
 
 class SearchView extends GetView<SearchPageController> {
   const SearchView({super.key});
@@ -187,7 +187,7 @@ class SearchView extends GetView<SearchPageController> {
                                                   '下一首播放'),
                                           onTap: () {
                                             // 添加到下一首播放
-                                            Get.find<MusicProvider>()
+                                            Get.find<MusicController>()
                                                 .insertNextToPlay(song);
                                             Get.snackbar(
                                               AppLocalizations.of(context)

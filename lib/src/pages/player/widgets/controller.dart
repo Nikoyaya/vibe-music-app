@@ -1,5 +1,5 @@
 import 'package:get/get.dart';
-import 'package:vibe_music_app/src/providers/music_provider.dart';
+import 'package:vibe_music_app/src/providers/music_controller.dart';
 import 'package:vibe_music_app/src/providers/auth_provider.dart';
 import 'package:vibe_music_app/src/models/song_model.dart';
 import 'package:vibe_music_app/src/routes/app_routes.dart';
@@ -18,24 +18,24 @@ class PlayerController extends GetxController {
   var _currentIndex = 0.obs;
 
   // 提供者
-  late MusicProvider _musicProvider;
+  late MusicController _musicController;
   late AuthProvider _authProvider;
 
   @override
   void onInit() {
     super.onInit();
-    _musicProvider = Get.find<MusicProvider>();
+    _musicController = Get.find<MusicController>();
     _authProvider = Get.find<AuthProvider>();
-    // 添加自己作为MusicProvider的监听器
-    _musicProvider.addListener(_onMusicProviderChanged);
+    // 添加自己作为MusicController的监听器
+    _musicController.addListener(_onMusicProviderChanged);
     // 初始化可观察变量
     _updateObservableVariables();
   }
 
   @override
   void onClose() {
-    // 移除自己作为MusicProvider的监听器
-    _musicProvider.removeListener(_onMusicProviderChanged);
+    // 移除自己作为MusicController的监听器
+    _musicController.removeListener(_onMusicProviderChanged);
     super.onClose();
   }
 
@@ -49,10 +49,10 @@ class PlayerController extends GetxController {
 
   /// 更新可观察变量
   void _updateObservableVariables() {
-    _currentSong.value = _musicProvider.currentSong;
-    _isPlaying.value = _musicProvider.playerState == AppPlayerState.playing;
-    _isShuffle.value = _musicProvider.isShuffle;
-    switch (_musicProvider.repeatMode) {
+    _currentSong.value = _musicController.currentSong;
+    _isPlaying.value = _musicController.playerState == AppPlayerState.playing;
+    _isShuffle.value = _musicController.isShuffle;
+    switch (_musicController.repeatMode) {
       case RepeatMode.one:
         _repeatMode.value = 'one';
         break;
@@ -63,15 +63,15 @@ class PlayerController extends GetxController {
         _repeatMode.value = 'none';
         break;
     }
-    _volume.value = _musicProvider.volume;
+    _volume.value = _musicController.volume;
     // 创建播放列表的副本，确保UI检测到变化
-    _playlist.value = [..._musicProvider.playlist];
-    _currentIndex.value = _musicProvider.currentIndex;
+    _playlist.value = [..._musicController.playlist];
+    _currentIndex.value = _musicController.currentIndex;
   }
 
   /// 切换收藏状态
   Future<void> toggleFavorite() async {
-    if (_musicProvider.currentSong == null) return;
+    if (_musicController.currentSong == null) return;
 
     if (!_authProvider.isAuthenticated) {
       Get.snackbar(LocalizationService.instance.tip,
@@ -80,17 +80,17 @@ class PlayerController extends GetxController {
       return;
     }
 
-    final song = _musicProvider.currentSong!;
+    final song = _musicController.currentSong!;
     bool success;
 
-    if (_musicProvider.isSongFavorited(song)) {
-      success = await _musicProvider.removeFromFavorites(song);
+    if (_musicController.isSongFavorited(song)) {
+      success = await _musicController.removeFromFavorites(song);
       if (success) {
         Get.snackbar(LocalizationService.instance.success,
             LocalizationService.instance.removedFromFavorites);
       }
     } else {
-      success = await _musicProvider.addToFavorites(song);
+      success = await _musicController.addToFavorites(song);
       if (success) {
         Get.snackbar(LocalizationService.instance.success,
             LocalizationService.instance.addedToFavorites);
@@ -111,9 +111,9 @@ class PlayerController extends GetxController {
   /// 调整音量
   void adjustVolume(double delta) {
     const sensitivity = 0.005;
-    double newVolume = _musicProvider.volume - delta * sensitivity;
+    double newVolume = _musicController.volume - delta * sensitivity;
     newVolume = newVolume.clamp(0.0, 1.0);
-    _musicProvider.setVolume(newVolume);
+    _musicController.setVolume(newVolume);
 
     if (!showVolumeIndicator.value) {
       showVolumeIndicator.value = true;
@@ -127,8 +127,8 @@ class PlayerController extends GetxController {
 
   /// 播放指定歌曲
   void playSongAtIndex(int index) {
-    if (index >= 0 && index < _musicProvider.playlist.length) {
-      _musicProvider.playSong(_musicProvider.playlist[index]);
+    if (index >= 0 && index < _musicController.playlist.length) {
+      _musicController.playSong(_musicController.playlist[index]);
     }
   }
 
@@ -142,14 +142,14 @@ class PlayerController extends GetxController {
     }
 
     bool success;
-    if (_musicProvider.isSongFavorited(song)) {
-      success = await _musicProvider.removeFromFavorites(song);
+    if (_musicController.isSongFavorited(song)) {
+      success = await _musicController.removeFromFavorites(song);
       if (success) {
         Get.snackbar(LocalizationService.instance.success,
             LocalizationService.instance.removedFromFavorites);
       }
     } else {
-      success = await _musicProvider.addToFavorites(song);
+      success = await _musicController.addToFavorites(song);
       if (success) {
         Get.snackbar(LocalizationService.instance.success,
             LocalizationService.instance.addedToFavorites);
@@ -159,12 +159,12 @@ class PlayerController extends GetxController {
 
   /// 检查歌曲是否已收藏
   bool isSongFavorited(Song song) {
-    return _musicProvider.isSongFavorited(song);
+    return _musicController.isSongFavorited(song);
   }
 
   /// 从播放列表移除歌曲
   void removeFromPlaylist(int index) {
-    _musicProvider.removeFromPlaylist(index);
+    _musicController.removeFromPlaylist(index);
     // 更新本地状态
     _updateObservableVariables();
   }
@@ -206,61 +206,61 @@ class PlayerController extends GetxController {
 
   /// 获取播放位置流
   Stream<Duration> get positionStream {
-    return _musicProvider.positionStream;
+    return _musicController.positionStream;
   }
 
   /// 获取时长流
   Stream<Duration> get durationStream {
-    return _musicProvider.durationStream;
+    return _musicController.durationStream;
   }
 
   /// 获取音量流
   Stream<double> get volumeStream {
-    return _musicProvider.volumeStream;
+    return _musicController.volumeStream;
   }
 
   /// 获取当前时长
   Duration get duration {
-    return _musicProvider.duration;
+    return _musicController.duration;
   }
 
   /// 播放
   Future<void> play() async {
-    await _musicProvider.play();
+    await _musicController.play();
   }
 
   /// 暂停
   Future<void> pause() async {
-    await _musicProvider.pause();
+    await _musicController.pause();
   }
 
   /// 上一首
   void previous() {
-    _musicProvider.previous();
+    _musicController.previous();
   }
 
   /// 下一首
   void next() {
-    _musicProvider.next();
+    _musicController.next();
   }
 
   /// 切换随机播放
   void toggleShuffle() {
-    _musicProvider.toggleShuffle();
+    _musicController.toggleShuffle();
   }
 
   /// 切换重复模式
   void toggleRepeat() {
-    _musicProvider.toggleRepeat();
+    _musicController.toggleRepeat();
   }
 
   /// 设置音量
   void setVolume(double value) {
-    _musicProvider.setVolume(value);
+    _musicController.setVolume(value);
   }
 
   /// 跳转到指定位置
   Future<void> seekTo(Duration position) async {
-    await _musicProvider.seekTo(position);
+    await _musicController.seekTo(position);
   }
 }

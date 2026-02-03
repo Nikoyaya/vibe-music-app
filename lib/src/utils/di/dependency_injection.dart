@@ -1,6 +1,6 @@
 import 'package:get/get.dart';
 import 'package:vibe_music_app/src/providers/auth_provider.dart';
-import 'package:vibe_music_app/src/providers/music_provider.dart';
+import 'package:vibe_music_app/src/providers/music_controller.dart';
 import 'package:vibe_music_app/src/pages/home/widgets/controller.dart';
 import 'package:vibe_music_app/src/pages/favorites/widgets/controller.dart';
 import 'package:vibe_music_app/src/pages/search/widgets/controller.dart';
@@ -13,7 +13,7 @@ class DependencyInjection {
   static void init() {
     // 状态管理依赖
     Get.put(AuthProvider(), permanent: true);
-    Get.put(MusicProvider(), permanent: true);
+    Get.put(MusicController(), permanent: true);
 
     // 页面控制器
     Get.put(HomeController(), permanent: true);

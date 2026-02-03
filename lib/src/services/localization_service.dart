@@ -16,7 +16,8 @@ class LocalizationService {
   /// 如果未初始化，会抛出异常
   static AppLocalizations get instance {
     if (_instance == null) {
-      throw Exception('LocalizationService not initialized. Call init(BuildContext context) first.');
+      throw Exception(
+          'LocalizationService not initialized. Call init(BuildContext context) first.');
     }
     return _instance!;
   }

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:vibe_music_app/src/providers/music_provider.dart';
+import 'package:vibe_music_app/src/providers/music_controller.dart';
 import 'package:vibe_music_app/src/routes/app_routes.dart';
 import 'package:vibe_music_app/src/models/song_model.dart';
 import 'package:vibe_music_app/src/utils/glass_morphism/glass_morphism.dart';
@@ -11,7 +11,7 @@ class CurrentlyPlayingBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final musicProvider = Get.find<MusicProvider>();
+    final musicProvider = Get.find<MusicController>();
 
     return AnimatedBuilder(
       animation: musicProvider,
@@ -34,7 +34,7 @@ class CurrentlyPlayingBar extends StatelessWidget {
 
 /// 当前播放音乐的底部控件内容
 class _CurrentlyPlayingBarContent extends StatefulWidget {
-  final MusicProvider musicProvider;
+  final MusicController musicProvider;
   final Song song;
 
   const _CurrentlyPlayingBarContent({
@@ -330,7 +330,7 @@ class _CurrentlyPlayingBarContentState
 
   /// 显示关闭确认对话框
   void showCloseConfirmation(
-      BuildContext context, MusicProvider musicProvider) {
+      BuildContext context, MusicController musicProvider) {
     setState(() {
       _isShowingCloseDialog = true;
     });

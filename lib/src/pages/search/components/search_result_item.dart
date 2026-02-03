@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:get/get.dart';
 import 'package:vibe_music_app/generated/app_localizations.dart';
 import 'package:vibe_music_app/src/models/song_model.dart';
-import 'package:vibe_music_app/src/providers/music_provider.dart';
+import 'package:vibe_music_app/src/providers/music_controller.dart';
 import 'package:vibe_music_app/src/providers/auth_provider.dart';
 import 'package:vibe_music_app/src/utils/snackbar_manager.dart';
 
@@ -24,9 +24,9 @@ class SearchResultItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final coverUrl = song.coverUrl;
-    final musicProvider = Provider.of<MusicProvider>(context);
-    final authProvider = Provider.of<AuthProvider>(context);
-    final isFavorited = musicProvider.isSongFavorited(song);
+    final musicController = Get.find<MusicController>();
+    final authProvider = Get.find<AuthProvider>();
+    final isFavorited = musicController.isSongFavorited(song);
 
     return ListTile(
       leading: CircleAvatar(
@@ -58,7 +58,7 @@ class SearchResultItem extends StatelessWidget {
 
               bool success;
               if (isFavorited) {
-                success = await musicProvider.removeFromFavorites(song);
+                success = await musicController.removeFromFavorites(song);
                 if (success) {
                   SnackbarManager().showSnackbar(
                     title: localizations?.success ?? '成功',
@@ -68,7 +68,7 @@ class SearchResultItem extends StatelessWidget {
                   );
                 }
               } else {
-                success = await musicProvider.addToFavorites(song);
+                success = await musicController.addToFavorites(song);
                 if (success) {
                   SnackbarManager().showSnackbar(
                     title: localizations?.success ?? '成功',

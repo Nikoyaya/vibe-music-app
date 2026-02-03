@@ -46,7 +46,8 @@ class AppConfig {
   }
 
   /// 语言解析回调
-  static Locale? localeResolutionCallback(Locale? locale, Iterable<Locale> supportedLocales) {
+  static Locale? localeResolutionCallback(
+      Locale? locale, Iterable<Locale> supportedLocales) {
     if (Get.isRegistered<LanguageProvider>()) {
       final languageProvider = Get.find<LanguageProvider>();
       // 如果用户选择了系统语言，使用系统语言
