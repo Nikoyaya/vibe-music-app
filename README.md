@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-[English](README_EN.md) | [简体中文](README.md) | [繁體中文](README_ZH_TW.md)
+<a href="README_EN.md">English</a> | <a href="README.md">简体中文</a> | <a href="README_ZH_TW.md">繁體中文</a>
 </p>
 
 一款基于 Flutter 开发的现代化音乐播放器应用，用于连接和播放 Vibe Music Server 中的音乐。
