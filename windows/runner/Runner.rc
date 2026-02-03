@@ -89,13 +89,13 @@ BEGIN
     BEGIN
         BLOCK "040904e4"
         BEGIN
-            VALUE "CompanyName", "com.example" "\0"
-            VALUE "FileDescription", "vibe_music_app" "\0"
+            VALUE "CompanyName", "com.amis" "\0"
+            VALUE "FileDescription", "Vibe Music" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "vibe_music_app" "\0"
-            VALUE "LegalCopyright", "Copyright (C) 2026 com.example. All rights reserved." "\0"
-            VALUE "OriginalFilename", "vibe_music_app.exe" "\0"
-            VALUE "ProductName", "vibe_music_app" "\0"
+            VALUE "InternalName", "Vibe Music" "\0"
+            VALUE "LegalCopyright", "Copyright (C) 2026 com.amis. All rights reserved." "\0"
+            VALUE "OriginalFilename", "Vibe Music.exe" "\0"
+            VALUE "ProductName", "Vibe Music" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END
