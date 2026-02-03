@@ -27,8 +27,8 @@ A modern music player application developed with Flutter, designed to connect an
 
 - **Framework**: Flutter 3.0+
 - **Language**: Dart
-- **Audio Playback**: just_audio
-- **State Management**: provider
+- **Audio Playback**: just_audio + audioplayers
+- **State Management**: GetX (get)
 - **Network Request**: dio
 - **Image Loading**: cached_network_image
 - **Environment Variables**: flutter_dotenv
@@ -43,6 +43,9 @@ A modern music player application developed with Flutter, designed to connect an
 - **Splash Screen**: flutter_native_splash
 - **Device Info**: device_info_plus
 - **Code Generation**: freezed
+- **Database**: floor + sqflite
+- **Network Connectivity**: connectivity_plus
+- **Desktop Window Management**: bitsdojo_window
 
 ## App Showcase
 
@@ -93,108 +96,7 @@ flutter run
 flutter run -d <device-id>
 ```
 
-## Project Structure
 
-```
-vibe_music_app/
-├── android/          # Android platform-specific code
-├── ios/              # iOS platform-specific code
-├── linux/            # Linux platform-specific code
-├── macos/            # macOS platform-specific code
-├── web/              # Web platform-specific code
-├── windows/          # Windows platform-specific code
-├── lib/              # Flutter source code
-│   ├── src/          # Source code directory
-│   │   ├── components/     # Common components
-│   │   │   ├── common_button.dart
-│   │   │   ├── common_card.dart
-│   │   │   ├── common_loading.dart
-│   │   │   └── pull_to_refresh.dart
-│   │   ├── models/         # Data models
-│   │   │   ├── song_model.dart
-│   │   │   └── user_model.dart
-│   │   ├── pages/          # Pages
-│   │   │   ├── admin/      # Admin pages
-│   │   │   ├── auth/       # Authentication pages
-│   │   │   │   ├── login/  # Login page
-│   │   │   │   └── register/# Register page
-│   │   │   ├── favorites/  # Favorites page
-│   │   │   ├── home/       # Home page
-│   │   │   ├── player/     # Player page
-│   │   │   └── search/     # Search page
-│   │   ├── providers/      # State management
-│   │   │   ├── auth_provider.dart
-│   │   │   └── music_provider.dart
-│   │   ├── routes/         # Route configuration
-│   │   ├── services/       # Service classes
-│   │   │   ├── api_service.dart
-│   │   │   └── image_preload_service.dart
-│   │   ├── theme/          # Theme configuration
-│   │   └── utils/          # Utility classes
-│   │       ├── app_logger.dart
-│   │       ├── database/   # Database utilities
-│   │       ├── deviceInfoUtils/# Device information
-│   │       ├── di/         # Dependency injection
-│   │       ├── glass_morphism/# Glass morphism effects
-│   │       ├── snackbar_manager.dart
-│   │       └── sp_util.dart
-│   └── main.dart           # App entry point
-├── assets/           # Static assets
-│   └── images/       # Image assets
-├── .env              # Environment variables configuration
-├── pubspec.yaml      # Dependency configuration
-├── README.md         # Project documentation (Chinese)
-├── README_EN.md      # Project documentation (English)
-├── README_ZH_TW.md   # Project documentation (Traditional Chinese)
-├── BUG_REPORT.md     # Bug report template
-└── TODO_LIST.md      # Development task list
-```
-
-### Core Module Description
-
-#### Data Layer (`lib/src/data/database/`)
-
-The app uses local database to store data, including the following Data Access Objects (DAO) and entities:
-
-- **DAO**:
-  - `play_history_dao.dart` - Play history
-  - `playlist_dao.dart` - Playlist
-  - `playlist_song_dao.dart` - Playlist-song association
-  - `song_dao.dart` - Song data
-  - `user_dao.dart` - User data
-
-- **Entities**:
-  - `play_history_entity.dart`
-  - `playlist_entity.dart`
-  - `playlist_song_entity.dart`
-  - `song_entity.dart`
-  - `user_entity.dart`
-
-#### Page Module (`lib/src/pages/`)
-
-Organized using MVC architecture pattern:
-
-- **admin/** - Admin function pages, including user and song management
-- **auth/** - User authentication pages, including login and registration
-- **favorites/** - Favorites management page
-- **home/** - App home page, including current play bar and song list
-- **player/** - Player page, including play control, progress bar, volume control, etc.
-- **search/** - Search function page
-
-#### Service Layer (`lib/src/services/`)
-
-- `api_service.dart` - API network request service
-- `image_preload_service.dart` - Image preloading service
-
-#### Utility Classes (`lib/src/utils/`)
-
-- **database/** - Database management utilities
-- **deviceInfoUtils/** - Device information retrieval (supports Android, iOS, Web)
-- **di/** - Dependency injection
-- **glass_morphism/** - Glass morphism effect components
-- `app_logger.dart` - App logging
-- `snackbar_manager.dart` - Message prompt management
-- `sp_util.dart` - SharedPreferences utility
 
 ## Configuration Instructions
 
@@ -355,8 +257,10 @@ This project adopts a custom non-commercial use license - please refer to the [L
 
 ## Contact
 
-- Project address: https://gitee.com/jason_kwok35/vibe-music-app
-- Issue feedback: https://gitee.com/jason_kwok35/vibe-music-app/issues
+- **Gitee Project Address**: https://gitee.com/jason_kwok35/vibe-music-app
+- **Gitee Issue Feedback**: https://gitee.com/jason_kwok35/vibe-music-app/issues
+- **GitHub Project Address**: https://github.com/Nikoyaya/vibe-music-app
+- **GitHub Issue Feedback**: https://github.com/Nikoyaya/vibe-music-app/issues
 
 ## Acknowledgements
 

@@ -27,8 +27,8 @@
 
 - **框架**：Flutter 3.0+
 - **語言**：Dart
-- **音頻播放**：just_audio
-- **狀態管理**：provider
+- **音頻播放**：just_audio + audioplayers
+- **狀態管理**：GetX (get)
 - **網路請求**：dio
 - **圖片載入**：cached_network_image
 - **環境變數**：flutter_dotenv
@@ -43,6 +43,9 @@
 - **啟動頁**：flutter_native_splash
 - **設備資訊**：device_info_plus
 - **程式碼生成**：freezed
+- **資料庫**：floor + sqflite
+- **網路連接檢測**：connectivity_plus
+- **桌面視窗管理**：bitsdojo_window
 
 ## App 展示
 
@@ -93,108 +96,7 @@ flutter run
 flutter run -d <device-id>
 ```
 
-## 專案結構
 
-```
-vibe_music_app/
-├── android/          # Android 平台特定程式碼
-├── ios/              # iOS 平台特定程式碼
-├── linux/            # Linux 平台特定程式碼
-├── macos/            # macOS 平台特定程式碼
-├── web/              # Web 平台特定程式碼
-├── windows/          # Windows 平台特定程式碼
-├── lib/              # Flutter 原始碼
-│   ├── src/          # 原始碼目錄
-│   │   ├── components/     # 通用元件
-│   │   │   ├── common_button.dart
-│   │   │   ├── common_card.dart
-│   │   │   ├── common_loading.dart
-│   │   │   └── pull_to_refresh.dart
-│   │   ├── models/         # 數據模型
-│   │   │   ├── song_model.dart
-│   │   │   └── user_model.dart
-│   │   ├── pages/          # 頁面
-│   │   │   ├── admin/      # 管理員頁面
-│   │   │   ├── auth/       # 認證頁面
-│   │   │   │   ├── login/  # 登入頁面
-│   │   │   │   └── register/# 註冊頁面
-│   │   │   ├── favorites/  # 收藏頁面
-│   │   │   ├── home/       # 首頁
-│   │   │   ├── player/     # 播放器頁面
-│   │   │   └── search/     # 搜索頁面
-│   │   ├── providers/      # 狀態管理
-│   │   │   ├── auth_provider.dart
-│   │   │   └── music_provider.dart
-│   │   ├── routes/         # 路由配置
-│   │   ├── services/       # 服務類
-│   │   │   ├── api_service.dart
-│   │   │   └── image_preload_service.dart
-│   │   ├── theme/          # 主題配置
-│   │   └── utils/          # 工具類
-│   │       ├── app_logger.dart
-│   │       ├── database/   # 資料庫工具
-│   │       ├── deviceInfoUtils/# 設備資訊
-│   │       ├── di/         # 依賴注入
-│   │       ├── glass_morphism/# 玻璃態效果
-│   │       ├── snackbar_manager.dart
-│   │       └── sp_util.dart
-│   └── main.dart           # 應用入口
-├── assets/           # 靜態資源
-│   └── images/       # 圖片資源
-├── .env              # 環境變數配置
-├── pubspec.yaml      # 依賴配置
-├── README.md         # 專案文件（簡體中文）
-├── README_EN.md      # 專案文件（英文）
-├── README_ZH_TW.md   # 專案文件（繁體中文）
-├── BUG_REPORT.md     # Bug 報告模板
-└── TODO_LIST.md      # 開發任務列表
-```
-
-### 核心模組說明
-
-#### 數據層 (`lib/src/data/database/`)
-
-應用使用本地資料庫儲存數據，包含以下數據存取物件（DAO）和實體：
-
-- **DAO**：
-  - `play_history_dao.dart` - 播放歷史
-  - `playlist_dao.dart` - 播放列表
-  - `playlist_song_dao.dart` - 播放列表歌曲關聯
-  - `song_dao.dart` - 歌曲數據
-  - `user_dao.dart` - 使用者數據
-
-- **實體**：
-  - `play_history_entity.dart`
-  - `playlist_entity.dart`
-  - `playlist_song_entity.dart`
-  - `song_entity.dart`
-  - `user_entity.dart`
-
-#### 頁面模組 (`lib/src/pages/`)
-
-採用 MVC 架構模式組織：
-
-- **admin/** - 管理員功能頁面，包含使用者和歌曲管理
-- **auth/** - 使用者認證頁面，包括登入和註冊
-- **favorites/** - 收藏管理頁面
-- **home/** - 應用首頁，包含當前播放欄和歌曲列表
-- **player/** - 播放器頁面，包含播放控制、進度條、音量控制等
-- **search/** - 搜索功能頁面
-
-#### 服務層 (`lib/src/services/`)
-
-- `api_service.dart` - API 網路請求服務
-- `image_preload_service.dart` - 圖片預載入服務
-
-#### 工具類 (`lib/src/utils/`)
-
-- **database/** - 資料庫管理工具
-- **deviceInfoUtils/** - 設備資訊獲取（支援 Android、iOS、Web）
-- **di/** - 依賴注入
-- **glass_morphism/** - 玻璃態效果元件
-- `app_logger.dart` - 應用日誌
-- `snackbar_manager.dart` - 消息提示管理
-- `sp_util.dart` - SharedPreferences 工具
 
 ## 配置說明
 
@@ -355,8 +257,10 @@ flutter build windows
 
 ## 聯繫方式
 
-- 專案地址：https://gitee.com/jason_kwok35/vibe-music-app
-- 問題反饋：https://gitee.com/jason_kwok35/vibe-music-app/issues
+- **Gitee 專案地址**：https://gitee.com/jason_kwok35/vibe-music-app
+- **Gitee 問題反饋**：https://gitee.com/jason_kwok35/vibe-music-app/issues
+- **GitHub 專案地址**：https://github.com/Nikoyaya/vibe-music-app
+- **GitHub 問題反饋**：https://github.com/Nikoyaya/vibe-music-app/issues
 
 ## 感謝
 
