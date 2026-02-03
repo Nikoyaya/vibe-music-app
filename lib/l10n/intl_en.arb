@@ -113,5 +113,8 @@
   "verificationCodeSent": "Verification code sent!",
   "failedToSendVerificationCode": "Failed to send verification code",
   "registrationSuccessful": "Registration successful! Please login.",
-  "settingsPageComingSoon": "Settings page will be implemented soon"
+  "settingsPageComingSoon": "Settings page will be implemented soon",
+  "confirmClose": "Close?",
+  "closePlayback": "Close Playback",
+  "confirmClosePlayback": "Are you sure you want to close the current playback?"
 }

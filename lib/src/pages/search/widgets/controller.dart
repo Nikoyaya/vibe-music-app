@@ -4,8 +4,8 @@ import 'package:vibe_music_app/generated/app_localizations.dart';
 import 'package:vibe_music_app/src/providers/music_controller.dart';
 import 'package:vibe_music_app/src/providers/auth_provider.dart';
 import 'package:vibe_music_app/src/models/song_model.dart';
-import 'package:vibe_music_app/src/routes/app_routes.dart';
 import 'package:vibe_music_app/src/utils/app_logger.dart';
+import 'package:vibe_music_app/src/pages/home/widgets/controller.dart';
 
 class SearchPageController extends GetxController {
   // 控制器
@@ -106,7 +106,9 @@ class SearchPageController extends GetxController {
   /// 处理搜索结果点击
   void handleResultTap(Song song) {
     _musicController.playSong(song, playlist: searchResults);
-    Get.toNamed(AppRoutes.player);
+    // 切换到底部导航栏的播放页
+    final homeController = Get.find<HomeController>();
+    homeController.changePage(1);
   }
 
   /// 处理收藏按钮点击

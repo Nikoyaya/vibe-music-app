@@ -113,5 +113,8 @@
   "verificationCodeSent": "验证码已发送！",
   "failedToSendVerificationCode": "发送验证码失败",
   "registrationSuccessful": "注册成功！请登录。",
-  "settingsPageComingSoon": "设置页面即将上线"
+  "settingsPageComingSoon": "设置页面即将上线",
+  "confirmClose": "是否关闭",
+  "closePlayback": "关闭播放",
+  "confirmClosePlayback": "确定要关闭当前播放吗？"
 }

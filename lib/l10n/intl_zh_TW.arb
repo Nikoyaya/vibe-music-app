@@ -113,5 +113,8 @@
   "verificationCodeSent": "驗證碼已發送！",
   "failedToSendVerificationCode": "發送驗證碼失敗",
   "registrationSuccessful": "註冊成功！請登錄。",
-  "settingsPageComingSoon": "設置頁面即將上線"
+  "settingsPageComingSoon": "設置頁面即將上線",
+  "confirmClose": "是否關閉",
+  "closePlayback": "關閉播放",
+  "confirmClosePlayback": "確定要關閉當前播放嗎？"
 }

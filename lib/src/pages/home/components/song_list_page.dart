@@ -11,6 +11,7 @@ import 'package:vibe_music_app/src/services/image_preload_service.dart';
 import 'package:vibe_music_app/src/utils/snackbar_manager.dart';
 import 'package:vibe_music_app/src/routes/app_routes.dart';
 import 'package:vibe_music_app/src/utils/glass_morphism/responsive_layout.dart';
+import 'package:vibe_music_app/src/pages/home/widgets/controller.dart';
 
 /// 歌曲列表页面
 class SongListPage extends StatefulWidget {
@@ -1010,9 +1011,11 @@ class _SongListPageState extends State<SongListPage> {
                                     // 将整个热门歌曲列表添加到播放列表
                                     await Get.find<MusicController>()
                                         .playSong(song, playlist: songs);
-                                    // 导航到播放器页面
+                                    // 导航到播放器页面（切换到底部导航栏的播放页）
                                     if (mounted) {
-                                      Get.toNamed(AppRoutes.player);
+                                      final homeController =
+                                          Get.find<HomeController>();
+                                      homeController.changePage(1);
                                     }
                                   },
                                   icon: Icon(

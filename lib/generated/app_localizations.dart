@@ -782,6 +782,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Settings page will be implemented soon'**
   String get settingsPageComingSoon;
+
+  /// No description provided for @confirmClose.
+  ///
+  /// In en, this message translates to:
+  /// **'Close?'**
+  String get confirmClose;
+
+  /// No description provided for @closePlayback.
+  ///
+  /// In en, this message translates to:
+  /// **'Close Playback'**
+  String get closePlayback;
+
+  /// No description provided for @confirmClosePlayback.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to close the current playback?'**
+  String get confirmClosePlayback;
 }
 
 class _AppLocalizationsDelegate

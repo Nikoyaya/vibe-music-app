@@ -357,6 +357,15 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get settingsPageComingSoon => '设置页面即将上线';
+
+  @override
+  String get confirmClose => '是否关闭';
+
+  @override
+  String get closePlayback => '关闭播放';
+
+  @override
+  String get confirmClosePlayback => '确定要关闭当前播放吗？';
 }
 
 /// The translations for Chinese, as used in Taiwan (`zh_TW`).
@@ -712,4 +721,13 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get settingsPageComingSoon => '設置頁面即將上線';
+
+  @override
+  String get confirmClose => '是否關閉';
+
+  @override
+  String get closePlayback => '關閉播放';
+
+  @override
+  String get confirmClosePlayback => '確定要關閉當前播放嗎？';
 }

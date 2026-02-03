@@ -358,4 +358,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsPageComingSoon => 'Settings page will be implemented soon';
+
+  @override
+  String get confirmClose => 'Close?';
+
+  @override
+  String get closePlayback => 'Close Playback';
+
+  @override
+  String get confirmClosePlayback =>
+      'Are you sure you want to close the current playback?';
 }

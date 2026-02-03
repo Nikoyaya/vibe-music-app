@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:vibe_music_app/generated/app_localizations.dart';
 import 'package:vibe_music_app/src/providers/music_controller.dart';
-import 'package:vibe_music_app/src/routes/app_routes.dart';
 import 'package:vibe_music_app/src/models/song_model.dart';
 import 'package:vibe_music_app/src/utils/glass_morphism/glass_morphism.dart';
+import 'package:vibe_music_app/src/pages/home/widgets/controller.dart';
 
 /// 当前播放音乐的底部控件
 class CurrentlyPlayingBar extends StatelessWidget {
@@ -90,6 +91,12 @@ class _CurrentlyPlayingBarContentState
         if (_isSwiping) {
           return;
         }
+        // 只有当没有滑动偏移、不在滑动状态且没有显示关闭对话框时才导航到播放页面
+        if (_offset == 0 && !_isSwiping && !_isShowingCloseDialog) {
+          // 获取HomeController并切换到播放页面（索引为1）
+          final homeController = Get.find<HomeController>();
+          homeController.changePage(1);
+        }
       },
       child: Stack(
         children: [
@@ -114,7 +121,7 @@ class _CurrentlyPlayingBarContentState
                   ),
                   child: Center(
                     child: Text(
-                      '是否关闭',
+                      AppLocalizations.of(context)?.confirmClose ?? '是否关闭',
                       style: TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
@@ -146,176 +153,163 @@ class _CurrentlyPlayingBarContentState
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     // 歌曲信息和控制按钮
-                    GestureDetector(
-                      onTap: () {
-                        // 只有当没有滑动偏移、不在滑动状态且没有显示关闭对话框时才导航到播放页面
-                        if (_offset == 0 &&
-                            !_isSwiping &&
-                            !_isShowingCloseDialog) {
-                          Get.toNamed(AppRoutes.player);
-                        }
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 10),
-                        child: Row(
-                          children: [
-                            // 歌曲封面
-                            Hero(
-                              tag: 'currentSong',
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(12),
-                                child: widget.song.coverUrl != null
-                                    ? Image.network(
-                                        widget.song.coverUrl!,
-                                        width: 56,
-                                        height: 56,
-                                        fit: BoxFit.cover,
-                                        loadingBuilder:
-                                            (context, child, loadingProgress) {
-                                          if (loadingProgress == null)
-                                            return child;
-                                          return Container(
-                                            width: 56,
-                                            height: 56,
-                                            color: Theme.of(context)
-                                                .colorScheme
-                                                .primaryContainer,
-                                            child: Icon(Icons.music_note,
-                                                size: 28,
-                                                color: Theme.of(context)
-                                                    .colorScheme
-                                                    .onPrimaryContainer),
-                                          );
-                                        },
-                                      )
-                                    : Container(
-                                        width: 56,
-                                        height: 56,
-                                        decoration: BoxDecoration(
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 10),
+                      child: Row(
+                        children: [
+                          // 歌曲封面
+                          Hero(
+                            tag: 'currentSong',
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(12),
+                              child: widget.song.coverUrl != null
+                                  ? Image.network(
+                                      widget.song.coverUrl!,
+                                      width: 56,
+                                      height: 56,
+                                      fit: BoxFit.cover,
+                                      loadingBuilder:
+                                          (context, child, loadingProgress) {
+                                        if (loadingProgress == null)
+                                          return child;
+                                        return Container(
+                                          width: 56,
+                                          height: 56,
                                           color: Theme.of(context)
                                               .colorScheme
                                               .primaryContainer,
-                                          borderRadius:
-                                              BorderRadius.circular(12),
-                                        ),
-                                        child: Icon(Icons.music_note,
-                                            size: 28,
-                                            color: Theme.of(context)
-                                                .colorScheme
-                                                .onPrimaryContainer),
+                                          child: Icon(Icons.music_note,
+                                              size: 28,
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .onPrimaryContainer),
+                                        );
+                                      },
+                                    )
+                                  : Container(
+                                      width: 56,
+                                      height: 56,
+                                      decoration: BoxDecoration(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .primaryContainer,
+                                        borderRadius: BorderRadius.circular(12),
                                       ),
-                              ),
-                            ),
-                            const SizedBox(width: 14),
-
-                            // 歌曲信息
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text(
-                                    widget.song.songName ?? 'Unknown Song',
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .bodyMedium
-                                        ?.copyWith(
-                                          fontWeight: FontWeight.w600,
-                                          color: Colors.white,
-                                        ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  const SizedBox(height: 3),
-                                  Text(
-                                    widget.song.artistName ?? 'Unknown Artist',
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .bodySmall
-                                        ?.copyWith(
-                                          color: Colors.white.withOpacity(0.8),
-                                          fontWeight: FontWeight.w400,
-                                        ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ],
-                              ),
-                            ),
-
-                            // 控制按钮
-                            GlassMorphism.glassCard(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 8, vertical: 4),
-                              child: Row(
-                                children: [
-                                  IconButton(
-                                    icon: Icon(
-                                      Icons.skip_previous,
-                                      size: 22,
-                                      color: Colors.white,
-                                    ),
-                                    onPressed: () =>
-                                        widget.musicProvider.previous(),
-                                    padding: const EdgeInsets.all(6),
-                                    constraints:
-                                        const BoxConstraints(minWidth: 36),
-                                    splashRadius: 20,
-                                  ),
-                                  // 使用StreamBuilder监听播放状态变化
-                                  StreamBuilder<AppPlayerState>(
-                                    stream:
-                                        widget.musicProvider.playerStateStream,
-                                    initialData:
-                                        widget.musicProvider.playerState,
-                                    builder: (context, snapshot) {
-                                      final playerState = snapshot.data ??
-                                          AppPlayerState.stopped;
-                                      return IconButton(
-                                        icon: Icon(
-                                          playerState == AppPlayerState.playing
-                                              ? Icons.pause_circle_filled
-                                              : Icons.play_circle_filled,
-                                          size: 36,
+                                      child: Icon(Icons.music_note,
+                                          size: 28,
                                           color: Theme.of(context)
                                               .colorScheme
-                                              .primary,
-                                        ),
-                                        onPressed: () {
-                                          if (playerState ==
-                                              AppPlayerState.playing) {
-                                            widget.musicProvider.pause();
-                                          } else {
-                                            widget.musicProvider.play();
-                                          }
-                                        },
-                                        padding: const EdgeInsets.all(4),
-                                        constraints:
-                                            const BoxConstraints(minWidth: 44),
-                                        splashRadius: 24,
-                                      );
-                                    },
-                                  ),
-                                  IconButton(
-                                    icon: Icon(
-                                      Icons.skip_next,
-                                      size: 22,
-                                      color: Colors.white,
+                                              .onPrimaryContainer),
                                     ),
-                                    onPressed: () =>
-                                        widget.musicProvider.next(),
-                                    padding: const EdgeInsets.all(6),
-                                    constraints:
-                                        const BoxConstraints(minWidth: 36),
-                                    splashRadius: 20,
-                                  ),
-                                ],
-                              ),
                             ),
-                          ],
-                        ),
+                          ),
+                          const SizedBox(width: 14),
+
+                          // 歌曲信息
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  widget.song.songName ?? 'Unknown Song',
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodyMedium
+                                      ?.copyWith(
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.white,
+                                      ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                const SizedBox(height: 3),
+                                Text(
+                                  widget.song.artistName ?? 'Unknown Artist',
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodySmall
+                                      ?.copyWith(
+                                        color: Colors.white.withOpacity(0.8),
+                                        fontWeight: FontWeight.w400,
+                                      ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ),
+                          ),
+
+                          // 控制按钮
+                          GlassMorphism.glassCard(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 4),
+                            child: Row(
+                              children: [
+                                IconButton(
+                                  icon: Icon(
+                                    Icons.skip_previous,
+                                    size: 22,
+                                    color: Colors.white,
+                                  ),
+                                  onPressed: () =>
+                                      widget.musicProvider.previous(),
+                                  padding: const EdgeInsets.all(6),
+                                  constraints:
+                                      const BoxConstraints(minWidth: 36),
+                                  splashRadius: 20,
+                                ),
+                                // 使用StreamBuilder监听播放状态变化
+                                StreamBuilder<AppPlayerState>(
+                                  stream:
+                                      widget.musicProvider.playerStateStream,
+                                  initialData: widget.musicProvider.playerState,
+                                  builder: (context, snapshot) {
+                                    final playerState =
+                                        snapshot.data ?? AppPlayerState.stopped;
+                                    return IconButton(
+                                      icon: Icon(
+                                        playerState == AppPlayerState.playing
+                                            ? Icons.pause_circle_filled
+                                            : Icons.play_circle_filled,
+                                        size: 36,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .primary,
+                                      ),
+                                      onPressed: () {
+                                        if (playerState ==
+                                            AppPlayerState.playing) {
+                                          widget.musicProvider.pause();
+                                        } else {
+                                          widget.musicProvider.play();
+                                        }
+                                      },
+                                      padding: const EdgeInsets.all(4),
+                                      constraints:
+                                          const BoxConstraints(minWidth: 44),
+                                      splashRadius: 24,
+                                    );
+                                  },
+                                ),
+                                IconButton(
+                                  icon: Icon(
+                                    Icons.skip_next,
+                                    size: 22,
+                                    color: Colors.white,
+                                  ),
+                                  onPressed: () => widget.musicProvider.next(),
+                                  padding: const EdgeInsets.all(6),
+                                  constraints:
+                                      const BoxConstraints(minWidth: 36),
+                                  splashRadius: 20,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
@@ -339,8 +333,11 @@ class _CurrentlyPlayingBarContentState
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          title: const Text('关闭播放'),
-          content: const Text('确定要关闭当前播放吗？'),
+          title:
+              Text(AppLocalizations.of(dialogContext)?.closePlayback ?? '关闭播放'),
+          content: Text(
+              AppLocalizations.of(dialogContext)?.confirmClosePlayback ??
+                  '确定要关闭当前播放吗？'),
           actions: [
             TextButton(
               onPressed: () {
@@ -349,7 +346,7 @@ class _CurrentlyPlayingBarContentState
                   _isShowingCloseDialog = false;
                 });
               },
-              child: const Text('取消'),
+              child: Text(AppLocalizations.of(dialogContext)?.cancel ?? '取消'),
             ),
             TextButton(
               onPressed: () {
@@ -361,7 +358,7 @@ class _CurrentlyPlayingBarContentState
                   _isShowingCloseDialog = false;
                 });
               },
-              child: const Text('确定'),
+              child: Text(AppLocalizations.of(dialogContext)?.ok ?? '确定'),
             ),
           ],
         );
