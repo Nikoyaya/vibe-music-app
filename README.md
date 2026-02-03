@@ -1,6 +1,10 @@
-
-
 # Vibe Music App
+
+<p align="center">
+  <img src="assets/images/icons/icon.png" alt="Vibe Music App Icon" width="100" height="100">
+</p>
+
+[English](README_EN.md) | [简体中文](README.md) | [繁體中文](README_ZH_TW.md)
 
 一款基于 Flutter 开发的现代化音乐播放器应用，用于连接和播放 Vibe Music Server 中的音乐。
 
@@ -139,7 +143,9 @@ vibe_music_app/
 │   └── images/       # 图片资源
 ├── .env              # 环境变量配置
 ├── pubspec.yaml      # 依赖配置
-├── README.md         # 项目文档
+├── README.md         # 项目文档（简体中文）
+├── README_EN.md      # 项目文档（英文）
+├── README_ZH_TW.md   # 项目文档（繁体中文）
 ├── BUG_REPORT.md     # Bug 报告模板
 └── TODO_LIST.md      # 开发任务列表
 ```
