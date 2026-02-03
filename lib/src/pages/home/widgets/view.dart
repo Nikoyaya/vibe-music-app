@@ -183,17 +183,30 @@ class HomeView extends GetView<HomeController> {
 
   /// 获取当前页面
   Widget _getCurrentPage() {
+    return IndexedStack(
+      index: controller.currentPage.value,
+      children: [
+        const SongListPage(),
+        const PlayerPage(),
+        const FavoritesPage(),
+        const ProfilePage(),
+      ],
+    );
+  }
+
+  /// 构建当前页面
+  Widget _buildCurrentPage() {
     switch (controller.currentPage.value) {
       case 0:
-        return const SongListPage();
+        return const KeyedSubtree(key: ValueKey(0), child: SongListPage());
       case 1:
-        return const PlayerPage();
+        return const KeyedSubtree(key: ValueKey(1), child: PlayerPage());
       case 2:
-        return const FavoritesPage();
+        return const KeyedSubtree(key: ValueKey(2), child: FavoritesPage());
       case 3:
-        return const ProfilePage();
+        return const KeyedSubtree(key: ValueKey(3), child: ProfilePage());
       default:
-        return const SongListPage();
+        return const KeyedSubtree(key: ValueKey(0), child: SongListPage());
     }
   }
 

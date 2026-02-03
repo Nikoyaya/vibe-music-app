@@ -366,6 +366,12 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get confirmClosePlayback => '确定要关闭当前播放吗？';
+
+  @override
+  String get loginExpired => '登录失效，请重新登录';
+
+  @override
+  String get goToLogin => '去登录';
 }
 
 /// The translations for Chinese, as used in Taiwan (`zh_TW`).
@@ -730,4 +736,10 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get confirmClosePlayback => '確定要關閉當前播放嗎？';
+
+  @override
+  String get loginExpired => '登入失效，請重新登入';
+
+  @override
+  String get goToLogin => '去登入';
 }

@@ -800,6 +800,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Are you sure you want to close the current playback?'**
   String get confirmClosePlayback;
+
+  /// No description provided for @loginExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'Login expired, please log in again'**
+  String get loginExpired;
+
+  /// No description provided for @goToLogin.
+  ///
+  /// In en, this message translates to:
+  /// **'Go to login'**
+  String get goToLogin;
 }
 
 class _AppLocalizationsDelegate

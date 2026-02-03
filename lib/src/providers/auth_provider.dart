@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
+import 'package:get/get.dart';
 import 'package:vibe_music_app/src/services/api_service.dart';
+import 'package:vibe_music_app/src/services/global_notification_service.dart';
 import 'package:vibe_music_app/src/models/user_model.dart';
 import 'package:vibe_music_app/src/utils/app_logger.dart';
 import 'package:vibe_music_app/src/utils/sp_util.dart';
@@ -16,42 +18,42 @@ enum AuthStatus {
 
 /// 认证提供者
 /// 管理用户认证状态、token和用户信息
-class AuthProvider with ChangeNotifier {
+class AuthProvider extends GetxController {
   /// 认证状态
-  AuthStatus _status = AuthStatus.unknown;
-
-  /// 用户信息
-  User? _user;
+  final _status = AuthStatus.unknown.obs;
 
   /// 访问令牌
-  String? _token;
+  final _token = Rxn<String>();
 
   /// 刷新令牌
-  String? _refreshToken;
+  final _refreshToken = Rxn<String>();
 
-  /// 访问令牌过期时间
-  DateTime? _tokenExpiry;
+  /// 令牌过期时间
+  final _tokenExpiry = Rxn<DateTime>();
 
   /// 刷新令牌过期时间
-  DateTime? _refreshTokenExpiry;
+  final _refreshTokenExpiry = Rxn<DateTime>();
+
+  /// 用户信息
+  final _user = Rxn<User>();
 
   /// 错误消息
-  String? _errorMessage;
+  final _errorMessage = Rxn<String>();
 
   /// 获取认证状态
-  AuthStatus get status => _status;
+  AuthStatus get status => _status.value;
 
   /// 获取用户信息
-  User? get user => _user;
+  User? get user => _user.value;
 
-  /// 获取访问令牌
-  String? get token => _token;
+  /// 获取令牌
+  String? get token => _token.value;
 
   /// 获取错误消息
-  String? get errorMessage => _errorMessage;
+  String? get errorMessage => _errorMessage.value;
 
   /// 是否已认证
-  bool get isAuthenticated => _status == AuthStatus.authenticated;
+  bool get isAuthenticated => _status.value == AuthStatus.authenticated;
 
   /// 构造函数
   AuthProvider() {
@@ -67,27 +69,28 @@ class AuthProvider with ChangeNotifier {
     final userJson = SpUtil.get<String>('user');
 
     if (token != null && userJson != null) {
-      _token = token;
-      _refreshToken = refreshToken;
-      _tokenExpiry = tokenExpiry != null ? DateTime.parse(tokenExpiry) : null;
-      _refreshTokenExpiry = refreshTokenExpiry != null
+      _token.value = token;
+      _refreshToken.value = refreshToken;
+      _tokenExpiry.value =
+          tokenExpiry != null ? DateTime.parse(tokenExpiry) : null;
+      _refreshTokenExpiry.value = refreshTokenExpiry != null
           ? DateTime.parse(refreshTokenExpiry)
           : null;
-      _user = User.fromJson(jsonDecode(userJson));
+      _user.value = User.fromJson(jsonDecode(userJson));
       ApiService().setToken(token);
 
       // 检查token是否过期
-      if (_tokenExpiry != null && _tokenExpiry!.isAfter(DateTime.now())) {
-        _status = AuthStatus.authenticated;
+      if (_tokenExpiry.value != null &&
+          _tokenExpiry.value!.isAfter(DateTime.now())) {
+        _status.value = AuthStatus.authenticated;
         // 获取最新的用户信息
         await _fetchUserInfo();
       } else {
         await _tryRefreshToken();
       }
     } else {
-      _status = AuthStatus.unauthenticated;
+      _status.value = AuthStatus.unauthenticated;
     }
-    notifyListeners();
   }
 
   /// 获取用户信息
@@ -98,9 +101,8 @@ class AuthProvider with ChangeNotifier {
         final data =
             response.data is Map ? response.data : jsonDecode(response.data);
         if (data['code'] == 200 && data['data'] != null) {
-          _user = User.fromJson(data['data']);
-          await SpUtil.put('user', jsonEncode(_user!.toJson()));
-          notifyListeners();
+          _user.value = User.fromJson(data['data']);
+          await SpUtil.put('user', jsonEncode(_user.value!.toJson()));
         }
       }
     } catch (e) {
@@ -110,27 +112,60 @@ class AuthProvider with ChangeNotifier {
 
   /// 尝试刷新令牌
   Future<bool> _tryRefreshToken() async {
-    if (_refreshToken == null ||
-        _refreshTokenExpiry == null ||
-        _refreshTokenExpiry!.isBefore(DateTime.now())) {
+    if (_refreshToken.value == null ||
+        _refreshTokenExpiry.value == null ||
+        _refreshTokenExpiry.value!.isBefore(DateTime.now())) {
       return false;
     }
 
     try {
-      final response = await ApiService().refreshToken(_refreshToken!);
+      final response = await ApiService().refreshToken(_refreshToken.value!);
+
+      // 检查是否为登录过期错误（HTTP 401 + 错误码1010）
+      if (response.statusCode == 401) {
+        final data = response.data is Map ? response.data : null;
+        if (data != null && data['code'] == 1010) {
+          // 登录过期，清空登录信息并显示提示
+          AppLogger().w('refreshToken返回登录过期错误: ${data['message']}');
+          await logout();
+          // 显示登录过期提示对话框
+          AppLogger().d('尝试显示登录过期提示对话框，上下文是否可用: ${Get.context != null}');
+          if (Get.context != null) {
+            AppLogger().d('开始显示登录过期提示对话框');
+            await GlobalNotificationService()
+                .showLoginExpiredDialog(Get.context!);
+            AppLogger().d('登录过期提示对话框显示完成');
+          } else {
+            AppLogger().w('无法显示登录过期提示：Get.context 为 null');
+            // 如果上下文不可用，延迟一秒后再次尝试
+            Future.delayed(Duration(seconds: 1), () async {
+              if (Get.context != null) {
+                AppLogger().d('延迟后上下文可用，显示登录过期提示对话框');
+                await GlobalNotificationService()
+                    .showLoginExpiredDialog(Get.context!);
+              } else {
+                AppLogger().e('延迟后上下文仍然不可用，无法显示登录过期提示');
+              }
+            });
+          }
+          return false;
+        }
+      }
+
       if (response.statusCode == 200) {
         final data =
             response.data is Map ? response.data : jsonDecode(response.data);
         if (data['code'] == 200 && data['data'] != null) {
-          _token = data['data']['accessToken'];
-          _tokenExpiry = DateTime.parse(data['data']['accessTokenExpireTime']);
-          ApiService().setToken(_token);
+          _token.value = data['data']['accessToken'];
+          _tokenExpiry.value =
+              DateTime.parse(data['data']['accessTokenExpireTime']);
+          ApiService().setToken(_token.value);
 
-          await SpUtil.put('token', _token!);
-          await SpUtil.put('tokenExpiry', _tokenExpiry!.toIso8601String());
+          await SpUtil.put('token', _token.value!);
+          await SpUtil.put(
+              'tokenExpiry', _tokenExpiry.value!.toIso8601String());
 
-          _status = AuthStatus.authenticated;
-          notifyListeners();
+          _status.value = AuthStatus.authenticated;
           return true;
         }
       }
@@ -144,9 +179,8 @@ class AuthProvider with ChangeNotifier {
 
   /// 用户登录
   Future<bool> login(String usernameOrEmail, String password) async {
-    _status = AuthStatus.loading;
-    _errorMessage = null;
-    notifyListeners();
+    _status.value = AuthStatus.loading;
+    _errorMessage.value = null;
 
     try {
       AppLogger().d('🔍 开始登录: usernameOrEmail=$usernameOrEmail');
@@ -165,32 +199,34 @@ class AuthProvider with ChangeNotifier {
         if (data['code'] == 200 && data['data'] != null) {
           AppLogger().d('✅ 登录成功，开始处理Token和用户数据...');
 
-          _token = data['data']['accessToken'];
-          _refreshToken = data['data']['refreshToken'];
-          _tokenExpiry = DateTime.parse(data['data']['accessTokenExpireTime']);
-          _refreshTokenExpiry =
+          _token.value = data['data']['accessToken'];
+          _refreshToken.value = data['data']['refreshToken'];
+          _tokenExpiry.value =
+              DateTime.parse(data['data']['accessTokenExpireTime']);
+          _refreshTokenExpiry.value =
               DateTime.parse(data['data']['refreshTokenExpireTime']);
 
           AppLogger().d(
-              '🔑 Token信息 - accessToken: ${_token != null ? "存在" : "null"}, refreshToken: ${_refreshToken != null ? "存在" : "null"}');
+              '🔑 Token信息 - accessToken: ${_token.value != null ? "存在" : "null"}, refreshToken: ${_refreshToken.value != null ? "存在" : "null"}');
 
           // 使用基础信息创建用户，详细用户信息通过_fetchUserInfo获取
-          _user = User();
+          _user.value = User();
 
-          AppLogger().d('👤 用户基本信息创建成功: ${_user?.username}');
+          AppLogger().d('👤 用户基本信息创建成功: ${_user.value?.username}');
 
           // 先设置Token，再获取完整的用户信息（因为getUserInfo需要认证）
-          ApiService().setToken(_token);
+          ApiService().setToken(_token.value);
           await _fetchUserInfo();
 
-          await SpUtil.put('token', _token!);
-          await SpUtil.put('tokenExpiry', _tokenExpiry!.toIso8601String());
-          if (_refreshToken != null) {
-            await SpUtil.put('refreshToken', _refreshToken!);
-            await SpUtil.put(
-                'refreshTokenExpiry', _refreshTokenExpiry!.toIso8601String());
+          await SpUtil.put('token', _token.value!);
+          await SpUtil.put(
+              'tokenExpiry', _tokenExpiry.value!.toIso8601String());
+          if (_refreshToken.value != null) {
+            await SpUtil.put('refreshToken', _refreshToken.value!);
+            await SpUtil.put('refreshTokenExpiry',
+                _refreshTokenExpiry.value!.toIso8601String());
           }
-          await SpUtil.put('user', jsonEncode(_user!.toJson()));
+          await SpUtil.put('user', jsonEncode(_user.value!.toJson()));
 
           // 验证保存状态
           _logSpUtilState();
@@ -198,30 +234,26 @@ class AuthProvider with ChangeNotifier {
           // 获取设备信息并调用后端接口
           await _sendDeviceInfo();
 
-          _status = AuthStatus.authenticated;
-          notifyListeners();
+          _status.value = AuthStatus.authenticated;
           AppLogger().d('🎉 登录流程完成，状态更新为已认证');
           return true;
         } else {
-          _errorMessage =
+          _errorMessage.value =
               '服务器响应: code=${data['code']}, message=${data['message']}';
-          AppLogger().e('❌ 登录失败: $_errorMessage');
-          _status = AuthStatus.unauthenticated;
-          notifyListeners();
+          AppLogger().e('❌ 登录失败: ${_errorMessage.value}');
+          _status.value = AuthStatus.unauthenticated;
           return false;
         }
       } else {
-        _errorMessage = '网络错误: ${response.statusCode}';
-        AppLogger().e('❌ 网络错误: $_errorMessage');
-        _status = AuthStatus.unauthenticated;
-        notifyListeners();
+        _errorMessage.value = '网络错误: ${response.statusCode}';
+        AppLogger().e('❌ 网络错误: ${_errorMessage.value}');
+        _status.value = AuthStatus.unauthenticated;
         return false;
       }
     } catch (e) {
-      _errorMessage = '连接错误: $e';
-      AppLogger().e('❌ 连接错误: $_errorMessage');
-      _status = AuthStatus.unauthenticated;
-      notifyListeners();
+      _errorMessage.value = '连接错误: $e';
+      AppLogger().e('❌ 连接错误: ${_errorMessage.value}');
+      _status.value = AuthStatus.unauthenticated;
       return false;
     }
   }
@@ -229,9 +261,8 @@ class AuthProvider with ChangeNotifier {
   /// 注册新用户
   Future<bool> register(String email, String username, String password,
       String verificationCode) async {
-    _status = AuthStatus.loading;
-    _errorMessage = null;
-    notifyListeners();
+    _status.value = AuthStatus.loading;
+    _errorMessage.value = null;
 
     try {
       final response = await ApiService()
@@ -241,25 +272,21 @@ class AuthProvider with ChangeNotifier {
         final data =
             response.data is Map ? response.data : jsonDecode(response.data);
         if (data['code'] == 200) {
-          _status = AuthStatus.unauthenticated;
-          notifyListeners();
+          _status.value = AuthStatus.unauthenticated;
           return true;
         } else {
-          _errorMessage = data['message'] ?? '注册失败';
-          _status = AuthStatus.unauthenticated;
-          notifyListeners();
+          _errorMessage.value = data['message'] ?? '注册失败';
+          _status.value = AuthStatus.unauthenticated;
           return false;
         }
       } else {
-        _errorMessage = '网络错误: ${response.statusCode}';
-        _status = AuthStatus.unauthenticated;
-        notifyListeners();
+        _errorMessage.value = '网络错误: ${response.statusCode}';
+        _status.value = AuthStatus.unauthenticated;
         return false;
       }
     } catch (e) {
-      _errorMessage = '连接错误: $e';
-      _status = AuthStatus.unauthenticated;
-      notifyListeners();
+      _errorMessage.value = '连接错误: $e';
+      _status.value = AuthStatus.unauthenticated;
       return false;
     }
   }
@@ -294,17 +321,15 @@ class AuthProvider with ChangeNotifier {
       await ApiService().logout();
     } catch (_) {}
 
-    _token = null;
-    _refreshToken = null;
-    _user = null;
-    _status = AuthStatus.unauthenticated;
+    _token.value = null;
+    _refreshToken.value = null;
+    _user.value = null;
+    _status.value = AuthStatus.unauthenticated;
     ApiService().setToken(null);
 
     await SpUtil.remove('token');
     await SpUtil.remove('refreshToken');
     await SpUtil.remove('user');
-
-    notifyListeners();
   }
 
   /// 更新用户信息
@@ -317,13 +342,12 @@ class AuthProvider with ChangeNotifier {
         if (data['code'] == 200) {
           // 如果data['data']不为null，使用它更新用户信息；否则刷新用户信息
           if (data['data'] != null) {
-            _user = User.fromJson(data['data']);
+            _user.value = User.fromJson(data['data']);
           } else {
             // 后端未返回用户数据，重新获取最新用户信息
             await _fetchUserInfo();
           }
           await SpUtil.put('user', jsonEncode(_user!.toJson()));
-          notifyListeners();
           return true;
         }
       }
@@ -367,8 +391,7 @@ class AuthProvider with ChangeNotifier {
 
   /// 清除错误信息
   void clearError() {
-    _errorMessage = null;
-    notifyListeners();
+    _errorMessage.value = null;
   }
 
   /// 记录SpUtil存储状态

@@ -32,6 +32,13 @@ class _ProfilePageState extends State<ProfilePage> {
   Map<String, String>? _lastUserInfo;
 
   @override
+  void initState() {
+    super.initState();
+    // 在初始化时不调用 _updateFormFields，因为此时 context 不可用
+    // 改为在 didChangeDependencies 中调用
+  }
+
+  @override
   void dispose() {
     // 释放控制器资源
     _usernameController.dispose();
@@ -39,13 +46,6 @@ class _ProfilePageState extends State<ProfilePage> {
     _phoneController.dispose();
     _introductionController.dispose();
     super.dispose();
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    // 在初始化时不调用 _updateFormFields，因为此时 context 不可用
-    // 改为在 didChangeDependencies 中调用
   }
 
   @override
@@ -74,6 +74,15 @@ class _ProfilePageState extends State<ProfilePage> {
         _introductionController.text = authProvider.user!.introduction ?? '';
         _lastUserInfo = currentUserInfo;
       }
+    } else {
+      // 用户未登录，清空表单字段
+      if (_lastUserInfo != null) {
+        _usernameController.clear();
+        _emailController.clear();
+        _phoneController.clear();
+        _introductionController.clear();
+        _lastUserInfo = null;
+      }
     }
   }
 
@@ -85,28 +94,35 @@ class _ProfilePageState extends State<ProfilePage> {
     return Scaffold(
       appBar: AppBar(
         title: Text(AppLocalizations.of(context)?.profile ?? '个人中心'),
-        actions: authProvider.isAuthenticated && !_isEditing
-            ? [
-                IconButton(
-                  icon: const Icon(Icons.edit),
-                  onPressed: () {
-                    setState(() {
-                      _isEditing = true;
-                    });
-                  },
-                ),
-              ]
-            : [],
+        actions: [
+          Obx(() {
+            if (authProvider.isAuthenticated && !_isEditing) {
+              return IconButton(
+                icon: const Icon(Icons.edit),
+                onPressed: () {
+                  setState(() {
+                    _isEditing = true;
+                  });
+                },
+              );
+            }
+            return const SizedBox.shrink();
+          }),
+        ],
       ),
       body: SingleChildScrollView(
         child: Column(
           children: [
             Center(
-              child: authProvider.isAuthenticated
-                  ? _isEditing
-                      ? _buildEditProfileForm(authProvider)
-                      : _buildProfileView(authProvider)
-                  : _buildLoginPrompt(),
+              child: Obx(() {
+                // 每次认证状态变化时更新表单字段
+                _updateFormFields();
+                return authProvider.isAuthenticated
+                    ? _isEditing
+                        ? _buildEditProfileForm(authProvider)
+                        : _buildProfileView(authProvider)
+                    : _buildLoginPrompt();
+              }),
             ),
             const SizedBox(height: 32),
             LanguageSelector(),

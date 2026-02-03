@@ -116,5 +116,7 @@
   "settingsPageComingSoon": "Settings page will be implemented soon",
   "confirmClose": "Close?",
   "closePlayback": "Close Playback",
-  "confirmClosePlayback": "Are you sure you want to close the current playback?"
+  "confirmClosePlayback": "Are you sure you want to close the current playback?",
+  "loginExpired": "Login expired, please log in again",
+  "goToLogin": "Go to login"
 }

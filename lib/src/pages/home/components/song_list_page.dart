@@ -53,7 +53,8 @@ class PlaylistItem {
   });
 }
 
-class _SongListPageState extends State<SongListPage> {
+class _SongListPageState extends State<SongListPage>
+    with AutomaticKeepAliveClientMixin<SongListPage> {
   late Future<List<Song>> _futureSongs; // 歌曲数据未来
   final Map<int, bool> _favoriteLoadingStates = {}; // 收藏操作加载状态
   int _currentCarouselIndex = 0; // 当前轮播图索引
@@ -119,6 +120,63 @@ class _SongListPageState extends State<SongListPage> {
   }
 
   @override
+  bool get wantKeepAlive => true;
+
+  @override
+  Widget build(BuildContext context) {
+    // 必须调用super.build(context)来保持页面状态
+    super.build(context);
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmallScreen = screenWidth < 380;
+    final isDesktop = ScreenSize.isDesktop(context);
+
+    return PullToRefresh(
+      onRefresh: _handleRefresh,
+      child: CustomScrollView(
+        slivers: [
+          // 顶部搜索栏
+          SliverPadding(
+            padding: const EdgeInsets.all(16),
+            sliver: SliverToBoxAdapter(
+              child: isDesktop ? _buildDesktopHeader() : _buildMobileHeader(),
+            ),
+          ),
+
+          // 内容部分
+          SliverList(
+            delegate: SliverChildBuilderDelegate(
+              (context, index) {
+                return Column(
+                  children: [
+                    // 轮播图 - 使用RepaintBoundary减少重绘区域
+                    RepaintBoundary(
+                      child: _buildCarousel(),
+                    ),
+
+                    // 推荐歌单 - 使用RepaintBoundary减少重绘区域
+                    RepaintBoundary(
+                      child: _buildRecommendedPlaylists(),
+                    ),
+
+                    // 热门歌曲 - 使用RepaintBoundary减少重绘区域
+                    RepaintBoundary(
+                      child: _buildPopularSongs(isSmallScreen),
+                    ),
+
+                    // 底部间距
+                    const SizedBox(height: 32),
+                  ],
+                );
+              },
+              childCount: 1,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     // 预加载轮播图和推荐歌单图片
@@ -153,56 +211,18 @@ class _SongListPageState extends State<SongListPage> {
 
   /// 处理下拉刷新
   Future<void> _handleRefresh() async {
-    // 重新加载歌曲数据
-    _loadSongs();
+    // 重新加载歌曲数据，强制刷新
+    final musicController = Get.find<MusicController>();
+    setState(() {
+      final future = musicController.loadRecommendedSongs(forceRefresh: true);
+      _futureSongs = future.then((songs) {
+        // 预加载歌曲封面图片
+        ImagePreloadService().preloadSongCovers(songs, context);
+        return songs;
+      });
+    });
     // 等待数据加载完成
     await _futureSongs;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isSmallScreen = screenWidth < 380;
-    final isDesktop = ScreenSize.isDesktop(context);
-
-    return PullToRefresh(
-      onRefresh: _handleRefresh,
-      child: CustomScrollView(
-        slivers: [
-          // 顶部搜索栏
-          SliverPadding(
-            padding: const EdgeInsets.all(16),
-            sliver: SliverToBoxAdapter(
-              child: isDesktop ? _buildDesktopHeader() : _buildMobileHeader(),
-            ),
-          ),
-
-          // 内容部分
-          SliverList(
-            delegate: SliverChildBuilderDelegate(
-              (context, index) {
-                return Column(
-                  children: [
-                    // 轮播图
-                    _buildCarousel(),
-
-                    // 推荐歌单
-                    _buildRecommendedPlaylists(),
-
-                    // 热门歌曲
-                    _buildPopularSongs(isSmallScreen),
-
-                    // 底部间距
-                    const SizedBox(height: 32),
-                  ],
-                );
-              },
-              childCount: 1,
-            ),
-          ),
-        ],
-      ),
-    );
   }
 
   /// 构建桌面端头部
@@ -318,6 +338,10 @@ class _SongListPageState extends State<SongListPage> {
                                 fit: BoxFit.cover,
                                 width: 1000,
                                 height: 500,
+                                memCacheWidth: 800,
+                                memCacheHeight: 400,
+                                maxWidthDiskCache: 800,
+                                maxHeightDiskCache: 400,
                                 placeholder: (context, url) => Container(
                                   color: Theme.of(context)
                                       .colorScheme
@@ -662,10 +686,10 @@ class _SongListPageState extends State<SongListPage> {
         width: size,
         height: size,
         fit: BoxFit.cover,
-        memCacheWidth: cacheSize,
-        memCacheHeight: cacheSize,
-        maxWidthDiskCache: cacheSize,
-        maxHeightDiskCache: cacheSize,
+        memCacheWidth: 120,
+        memCacheHeight: 120,
+        maxWidthDiskCache: 120,
+        maxHeightDiskCache: 120,
         placeholder: (context, url) => placeholder,
         errorWidget: (context, url, error) => errorWidget,
       );

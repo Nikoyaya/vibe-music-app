@@ -29,8 +29,6 @@ class SidebarNavigation extends StatelessWidget {
   Widget build(BuildContext context) {
     final localizations = AppLocalizations.of(context);
     final authProvider = Get.find<AuthProvider>();
-    final isAuthenticated = authProvider.isAuthenticated;
-    final user = authProvider.user;
 
     return GlassMorphism.glassCard(
       child: Container(
@@ -79,34 +77,38 @@ class SidebarNavigation extends StatelessWidget {
             const Spacer(),
 
             // 用户信息
-            Container(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                children: [
-                  if (isAuthenticated && user?.userAvatar != null)
-                    CircleAvatar(
-                      backgroundImage: NetworkImage(user!.userAvatar!),
-                      radius: 20,
-                    )
-                  else
-                    CircleAvatar(
-                      backgroundColor: Colors.white.withOpacity(0.2),
-                      child: const Icon(Icons.person, color: Colors.white),
+            Obx(() {
+              final isAuthenticated = authProvider.isAuthenticated;
+              final user = authProvider.user;
+              return Container(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    if (isAuthenticated && user?.userAvatar != null)
+                      CircleAvatar(
+                        backgroundImage: NetworkImage(user!.userAvatar!),
+                        radius: 20,
+                      )
+                    else
+                      CircleAvatar(
+                        backgroundColor: Colors.white.withOpacity(0.2),
+                        child: const Icon(Icons.person, color: Colors.white),
+                      ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        isAuthenticated && user?.username != null
+                            ? user!.username!
+                            : localizations?.pleaseLogin ?? '未登录',
+                        style: const TextStyle(color: Colors.white),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                      ),
                     ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      isAuthenticated && user?.username != null
-                          ? user!.username!
-                          : localizations?.pleaseLogin ?? '未登录',
-                      style: const TextStyle(color: Colors.white),
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 1,
-                    ),
-                  ),
-                ],
-              ),
-            ),
+                  ],
+                ),
+              );
+            }),
           ],
         ),
       ),

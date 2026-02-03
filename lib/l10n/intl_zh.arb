@@ -116,5 +116,7 @@
   "settingsPageComingSoon": "设置页面即将上线",
   "confirmClose": "是否关闭",
   "closePlayback": "关闭播放",
-  "confirmClosePlayback": "确定要关闭当前播放吗？"
+  "confirmClosePlayback": "确定要关闭当前播放吗？",
+  "loginExpired": "登录失效，请重新登录",
+  "goToLogin": "去登录"
 }

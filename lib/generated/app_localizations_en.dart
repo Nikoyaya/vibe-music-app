@@ -368,4 +368,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get confirmClosePlayback =>
       'Are you sure you want to close the current playback?';
+
+  @override
+  String get loginExpired => 'Login expired, please log in again';
+
+  @override
+  String get goToLogin => 'Go to login';
 }

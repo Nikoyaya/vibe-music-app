@@ -637,8 +637,31 @@ class MusicController extends GetxController {
     return [];
   }
 
+  /// 推荐歌曲缓存
+  List<Song> _recommendedSongsCache = [];
+  DateTime? _recommendedSongsCacheTimestamp;
+  static const Duration _recommendedCacheExpiry = Duration(minutes: 30);
+
+  /// 检查推荐歌曲缓存是否有效
+  bool _isRecommendedSongsCacheValid() {
+    if (_recommendedSongsCache.isEmpty ||
+        _recommendedSongsCacheTimestamp == null) {
+      return false;
+    }
+    final cacheAge =
+        DateTime.now().difference(_recommendedSongsCacheTimestamp!);
+    return cacheAge < _recommendedCacheExpiry;
+  }
+
   /// 加载推荐歌曲
-  Future<List<Song>> loadRecommendedSongs() async {
+  /// [forceRefresh] 是否强制刷新（忽略缓存）
+  Future<List<Song>> loadRecommendedSongs({bool forceRefresh = false}) async {
+    // 检查缓存是否有效
+    if (!forceRefresh && _isRecommendedSongsCacheValid()) {
+      AppLogger().d('使用缓存的推荐歌曲');
+      return _recommendedSongsCache;
+    }
+
     try {
       final response = await ApiService().getRecommendedSongs();
       if (response.statusCode == 200) {
@@ -646,11 +669,20 @@ class MusicController extends GetxController {
             response.data is Map ? response.data : jsonDecode(response.data);
         if (data['code'] == 200 && data['data'] != null) {
           final List<dynamic> records = data['data'] ?? [];
-          return records.map((item) => Song.fromJson(item)).toList();
+          final songs = records.map((item) => Song.fromJson(item)).toList();
+          // 更新缓存
+          _recommendedSongsCache = songs;
+          _recommendedSongsCacheTimestamp = DateTime.now();
+          return songs;
         }
       }
     } catch (e) {
       AppLogger().e('加载推荐歌曲失败: $e');
+      // 如果加载失败，返回缓存数据（如果有）
+      if (_recommendedSongsCache.isNotEmpty) {
+        AppLogger().d('加载失败，返回缓存的推荐歌曲');
+        return _recommendedSongsCache;
+      }
     }
     return [];
   }

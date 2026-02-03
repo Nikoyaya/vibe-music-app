@@ -116,5 +116,7 @@
   "settingsPageComingSoon": "設置頁面即將上線",
   "confirmClose": "是否關閉",
   "closePlayback": "關閉播放",
-  "confirmClosePlayback": "確定要關閉當前播放嗎？"
+  "confirmClosePlayback": "確定要關閉當前播放嗎？",
+  "loginExpired": "登入失效，請重新登入",
+  "goToLogin": "去登入"
 }

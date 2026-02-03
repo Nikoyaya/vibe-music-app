@@ -1,7 +1,10 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'dart:typed_data';
+import 'package:flutter/material.dart';
+import 'package:get/get.dart' as getx;
 import 'package:vibe_music_app/src/utils/app_logger.dart';
+import 'global_notification_service.dart';
 
 /// API服务类
 /// 提供统一的网络请求封装，支持请求日志、token管理和URL替换
@@ -126,12 +129,29 @@ class ApiService {
       AppLogger().d('响应数据: ${response.data}');
       AppLogger().d('=================\n');
 
+      // 检查是否为单点登录过期错误
+      if (response.statusCode == 401) {
+        final data = response.data is Map ? response.data : null;
+        if (data != null && data['code'] == 1010) {
+          // 触发登录过期事件
+          AppLogger().w('检测到单点登录过期: ${data['message']}');
+          // 显示登录过期提示对话框
+          if (getx.Get.context != null) {
+            GlobalNotificationService()
+                .showLoginExpiredDialog(getx.Get.context!);
+          } else {
+            AppLogger().w('无法显示登录过期提示：getx.Get.context 为 null');
+          }
+        }
+      }
+
       return response;
     } catch (e) {
       // Log error details
       AppLogger().e('\n=== API错误 ===');
       AppLogger().e('错误: $e');
       AppLogger().e('=================\n');
+      // 重新抛出异常，让调用方处理
       rethrow;
     }
   }
