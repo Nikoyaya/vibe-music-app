@@ -52,11 +52,20 @@ class Song with _$Song {
         .trim();
 
     // 清理音频URL，去除末尾逗号和换行符，但保留URL中的必要编码
-    String? audioUrl = json['audioUrl']
+    String? audioUrl = json['songUrl']
         ?.toString()
         .replaceAll(RegExp(r'[\n\r]+'), '')
         .replaceAll(RegExp(r'[,]+$'), '')
         .trim();
+
+    // 兼容旧的 audioUrl 字段
+    if (audioUrl == null || audioUrl.isEmpty) {
+      audioUrl = json['audioUrl']
+          ?.toString()
+          .replaceAll(RegExp(r'[\n\r]+'), '')
+          .replaceAll(RegExp(r'[,]+$'), '')
+          .trim();
+    }
 
     // 对音频URL进行严格处理，确保URL格式正确
     String? processedAudioUrl;

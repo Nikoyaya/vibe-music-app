@@ -291,6 +291,8 @@ class MusicController extends GetxController {
       _playlist = playlist;
       _currentIndex = _playlist.indexOf(song);
       if (_currentIndex < 0) _currentIndex = 0;
+      // 保存新的播放列表
+      await savePlaylist();
     } else if (_playlist.isNotEmpty) {
       // 如果没有提供新的播放列表，就在当前播放列表中查找选中的歌曲
       final index = _playlist.indexOf(song);
@@ -565,14 +567,15 @@ class MusicController extends GetxController {
 
   /// 添加歌曲到播放列表
   /// [song] 要添加的歌曲
-  void addToPlaylist(Song song) {
+  Future<void> addToPlaylist(Song song) async {
     _playlist.add(song);
+    await savePlaylist();
     update();
   }
 
   /// 从播放列表移除歌曲
   /// [index] 要移除的歌曲索引
-  void removeFromPlaylist(int index) {
+  Future<void> removeFromPlaylist(int index) async {
     if (index >= 0 && index < _playlist.length) {
       final removedSong = _playlist[index];
       _playlist.removeAt(index);
@@ -582,16 +585,17 @@ class MusicController extends GetxController {
         _currentIndex = _playlist.length - 1;
       }
       // 保存播放列表
-      savePlaylist();
+      await savePlaylist();
       update();
       AppLogger().d('✅ 从播放列表移除歌曲: ${removedSong.songName}');
     }
   }
 
   /// 清空播放列表
-  void clearPlaylist() {
+  Future<void> clearPlaylist() async {
     _playlist.clear();
     _currentIndex = 0;
+    await savePlaylist();
     update();
   }
 
@@ -947,12 +951,15 @@ class MusicController extends GetxController {
       // 准备音频播放器
       final currentSong = _playlist[_currentIndex];
       await _prepareAudioPlayer(currentSong);
+
+      // 通知 UI 更新
+      update();
     } catch (e) {
       AppLogger().e('❌ 加载播放状态失败: $e');
     }
   }
 
-  /// 通用存储操作方法 - 优先使用数据库，失败则使用SharedPreferences
+  /// 通用存储操作方法 - 同时保存到数据库和 SharedPreferences，确保数据可靠性
   /// [dbOperation] 数据库操作函数
   /// [spOperation] SharedPreferences操作函数
   /// [operationName] 操作名称，用于日志
@@ -962,12 +969,17 @@ class MusicController extends GetxController {
     String operationName,
   ) async {
     try {
-      // 优先使用数据库
+      // 尝试保存到数据库
       await dbOperation();
     } catch (dbError) {
-      AppLogger().e('⚠️  数据库不可用，尝试使用 SharedPreferences: $dbError');
-      // 数据库不可用时，使用 SharedPreferences
+      AppLogger().e('⚠️  数据库不可用: $dbError');
+    }
+
+    try {
+      // 无论数据库操作是否成功，都尝试保存到 SharedPreferences
       await spOperation();
+    } catch (spError) {
+      AppLogger().e('⚠️  SharedPreferences 不可用: $spError');
     }
   }
 
@@ -1015,7 +1027,7 @@ class MusicController extends GetxController {
         return null;
       },
       () async {
-        final lastPlayedSongJson = SpUtil.get('lastPlayedSong');
+        final lastPlayedSongJson = SpUtil.get<String>('lastPlayedSong');
         if (lastPlayedSongJson != null) {
           final Map<String, dynamic> json = jsonDecode(lastPlayedSongJson);
           AppLogger().d('✅ 从 SharedPreferences 加载最后播放歌曲成功');
@@ -1030,43 +1042,37 @@ class MusicController extends GetxController {
   /// 加载播放列表
   Future<void> _loadPlaylist() async {
     try {
-      // 优先使用数据库
-      try {
-        final db = await DatabaseManager().database;
-        final playlistSongs = await db.playlistSongDao.getSongsByPlaylistId(1);
+      AppLogger().d('🔄 开始加载播放列表');
+      AppLogger().d('当前播放列表长度: ${_playlist.length}');
 
-        if (playlistSongs.isNotEmpty) {
-          _playlist.clear();
-          for (final playlistSong in playlistSongs) {
-            final song = Song(
-              id: null,
-              songName: playlistSong.songName,
-              artistName: playlistSong.artistName,
-              songUrl: playlistSong.songUrl,
-              coverUrl: playlistSong.coverUrl,
-              duration: playlistSong.duration,
-            );
-            _playlist.add(song);
-          }
-          AppLogger().d('✅ 从数据库加载播放列表成功，共 ${_playlist.length} 首歌曲');
-          update();
-          return;
-        }
-      } catch (dbError) {
-        AppLogger().e('⚠️  数据库不可用，尝试使用 SharedPreferences: $dbError');
-
-        // 数据库不可用时，尝试使用 SharedPreferences
-        final playlistJson = SpUtil.get('playlist');
-        if (playlistJson != null) {
+      // 直接从 SharedPreferences 加载，不使用数据库
+      AppLogger().d('💾 尝试从 SharedPreferences 加载播放列表');
+      final playlistJson = SpUtil.get<String>('playlist');
+      AppLogger().d('从 SharedPreferences 获取到的播放列表数据: $playlistJson');
+      if (playlistJson != null) {
+        try {
           final List<dynamic> jsonList = jsonDecode(playlistJson);
+          AppLogger().d('从 SharedPreferences 解析到 ${jsonList.length} 首歌曲');
           _playlist.clear();
           for (final item in jsonList) {
-            _playlist.add(Song.fromJson(item));
+            final song = Song.fromJson(item);
+            _playlist.add(song);
+            AppLogger().d('添加歌曲到播放列表: ${song.songName}');
           }
           AppLogger()
               .d('✅ 从 SharedPreferences 加载播放列表成功，共 ${_playlist.length} 首歌曲');
           update();
+          return;
+        } catch (jsonError) {
+          AppLogger().e('⚠️  解析 SharedPreferences 播放列表数据失败: $jsonError');
         }
+      }
+
+      // 如果所有存储都没有播放列表数据，记录日志
+      if (_playlist.isEmpty) {
+        AppLogger().d('⚠️  所有存储都没有播放列表数据，播放列表为空');
+      } else {
+        AppLogger().d('✅ 播放列表加载完成，共 ${_playlist.length} 首歌曲');
       }
     } catch (e) {
       AppLogger().e('❌ 加载播放列表失败: $e');
@@ -1075,42 +1081,30 @@ class MusicController extends GetxController {
 
   /// 保存播放列表
   Future<void> savePlaylist() async {
-    await _storageOperation(
-      () async {
-        final db = await DatabaseManager().database;
+    AppLogger().d('🔄 开始保存播放列表');
+    AppLogger().d('当前播放列表长度: ${_playlist.length}');
 
-        // 清空现有播放列表
-        await db.playlistSongDao.deleteSongsByPlaylistId(1);
+    for (int i = 0; i < _playlist.length; i++) {
+      final song = _playlist[i];
+      AppLogger().d('要保存的歌曲 $i: ${song.songName} - ${song.artistName}');
+    }
 
-        // 保存当前播放列表
-        for (int i = 0; i < _playlist.length; i++) {
-          final song = _playlist[i];
-          final playlistSong = PlaylistSong(
-            id: 0,
-            playlistId: 1, // 默认播放列表
-            songId: song.id?.toString() ?? '',
-            songName: song.songName ?? '',
-            artistName: song.artistName ?? '',
-            coverUrl: song.coverUrl ?? '',
-            songUrl: song.songUrl ?? '',
-            duration: song.duration ?? '',
-            position: i,
-            createdAt: DateTime.now().toIso8601String(),
-          );
-          await db.playlistSongDao.insertPlaylistSong(playlistSong);
-        }
+    // 直接保存到 SharedPreferences，不使用数据库
+    try {
+      final playlistJson =
+          jsonEncode(_playlist.map((song) => song.toJson()).toList());
+      AppLogger().d('💾 尝试保存播放列表到 SharedPreferences');
+      AppLogger().d('要保存到 SharedPreferences 的数据长度: ${playlistJson.length}');
+      AppLogger().d('要保存到 SharedPreferences 的数据: $playlistJson');
 
-        AppLogger().d('✅ 保存播放列表到数据库成功，共 ${_playlist.length} 首歌曲');
-      },
-      () async {
-        final playlistJson =
-            jsonEncode(_playlist.map((song) => song.toJson()).toList());
-        SpUtil.put('playlist', playlistJson);
-        AppLogger()
-            .d('✅ 保存播放列表到 SharedPreferences 成功，共 ${_playlist.length} 首歌曲');
-      },
-      '保存播放列表',
-    );
+      final success = await SpUtil.put('playlist', playlistJson);
+      AppLogger().d('保存到 SharedPreferences 结果: $success');
+      AppLogger().d('✅ 保存播放列表到 SharedPreferences 成功，共 ${_playlist.length} 首歌曲');
+    } catch (e) {
+      AppLogger().e('❌ 保存播放列表到 SharedPreferences 失败: $e');
+    }
+
+    AppLogger().d('✅ 播放列表保存完成');
   }
 
   /// 保存播放历史

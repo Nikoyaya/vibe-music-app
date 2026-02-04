@@ -171,7 +171,14 @@ class FavoritesController extends GetxController {
   /// 处理歌曲点击
   Future<void> handleSongTap(int index) async {
     final song = allSongs[index];
-    await _musicController.playSong(song, playlist: allSongs);
+    // 将收藏歌曲添加到播放列表
+    for (final s in allSongs) {
+      if (!_musicController.playlist.any((item) => item.songUrl == s.songUrl)) {
+        await _musicController.addToPlaylist(s);
+      }
+    }
+    // 播放选中的歌曲
+    await _musicController.playSong(song);
     Get.toNamed(AppRoutes.player);
   }
 

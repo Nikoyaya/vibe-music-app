@@ -1032,9 +1032,18 @@ class _SongListPageState extends State<SongListPage>
                                 // 播放按钮
                                 IconButton(
                                   onPressed: () async {
+                                    final musicController =
+                                        Get.find<MusicController>();
                                     // 将整个热门歌曲列表添加到播放列表
-                                    await Get.find<MusicController>()
-                                        .playSong(song, playlist: songs);
+                                    for (final s in songs) {
+                                      if (!musicController.playlist.any(
+                                          (item) =>
+                                              item.songUrl == s.songUrl)) {
+                                        await musicController.addToPlaylist(s);
+                                      }
+                                    }
+                                    // 播放选中的歌曲
+                                    await musicController.playSong(song);
                                     // 导航到播放器页面（切换到底部导航栏的播放页）
                                     if (mounted) {
                                       final homeController =

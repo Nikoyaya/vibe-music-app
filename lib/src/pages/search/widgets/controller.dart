@@ -104,8 +104,15 @@ class SearchPageController extends GetxController {
   }
 
   /// 处理搜索结果点击
-  void handleResultTap(Song song) {
-    _musicController.playSong(song, playlist: searchResults);
+  Future<void> handleResultTap(Song song) async {
+    // 将搜索结果添加到播放列表
+    for (final s in searchResults) {
+      if (!_musicController.playlist.any((item) => item.songUrl == s.songUrl)) {
+        await _musicController.addToPlaylist(s);
+      }
+    }
+    // 播放选中的歌曲
+    await _musicController.playSong(song);
     // 切换到底部导航栏的播放页
     final homeController = Get.find<HomeController>();
     homeController.changePage(1);
