@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:get/get.dart';
 import 'package:vibe_music_app/src/providers/music_controller.dart';
 import 'package:vibe_music_app/src/providers/auth_provider.dart';
@@ -24,6 +25,9 @@ class PlayerController extends GetxController {
   late MusicController _musicController;
   late AuthProvider _authProvider;
 
+  // 流订阅
+  late StreamSubscription<AppPlayerState> _playerStateSubscription;
+
   @override
   void onInit() {
     super.onInit();
@@ -31,6 +35,13 @@ class PlayerController extends GetxController {
     _authProvider = Get.find<AuthProvider>();
     // 添加自己作为MusicController的监听器
     _musicController.addListener(_onMusicProviderChanged);
+    // 直接监听播放器状态流，确保UI能及时更新
+    _playerStateSubscription =
+        _musicController.playerStateStream.listen((state) {
+      _isPlaying.value = state == AppPlayerState.playing;
+      // 强制更新UI
+      update();
+    });
     // 初始化可观察变量
     _updateObservableVariables();
   }
@@ -39,6 +50,8 @@ class PlayerController extends GetxController {
   void onClose() {
     // 移除自己作为MusicController的监听器
     _musicController.removeListener(_onMusicProviderChanged);
+    // 取消流订阅
+    _playerStateSubscription.cancel();
     super.onClose();
   }
 
