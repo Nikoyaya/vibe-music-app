@@ -7,12 +7,9 @@ import 'package:audio_session/audio_session.dart';
 
 // 导入 audioplayers 库，并添加前缀以避免命名冲突
 import 'package:audioplayers/audioplayers.dart' as audioplayers;
-import 'package:vibe_music_app/src/data/database/entity/play_history_entity.dart';
-import 'package:vibe_music_app/src/data/database/entity/playlist_song_entity.dart';
 import 'package:vibe_music_app/src/services/api_service.dart';
 import 'package:vibe_music_app/src/models/song_model.dart';
 import 'package:vibe_music_app/src/utils/app_logger.dart';
-import 'package:vibe_music_app/src/utils/database/database_manager.dart';
 import 'package:vibe_music_app/src/utils/sp_util.dart';
 
 /// 播放器状态枚举
@@ -481,7 +478,7 @@ class MusicController extends GetxController {
   }
 
   /// 播放下一首歌曲
-  void next() {
+  Future<void> next() async {
     if (_playlist.isNotEmpty) {
       if (_isShuffle) {
         // 随机播放
@@ -490,15 +487,15 @@ class MusicController extends GetxController {
         // 顺序播放
         _currentIndex = (_currentIndex + 1) % _playlist.length;
       }
-      playSong(_playlist[_currentIndex]);
+      await playSong(_playlist[_currentIndex]);
     }
   }
 
   /// 播放上一首歌曲
-  void previous() {
+  Future<void> previous() async {
     if (_playlist.isNotEmpty) {
       _currentIndex = (_currentIndex - 1 + _playlist.length) % _playlist.length;
-      playSong(_playlist[_currentIndex]);
+      await playSong(_playlist[_currentIndex]);
     }
   }
 
@@ -1007,36 +1004,23 @@ class MusicController extends GetxController {
 
   /// 加载最后播放的歌曲
   Future<Song?> _loadLastPlayedSong() async {
-    return await _loadOperation<Song?>(
-      () async {
-        final db = await DatabaseManager().database;
-        final playHistory = await db.playHistoryDao.getRecentPlayHistory(1);
-
-        if (playHistory.isNotEmpty) {
-          final history = playHistory[0];
-          AppLogger().d('✅ 从数据库加载最后播放歌曲成功');
-          return Song(
-            id: null,
-            songName: history.songName,
-            artistName: history.artistName,
-            songUrl: history.songUrl,
-            coverUrl: history.coverUrl,
-            duration: history.duration,
-          );
-        }
-        return null;
-      },
-      () async {
-        final lastPlayedSongJson = SpUtil.get<String>('lastPlayedSong');
-        if (lastPlayedSongJson != null) {
+    try {
+      // 直接从 SharedPreferences 加载，不使用数据库
+      final lastPlayedSongJson = SpUtil.get<String>('lastPlayedSong');
+      if (lastPlayedSongJson != null) {
+        try {
           final Map<String, dynamic> json = jsonDecode(lastPlayedSongJson);
           AppLogger().d('✅ 从 SharedPreferences 加载最后播放歌曲成功');
           return Song.fromJson(json);
+        } catch (jsonError) {
+          AppLogger().e('⚠️  解析 SharedPreferences 最后播放歌曲数据失败: $jsonError');
         }
-        return null;
-      },
-      '加载最后播放的歌曲',
-    );
+      }
+      return null;
+    } catch (e) {
+      AppLogger().e('❌ 加载最后播放歌曲失败: $e');
+      return null;
+    }
   }
 
   /// 加载播放列表
@@ -1109,29 +1093,14 @@ class MusicController extends GetxController {
 
   /// 保存播放历史
   Future<void> savePlayHistory(Song song) async {
-    await _storageOperation(
-      () async {
-        final db = await DatabaseManager().database;
-        final playHistory = PlayHistory(
-          id: 0,
-          songId: song.id?.toString() ?? '',
-          songName: song.songName ?? '',
-          artistName: song.artistName ?? '',
-          coverUrl: song.coverUrl ?? '',
-          songUrl: song.songUrl ?? '',
-          duration: song.duration ?? '',
-          playedAt: DateTime.now().toIso8601String(),
-        );
-        await db.playHistoryDao.insertPlayHistory(playHistory);
-        AppLogger().d('✅ 保存播放历史到数据库成功: ${song.songName}');
-      },
-      () async {
-        final lastPlayedSongJson = jsonEncode(song.toJson());
-        SpUtil.put('lastPlayedSong', lastPlayedSongJson);
-        AppLogger().d('✅ 保存播放历史到 SharedPreferences 成功: ${song.songName}');
-      },
-      '保存播放历史',
-    );
+    // 直接保存到 SharedPreferences，不使用数据库
+    try {
+      final lastPlayedSongJson = jsonEncode(song.toJson());
+      await SpUtil.put('lastPlayedSong', lastPlayedSongJson);
+      AppLogger().d('✅ 保存播放历史到 SharedPreferences 成功: ${song.songName}');
+    } catch (e) {
+      AppLogger().e('❌ 保存播放历史到 SharedPreferences 失败: $e');
+    }
   }
 
   /// 下一首播放

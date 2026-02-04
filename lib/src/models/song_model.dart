@@ -193,8 +193,7 @@ class Song with _$Song {
       final minutes = int.tryParse(mmSsMatch.group(1) ?? '0') ?? 0;
       final secondsDouble = double.tryParse(mmSsMatch.group(2) ?? '0') ?? 0;
       final seconds = secondsDouble.toInt();
-      AppLogger()
-          .i('分:秒格式，解析为$minutes分${secondsDouble}秒，取整为$minutes分$seconds秒');
+      AppLogger().i('分:秒格式，解析为$minutes分$secondsDouble秒，取整为$minutes分$seconds秒');
       return _formatSeconds(minutes * 60 + seconds);
     }
 
@@ -207,7 +206,7 @@ class Song with _$Song {
       final secondsDouble = double.tryParse(hhMmSsMatch.group(3) ?? '0') ?? 0;
       final seconds = secondsDouble.toInt();
       AppLogger().d(
-          '时:分:秒格式，解析为$hours时$minutes分${secondsDouble}秒，取整为$hours时$minutes分$seconds秒');
+          '时:分:秒格式，解析为$hours时$minutes分$secondsDouble秒，取整为$hours时$minutes分$seconds秒');
       return _formatSeconds(hours * 3600 + minutes * 60 + seconds);
     }
 

@@ -34,20 +34,20 @@ class GlassMorphism {
           decoration: BoxDecoration(
             borderRadius: borderRadius,
             border: Border.all(
-              color: borderColor.withOpacity(0.2),
+              color: borderColor.withValues(alpha: 0.2),
               width: 1,
             ),
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                Colors.white.withOpacity(opacity),
-                Colors.white.withOpacity(opacity * 0.5),
+                Colors.white.withValues(alpha: opacity),
+                Colors.white.withValues(alpha: opacity * 0.5),
               ],
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.1),
+                color: Colors.black.withValues(alpha: 0.1),
                 spreadRadius: 1,
                 blurRadius: 10,
                 offset: const Offset(0, 2),
@@ -89,8 +89,8 @@ class GlassMorphism {
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                Colors.white.withOpacity(opacity),
-                Colors.white.withOpacity(opacity * 0.5),
+                Colors.white.withValues(alpha: opacity),
+                Colors.white.withValues(alpha: opacity * 0.5),
               ],
             ),
           ),
@@ -117,7 +117,8 @@ class GlassMorphism {
     double blur = 8,
     double opacity = 0.2,
     BorderRadius borderRadius = const BorderRadius.all(Radius.circular(8)),
-    EdgeInsets padding = const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+    EdgeInsets padding =
+        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
   }) {
     return ClipRRect(
       borderRadius: borderRadius,
@@ -130,20 +131,20 @@ class GlassMorphism {
             decoration: BoxDecoration(
               borderRadius: borderRadius,
               border: Border.all(
-                color: Colors.white.withOpacity(0.3),
+                color: Colors.white.withValues(alpha: 0.3),
                 width: 1,
               ),
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  Colors.white.withOpacity(opacity),
-                  Colors.white.withOpacity(opacity * 0.5),
+                  Colors.white.withValues(alpha: opacity),
+                  Colors.white.withValues(alpha: opacity * 0.5),
                 ],
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
+                  color: Colors.black.withValues(alpha: 0.1),
                   spreadRadius: 1,
                   blurRadius: 8,
                   offset: const Offset(0, 2),

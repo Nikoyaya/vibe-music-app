@@ -48,14 +48,19 @@ class ImagePreloadService {
         return;
       }
 
-      await precacheImage(
-        CachedNetworkImageProvider(
-          imageUrl,
-          maxWidth: cacheWidth,
-          maxHeight: cacheHeight,
-        ),
-        context,
-      );
+      // 使用 WidgetsBinding 确保在正确的时机使用 context
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (context.mounted) {
+          precacheImage(
+            CachedNetworkImageProvider(
+              imageUrl,
+              maxWidth: cacheWidth,
+              maxHeight: cacheHeight,
+            ),
+            context,
+          );
+        }
+      });
     } catch (e) {
       // 忽略预加载错误，不影响应用运行
       AppLogger().e('预加载图片失败: $imageUrl, 错误: $e');

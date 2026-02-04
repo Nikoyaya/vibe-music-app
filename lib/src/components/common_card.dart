@@ -36,7 +36,7 @@ class CommonCard extends StatelessWidget {
   /// - [backgroundColor]: 卡片背景色，默认使用主题的surfaceContainerHighest颜色
   /// - [onTap]: 卡片点击回调函数，默认null
   const CommonCard({
-    Key? key,
+    super.key,
     required this.child,
     this.padding = const EdgeInsets.all(16),
     this.margin = const EdgeInsets.symmetric(vertical: 8),
@@ -44,7 +44,7 @@ class CommonCard extends StatelessWidget {
     this.boxShadow,
     this.backgroundColor,
     this.onTap,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

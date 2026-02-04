@@ -69,7 +69,7 @@ class SidebarNavigation extends StatelessWidget {
                 title: Text(item['label'] as String,
                     style: const TextStyle(color: Colors.white)),
                 selected: currentIndex == index,
-                selectedTileColor: Colors.white.withOpacity(0.1),
+                selectedTileColor: Colors.white.withValues(alpha: 0.1),
                 onTap: () => onDestinationSelected(index),
               );
             }),
@@ -91,7 +91,7 @@ class SidebarNavigation extends StatelessWidget {
                       )
                     else
                       CircleAvatar(
-                        backgroundColor: Colors.white.withOpacity(0.2),
+                        backgroundColor: Colors.white.withValues(alpha: 0.2),
                         child: const Icon(Icons.person, color: Colors.white),
                       ),
                     const SizedBox(width: 12),
@@ -200,7 +200,7 @@ class BottomNavigationBarGlass extends StatelessWidget {
         elevation: 0,
         backgroundColor: Colors.transparent,
         labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
-        indicatorColor: Colors.white.withOpacity(0.1),
+        indicatorColor: Colors.white.withValues(alpha: 0.1),
       ),
     );
   }

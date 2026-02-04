@@ -12,6 +12,7 @@ import 'package:vibe_music_app/src/utils/snackbar_manager.dart';
 import 'package:vibe_music_app/src/routes/app_routes.dart';
 import 'package:vibe_music_app/src/utils/glass_morphism/responsive_layout.dart';
 import 'package:vibe_music_app/src/pages/home/widgets/controller.dart';
+import 'package:vibe_music_app/src/utils/app_logger.dart';
 
 /// 歌曲列表页面
 class SongListPage extends StatefulWidget {
@@ -197,32 +198,41 @@ class _SongListPageState extends State<SongListPage>
   }
 
   /// 加载歌曲数据
-  void _loadSongs() {
+  Future<void> _loadSongs() async {
     final musicController = Get.find<MusicController>();
-    setState(() {
-      final future = musicController.loadRecommendedSongs();
-      _futureSongs = future.then((songs) {
-        // 预加载歌曲封面图片
+    try {
+      final songs = await musicController.loadRecommendedSongs();
+      // 预加载歌曲封面图片
+      if (mounted) {
         ImagePreloadService().preloadSongCovers(songs, context);
-        return songs;
+      }
+      setState(() {
+        _futureSongs = Future.value(songs);
       });
-    });
+    } catch (error) {
+      AppLogger().e('加载歌曲数据失败: $error');
+    }
   }
 
   /// 处理下拉刷新
   Future<void> _handleRefresh() async {
     // 重新加载歌曲数据，强制刷新
     final musicController = Get.find<MusicController>();
-    setState(() {
-      final future = musicController.loadRecommendedSongs(forceRefresh: true);
-      _futureSongs = future.then((songs) {
-        // 预加载歌曲封面图片
+    try {
+      final songs =
+          await musicController.loadRecommendedSongs(forceRefresh: true);
+      // 预加载歌曲封面图片
+      if (mounted) {
         ImagePreloadService().preloadSongCovers(songs, context);
-        return songs;
+      }
+      setState(() {
+        _futureSongs = Future.value(songs);
       });
-    });
-    // 等待数据加载完成
-    await _futureSongs;
+      // 等待数据加载完成
+      await _futureSongs;
+    } catch (error) {
+      AppLogger().e('刷新歌曲数据失败: $error');
+    }
   }
 
   /// 构建桌面端头部
@@ -239,7 +249,7 @@ class _SongListPageState extends State<SongListPage>
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 10,
             spreadRadius: 2,
           ),
@@ -320,7 +330,7 @@ class _SongListPageState extends State<SongListPage>
                           borderRadius: BorderRadius.circular(20.0),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.2),
+                              color: Colors.black.withValues(alpha: 0.2),
                               blurRadius: 15,
                               spreadRadius: 2,
                               offset: const Offset(0, 5),
@@ -368,8 +378,8 @@ class _SongListPageState extends State<SongListPage>
                                     end: Alignment.topCenter,
                                     stops: const [0.0, 0.4, 0.8],
                                     colors: [
-                                      Colors.black.withOpacity(0.8),
-                                      Colors.black.withOpacity(0.4),
+                                      Colors.black.withValues(alpha: 0.8),
+                                      Colors.black.withValues(alpha: 0.4),
                                       Colors.transparent,
                                     ],
                                   ),
@@ -391,8 +401,8 @@ class _SongListPageState extends State<SongListPage>
                                         letterSpacing: 0.5,
                                         shadows: [
                                           Shadow(
-                                            color:
-                                                Colors.black.withOpacity(0.6),
+                                            color: Colors.black
+                                                .withValues(alpha: 0.6),
                                             offset: const Offset(0, 1),
                                             blurRadius: 3,
                                           ),
@@ -411,8 +421,8 @@ class _SongListPageState extends State<SongListPage>
                                         letterSpacing: 1.0,
                                         shadows: [
                                           Shadow(
-                                            color:
-                                                Colors.black.withOpacity(0.6),
+                                            color: Colors.black
+                                                .withValues(alpha: 0.6),
                                             offset: const Offset(0, 2),
                                             blurRadius: 4,
                                           ),
@@ -448,7 +458,7 @@ class _SongListPageState extends State<SongListPage>
                   shape: BoxShape.circle,
                   color: index == _currentCarouselIndex
                       ? Colors.white
-                      : Colors.white.withOpacity(0.5),
+                      : Colors.white.withValues(alpha: 0.5),
                 ),
               );
             }).toList(),
@@ -546,7 +556,7 @@ class _SongListPageState extends State<SongListPage>
                               borderRadius: BorderRadius.circular(12.0),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.1),
+                                  color: Colors.black.withValues(alpha: 0.1),
                                   blurRadius: 8,
                                   spreadRadius: 1,
                                   offset: const Offset(0, 2),
@@ -571,7 +581,7 @@ class _SongListPageState extends State<SongListPage>
                                     color: Theme.of(context)
                                         .colorScheme
                                         .primary
-                                        .withOpacity(0.2),
+                                        .withValues(alpha: 0.2),
                                     borderRadius: BorderRadius.circular(12.0),
                                   ),
                                   child: Icon(
@@ -780,7 +790,7 @@ class _SongListPageState extends State<SongListPage>
                           borderRadius: BorderRadius.circular(16),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.05),
+                              color: Colors.black.withValues(alpha: 0.05),
                               blurRadius: 8,
                               spreadRadius: 1,
                               offset: const Offset(0, 2),
@@ -1139,7 +1149,7 @@ class _PlaylistPlayButton extends StatelessWidget {
       height: 28,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: Theme.of(context).colorScheme.primary.withOpacity(0.8),
+        color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.8),
       ),
       child: const Icon(
         Icons.play_arrow,

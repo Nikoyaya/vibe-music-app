@@ -63,8 +63,8 @@ class _LoginViewState extends State<LoginView> {
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
                       color: isDarkMode
-                          ? Colors.black.withOpacity(0.3)
-                          : Colors.white.withOpacity(0.3),
+                          ? Colors.black.withValues(alpha: 0.3)
+                          : Colors.white.withValues(alpha: 0.3),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Icon(

@@ -54,21 +54,21 @@ class FavoritesController extends GetxController {
     });
 
     // 监听收藏状态变化
-    _musicController.addListener(() {
+    _musicController.addListener(() async {
       // 当收藏状态变化时，更新收藏页数据
       if (_authProvider.isAuthenticated) {
         // 从MusicController获取最新的收藏歌曲缓存
-        _musicController
-            .loadUserFavoriteSongs(forceRefresh: false)
-            .then((songs) {
+        try {
+          final songs =
+              await _musicController.loadUserFavoriteSongs(forceRefresh: false);
           if (songs.isNotEmpty) {
             // 去重处理
             final uniqueSongs = removeDuplicateSongs(songs);
             allSongs.value = uniqueSongs;
           }
-        }).catchError((error) {
+        } catch (error) {
           AppLogger().e('更新收藏歌曲列表失败: $error');
-        });
+        }
       }
     });
 
@@ -83,35 +83,35 @@ class FavoritesController extends GetxController {
   }
 
   /// 加载收藏歌曲
-  void loadFavoriteSongs() {
+  Future<void> loadFavoriteSongs() async {
     if (_authProvider.isAuthenticated) {
       currentPage.value = 1;
       allSongs.clear();
       hasMoreSongs.value = true;
-      fetchFavoriteSongs();
+      await fetchFavoriteSongs();
     }
   }
 
   /// 加载更多歌曲
-  void loadMoreSongs() {
+  Future<void> loadMoreSongs() async {
     if (!isLoadingMore.value && hasMoreSongs.value) {
-      fetchFavoriteSongs();
+      await fetchFavoriteSongs();
     }
   }
 
   /// 获取收藏歌曲数据
-  void fetchFavoriteSongs() {
+  Future<void> fetchFavoriteSongs() async {
     if (!_authProvider.isAuthenticated) return;
 
     isLoadingMore.value = true;
 
-    _musicController
-        .loadUserFavoriteSongs(
-      page: currentPage.value,
-      size: pageSize,
-      forceRefresh: currentPage.value == 1 && allSongs.isEmpty, // 仅当第一次加载时强制刷新
-    )
-        .then((newSongs) {
+    try {
+      final newSongs = await _musicController.loadUserFavoriteSongs(
+        page: currentPage.value,
+        size: pageSize,
+        forceRefresh:
+            currentPage.value == 1 && allSongs.isEmpty, // 仅当第一次加载时强制刷新
+      );
       // 去重处理
       final uniqueNewSongs = removeDuplicateSongs(newSongs);
 
@@ -134,10 +134,10 @@ class FavoritesController extends GetxController {
       }
 
       isLoadingMore.value = false;
-    }).catchError((error, stackTrace) {
+    } catch (error, stackTrace) {
       AppLogger().e('加载收藏歌曲错误: $error', stackTrace: stackTrace);
       isLoadingMore.value = false;
-    });
+    }
   }
 
   /// 移除重复歌曲
@@ -190,21 +190,5 @@ class FavoritesController extends GetxController {
   /// 检查是否已登录（兼容旧代码）
   bool get isAuthenticatedValue {
     return isAuthenticated.value;
-  }
-
-  /// 更新收藏歌曲列表
-  void _updateFavoritesList() {
-    // 从MusicController获取最新的收藏歌曲缓存
-    // 注意：这里我们需要确保MusicController暴露了收藏歌曲缓存
-    // 由于我们没有直接访问权限，我们重新加载数据但使用缓存
-    _musicController.loadUserFavoriteSongs(forceRefresh: false).then((songs) {
-      if (songs.isNotEmpty) {
-        // 去重处理
-        final uniqueSongs = removeDuplicateSongs(songs);
-        allSongs.value = uniqueSongs;
-      }
-    }).catchError((error) {
-      AppLogger().e('更新收藏歌曲列表失败: $error');
-    });
   }
 }

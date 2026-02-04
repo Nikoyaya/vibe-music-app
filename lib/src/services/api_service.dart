@@ -1,28 +1,22 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'dart:typed_data';
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart' as getx;
 import 'package:vibe_music_app/src/utils/app_logger.dart';
 import 'global_notification_service.dart';
 
 /// API服务类
-/// 提供统一的网络请求封装，支持请求日志、token管理和URL替换
+/// 提供统一的网络请求封装，支持请求日志、token管理
 class ApiService {
   /// 基础URL
-  static final String baseUrl =
-      dotenv.env['BASE_URL'] ?? 'http://127.0.0.1:8080';
+  static final String baseUrl = dotenv.env['BASE_URL']!;
 
   /// API超时时间（毫秒）
   static final int timeout =
       int.tryParse(dotenv.env['API_TIMEOUT'] ?? '30000') ?? 30000;
 
-  /// 是否为手机环境
-  static final bool isPhone =
-      (dotenv.env['IS_PHONE'] ?? 'false').toLowerCase() == 'true';
-
-  /// 基础IP地址
-  static final String baseIp = dotenv.env['BASE_IP'] ?? 'http://192.168.31.76';
+  /// 测试URL（用于Debug模式）
+  static final String testUrl = dotenv.env['TEST_URL']!;
 
   /// 单例实例
   static final ApiService _instance = ApiService._internal();
@@ -32,27 +26,6 @@ class ApiService {
 
   /// 私有构造函数
   ApiService._internal();
-
-  /// 递归替换响应数据中的URL
-  /// [data]: 响应数据，可以是字符串、Map或List
-  dynamic _replaceUrls(dynamic data) {
-    if (data is String) {
-      // 如果是字符串，替换URL
-      return data.replaceAll('http://192.168.100.128', baseIp);
-    } else if (data is Map) {
-      // 如果是Map，递归处理每个值
-      final newMap = <String, dynamic>{};
-      for (final entry in data.entries) {
-        newMap[entry.key] = _replaceUrls(entry.value);
-      }
-      return newMap;
-    } else if (data is List) {
-      // 如果是List，递归处理每个项
-      return data.map((item) => _replaceUrls(item)).toList();
-    }
-    // 如果不是字符串、Map或List，直接返回
-    return data;
-  }
 
   /// 当前认证Token
   String? _token;
@@ -116,12 +89,6 @@ class ApiService {
         queryParameters: queryParams,
         options: options,
       );
-
-      // Process response data to replace URLs if isPhone is true
-      if (isPhone) {
-        // Recursively replace URLs in all response data
-        response.data = _replaceUrls(response.data);
-      }
 
       // Log response details
       AppLogger().d('\n=== API响应 ===');

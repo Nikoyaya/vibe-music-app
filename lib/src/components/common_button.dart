@@ -32,14 +32,14 @@ class CommonButton extends StatelessWidget {
   /// - [isLoading]: 是否显示加载状态，默认false
   /// - [disabled]: 是否禁用按钮，默认false
   const CommonButton({
-    Key? key,
+    super.key,
     required this.text,
     required this.onPressed,
     this.style,
     this.icon,
     this.isLoading = false,
     this.disabled = false,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

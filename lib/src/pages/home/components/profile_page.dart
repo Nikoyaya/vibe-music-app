@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:vibe_music_app/generated/app_localizations.dart';
 import 'package:vibe_music_app/src/providers/auth_provider.dart';
-import 'package:vibe_music_app/src/providers/language_provider.dart';
+
 import 'package:vibe_music_app/src/components/language_selector.dart';
 import 'package:vibe_music_app/src/routes/app_routes.dart';
 import 'package:vibe_music_app/src/utils/app_logger.dart';
@@ -89,7 +89,6 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   Widget build(BuildContext context) {
     final authProvider = Get.find<AuthProvider>();
-    final languageProvider = Get.find<LanguageProvider>();
 
     return Scaffold(
       appBar: AppBar(

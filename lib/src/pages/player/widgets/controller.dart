@@ -5,6 +5,8 @@ import 'package:vibe_music_app/src/models/song_model.dart';
 import 'package:vibe_music_app/src/routes/app_routes.dart';
 import 'package:vibe_music_app/src/services/localization_service.dart';
 
+/// 播放器页面控制器
+/// 管理播放器页面的状态和交互逻辑
 class PlayerController extends GetxController {
   // 状态
   var isExpanded = false.obs;

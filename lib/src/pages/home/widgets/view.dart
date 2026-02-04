@@ -49,7 +49,7 @@ class HomeView extends GetView<HomeController> {
                     const BorderRadius.vertical(top: Radius.circular(24)),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
+                    color: Colors.black.withValues(alpha: 0.1),
                     spreadRadius: 2,
                     blurRadius: 10,
                     offset: const Offset(0, -2),
@@ -194,22 +194,6 @@ class HomeView extends GetView<HomeController> {
     );
   }
 
-  /// 构建当前页面
-  Widget _buildCurrentPage() {
-    switch (controller.currentPage.value) {
-      case 0:
-        return const KeyedSubtree(key: ValueKey(0), child: SongListPage());
-      case 1:
-        return const KeyedSubtree(key: ValueKey(1), child: PlayerPage());
-      case 2:
-        return const KeyedSubtree(key: ValueKey(2), child: FavoritesPage());
-      case 3:
-        return const KeyedSubtree(key: ValueKey(3), child: ProfilePage());
-      default:
-        return const KeyedSubtree(key: ValueKey(0), child: SongListPage());
-    }
-  }
-
   /// 将主页面索引转换为侧边栏索引
   int _getSidebarIndex(int mainPageIndex) {
     switch (mainPageIndex) {
@@ -259,7 +243,7 @@ class TopNavigationBar extends StatelessWidget {
         color: Theme.of(context).colorScheme.surface,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             spreadRadius: 2,
             blurRadius: 10,
             offset: const Offset(0, 2),

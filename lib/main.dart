@@ -8,7 +8,7 @@ Future<void> main() async {
   AppLogger().initialize();
 
   // 初始化应用
-  final initialized = await AppInitializer.initialize();
+  await AppInitializer.initialize();
 
   // 运行应用
   runApp(AppConfig.buildApp());
