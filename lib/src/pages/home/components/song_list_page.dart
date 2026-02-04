@@ -56,7 +56,7 @@ class PlaylistItem {
 
 class _SongListPageState extends State<SongListPage>
     with AutomaticKeepAliveClientMixin<SongListPage> {
-  late Future<List<Song>> _futureSongs; // 歌曲数据未来
+  late Future<List<Song>> _futureSongs = Future.value([]); // 歌曲数据未来
   final Map<int, bool> _favoriteLoadingStates = {}; // 收藏操作加载状态
   int _currentCarouselIndex = 0; // 当前轮播图索引
 
