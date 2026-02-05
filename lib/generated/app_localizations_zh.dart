@@ -372,6 +372,15 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get goToLogin => '去登录';
+
+  @override
+  String get recommendedPlaylists => '推荐歌单';
+
+  @override
+  String get viewMore => '查看更多';
+
+  @override
+  String get hotSongs => '热门歌曲';
 }
 
 /// The translations for Chinese, as used in Taiwan (`zh_TW`).
@@ -742,4 +751,13 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get goToLogin => '去登入';
+
+  @override
+  String get recommendedPlaylists => '推薦歌單';
+
+  @override
+  String get viewMore => '查看更多';
+
+  @override
+  String get hotSongs => '熱門歌曲';
 }

@@ -374,4 +374,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get goToLogin => 'Go to login';
+
+  @override
+  String get recommendedPlaylists => 'Recommended Playlists';
+
+  @override
+  String get viewMore => 'View More';
+
+  @override
+  String get hotSongs => 'Hot Songs';
 }

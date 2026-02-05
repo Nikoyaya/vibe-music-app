@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:get/get.dart';
 import 'package:vibe_music_app/generated/app_localizations.dart';
-import 'package:vibe_music_app/src/providers/language_provider.dart';
+import 'package:vibe_music_app/src/controllers/language_controller.dart';
 import 'package:vibe_music_app/src/routes/app_routes.dart';
 import 'package:vibe_music_app/src/services/localization_service.dart';
 import 'package:vibe_music_app/src/theme/app_theme.dart';
@@ -39,8 +39,8 @@ class AppConfig {
 
   /// 获取当前语言
   static Locale? getCurrentLocale() {
-    if (Get.isRegistered<LanguageProvider>()) {
-      return Get.find<LanguageProvider>().currentLocale;
+    if (Get.isRegistered<LanguageController>()) {
+      return Get.find<LanguageController>().currentLocale.value;
     }
     return null;
   }
@@ -48,35 +48,32 @@ class AppConfig {
   /// 语言解析回调
   static Locale? localeResolutionCallback(
       Locale? locale, Iterable<Locale> supportedLocales) {
-    if (Get.isRegistered<LanguageProvider>()) {
-      final languageProvider = Get.find<LanguageProvider>();
+    // 处理特殊语言情况
+    if (Get.isRegistered<LanguageController>()) {
+      final languageController = Get.find<LanguageController>();
+
       // 如果用户选择了系统语言，使用系统语言
-      if (languageProvider.languageCode == 'system') {
-        // 优先使用系统语言
-        if (locale != null) {
-          // 尝试找到与系统语言匹配的支持的语言
-          for (var supportedLocale in supportedLocales) {
-            if (supportedLocale.languageCode == locale.languageCode &&
-                (supportedLocale.countryCode == null ||
-                    supportedLocale.countryCode == locale.countryCode)) {
-              return supportedLocale;
-            }
-          }
-          // 如果没有完全匹配的，尝试只匹配语言代码
-          for (var supportedLocale in supportedLocales) {
-            if (supportedLocale.languageCode == locale.languageCode) {
-              return supportedLocale;
-            }
-          }
-        }
-        // 如果系统语言不支持，返回支持的语言列表中的第一个
-        return supportedLocales.first;
+      if (languageController.languageCode.value == 'system' && locale != null) {
+        // 使用 language controller 中的匹配逻辑
+        return languageController.matchSystemLocale(locale);
       }
       // 否则使用用户选择的语言
-      return languageProvider.currentLocale ?? supportedLocales.first;
+      return languageController.currentLocale.value ?? supportedLocales.first;
     }
-    // 如果 LanguageProvider 未注册，直接使用系统语言
+    // 如果 LanguageController 未注册，直接使用系统语言
     if (locale != null) {
+      // 特殊处理：中文地区语言
+      if (locale.languageCode == 'zh') {
+        // 获取国家/地区代码
+        final countryCode = locale.countryCode;
+
+        // 如果不是中国大陆，使用繁体中文
+        if (countryCode != 'CN') {
+          return Locale('zh', 'TW');
+        }
+        // 否则使用简体中文
+        return Locale('zh', 'CN');
+      }
       // 尝试找到与系统语言匹配的支持的语言
       for (var supportedLocale in supportedLocales) {
         if (supportedLocale.languageCode == locale.languageCode &&
@@ -103,10 +100,13 @@ class VibeMusicApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // 在构建 GetMaterialApp 之前先注册 LanguageProvider
-    if (!Get.isRegistered<LanguageProvider>()) {
-      Get.put(LanguageProvider());
+    // 在构建 GetMaterialApp 之前先注册 LanguageController
+    if (!Get.isRegistered<LanguageController>()) {
+      Get.put(LanguageController());
     }
+
+    // 获取当前语言
+    final currentLocale = AppConfig.getCurrentLocale();
 
     return GetMaterialApp(
       title: AppConfig.appTitle, // 应用标题
@@ -125,7 +125,7 @@ class VibeMusicApp extends StatelessWidget {
       // 国际化配置
       localizationsDelegates: AppConfig.getLocalizationsDelegates(),
       supportedLocales: AppConfig.getSupportedLocales(),
-      locale: AppConfig.getCurrentLocale(),
+      locale: currentLocale, // 设置初始语言
       localeResolutionCallback: AppConfig.localeResolutionCallback,
     );
   }

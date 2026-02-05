@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:vibe_music_app/generated/app_localizations.dart';
-import 'package:vibe_music_app/src/providers/auth_provider.dart';
+import 'package:vibe_music_app/src/controllers/auth_controller.dart';
 
 import 'package:vibe_music_app/src/components/language_selector.dart';
 import 'package:vibe_music_app/src/routes/app_routes.dart';
@@ -57,21 +57,21 @@ class _ProfilePageState extends State<ProfilePage> {
 
   /// 更新表单字段，只有当用户数据真正变化时才更新
   void _updateFormFields() {
-    final authProvider = Get.find<AuthProvider>();
-    if (authProvider.user != null) {
+    final authController = Get.find<AuthController>();
+    if (authController.user != null) {
       final currentUserInfo = {
-        'username': authProvider.user!.username ?? '',
-        'email': authProvider.user!.email ?? '',
-        'phone': authProvider.user!.phone ?? '',
-        'introduction': authProvider.user!.introduction ?? ''
+        'username': authController.user!.username ?? '',
+        'email': authController.user!.email ?? '',
+        'phone': authController.user!.phone ?? '',
+        'introduction': authController.user!.introduction ?? ''
       };
 
       // 只有当用户信息真正变化时才更新表单
       if (_lastUserInfo != currentUserInfo) {
-        _usernameController.text = authProvider.user!.username ?? '';
-        _emailController.text = authProvider.user!.email ?? '';
-        _phoneController.text = authProvider.user!.phone ?? '';
-        _introductionController.text = authProvider.user!.introduction ?? '';
+        _usernameController.text = authController.user!.username ?? '';
+        _emailController.text = authController.user!.email ?? '';
+        _phoneController.text = authController.user!.phone ?? '';
+        _introductionController.text = authController.user!.introduction ?? '';
         _lastUserInfo = currentUserInfo;
       }
     } else {
@@ -88,16 +88,16 @@ class _ProfilePageState extends State<ProfilePage> {
 
   @override
   Widget build(BuildContext context) {
-    final authProvider = Get.find<AuthProvider>();
+    final authController = Get.find<AuthController>();
 
     return Scaffold(
       appBar: AppBar(
         title: Text(AppLocalizations.of(context)?.profile ?? '个人中心'),
         actions: [
           Obx(() {
-            if (authProvider.isAuthenticated && !_isEditing) {
+            if (authController.isAuthenticated && !_isEditing) {
               return IconButton(
-                icon: const Icon(Icons.edit),
+                icon: Icon(Icons.edit),
                 onPressed: () {
                   setState(() {
                     _isEditing = true;
@@ -105,7 +105,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 },
               );
             }
-            return const SizedBox.shrink();
+            return SizedBox.shrink();
           }),
         ],
       ),
@@ -116,10 +116,10 @@ class _ProfilePageState extends State<ProfilePage> {
               child: Obx(() {
                 // 每次认证状态变化时更新表单字段
                 _updateFormFields();
-                return authProvider.isAuthenticated
+                return authController.isAuthenticated
                     ? _isEditing
-                        ? _buildEditProfileForm(authProvider)
-                        : _buildProfileView(authProvider)
+                        ? _buildEditProfileForm(authController)
+                        : _buildProfileView(authController)
                     : _buildLoginPrompt();
               }),
             ),
@@ -133,7 +133,7 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   /// 构建个人资料查看页面
-  Widget _buildProfileView(AuthProvider authProvider) {
+  Widget _buildProfileView(AuthController authController) {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -144,12 +144,12 @@ class _ProfilePageState extends State<ProfilePage> {
             children: [
               CircleAvatar(
                 radius: 48,
-                backgroundImage: authProvider.user?.userAvatar != null
-                    ? NetworkImage(authProvider.user!.userAvatar!)
+                backgroundImage: authController.user?.userAvatar != null
+                    ? NetworkImage(authController.user!.userAvatar!)
                     : null,
-                child: authProvider.user?.userAvatar == null
+                child: authController.user?.userAvatar == null
                     ? Text(
-                        authProvider.user?.username?[0].toUpperCase() ?? 'U',
+                        authController.user?.username?[0].toUpperCase() ?? 'U',
                         style: const TextStyle(fontSize: 32),
                       )
                     : null,
@@ -170,28 +170,28 @@ class _ProfilePageState extends State<ProfilePage> {
         ),
         const SizedBox(height: 16),
         Text(
-          authProvider.user?.username ?? 'User',
+          authController.user?.username ?? 'User',
           style: Theme.of(context).textTheme.headlineMedium,
         ),
         Text(
-          authProvider.user?.email ?? '',
+          authController.user?.email ?? '',
           style: Theme.of(context).textTheme.bodyMedium,
         ),
-        if (authProvider.user?.phone != null &&
-            authProvider.user!.phone!.isNotEmpty) ...[
+        if (authController.user?.phone != null &&
+            authController.user!.phone!.isNotEmpty) ...[
           const SizedBox(height: 8),
           Text(
-            '${AppLocalizations.of(context)?.phone ?? '手机号'}: ${authProvider.user!.phone!}',
+            '${AppLocalizations.of(context)?.phone ?? '手机号'}: ${authController.user!.phone!}',
             style: Theme.of(context).textTheme.bodyMedium,
           ),
         ],
-        if (authProvider.user?.introduction != null &&
-            authProvider.user!.introduction!.isNotEmpty) ...[
+        if (authController.user?.introduction != null &&
+            authController.user!.introduction!.isNotEmpty) ...[
           const SizedBox(height: 16),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 32),
             child: Text(
-              authProvider.user!.introduction!,
+              authController.user!.introduction!,
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodySmall,
             ),
@@ -201,7 +201,7 @@ class _ProfilePageState extends State<ProfilePage> {
         const SizedBox(height: 16),
         ElevatedButton.icon(
           onPressed: () async {
-            await authProvider.logout();
+            await authController.logout();
             if (context.mounted) {
               if (mounted) {
                 Navigator.of(context).pushReplacementNamed('/login');
@@ -216,7 +216,7 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   /// 构建个人资料编辑表单
-  Widget _buildEditProfileForm(AuthProvider authProvider) {
+  Widget _buildEditProfileForm(AuthController authController) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Form(
@@ -304,13 +304,15 @@ class _ProfilePageState extends State<ProfilePage> {
                     setState(() {
                       _isEditing = false;
                       // 重置表单字段为当前用户数据
-                      if (authProvider.user != null) {
+                      if (authController.user != null) {
                         _usernameController.text =
-                            authProvider.user!.username ?? '';
-                        _emailController.text = authProvider.user!.email ?? '';
-                        _phoneController.text = authProvider.user!.phone ?? '';
+                            authController.user!.username ?? '';
+                        _emailController.text =
+                            authController.user!.email ?? '';
+                        _phoneController.text =
+                            authController.user!.phone ?? '';
                         _introductionController.text =
-                            authProvider.user!.introduction ?? '';
+                            authController.user!.introduction ?? '';
                       }
                     });
                   },
@@ -335,7 +337,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       };
 
                       final success =
-                          await authProvider.updateUserInfo(updatedInfo);
+                          await authController.updateUserInfo(updatedInfo);
                       if (success && mounted) {
                         setState(() {
                           _isEditing = false;
@@ -426,7 +428,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
   /// 选择图片
   Future<void> _pickImage(ImageSource source) async {
-    final authProvider = Get.find<AuthProvider>();
+    final authController = Get.find<AuthController>();
     try {
       final picker = ImagePicker();
       final pickedFile = await picker.pickImage(
@@ -439,7 +441,7 @@ class _ProfilePageState extends State<ProfilePage> {
       if (pickedFile != null) {
         // 读取图片字节而不是路径
         final bytes = await pickedFile.readAsBytes();
-        final success = await authProvider.updateUserAvatar(bytes);
+        final success = await authController.updateUserAvatar(bytes);
 
         if (success && mounted) {
           Get.snackbar(

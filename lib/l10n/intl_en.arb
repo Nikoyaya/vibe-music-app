@@ -118,5 +118,8 @@
   "closePlayback": "Close Playback",
   "confirmClosePlayback": "Are you sure you want to close the current playback?",
   "loginExpired": "Login expired, please log in again",
-  "goToLogin": "Go to login"
+  "goToLogin": "Go to login",
+  "recommendedPlaylists": "Recommended Playlists",
+  "viewMore": "View More",
+  "hotSongs": "Hot Songs"
 }

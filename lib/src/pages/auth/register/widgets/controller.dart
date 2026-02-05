@@ -2,7 +2,7 @@ import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:vibe_music_app/generated/app_localizations.dart';
-import 'package:vibe_music_app/src/providers/auth_provider.dart';
+import 'package:vibe_music_app/src/controllers/auth_controller.dart';
 import 'package:vibe_music_app/src/routes/app_routes.dart';
 import 'package:vibe_music_app/src/utils/app_logger.dart';
 
@@ -25,14 +25,14 @@ class RegisterController extends GetxController {
   late Timer _countdownTimer;
 
   // 认证提供者
-  late AuthProvider _authProvider;
+  late AuthController _authController;
 
   // 构造函数
   RegisterController()
       : formKey = GlobalKey<FormState>(
             debugLabel:
                 'RegisterForm_${DateTime.now().millisecondsSinceEpoch}') {
-    _authProvider = Get.find<AuthProvider>();
+    _authController = Get.find<AuthController>();
   }
 
   @override
@@ -70,7 +70,7 @@ class RegisterController extends GetxController {
 
     try {
       final success =
-          await _authProvider.sendVerificationCode(emailController.text);
+          await _authController.sendVerificationCode(emailController.text);
 
       if (success) {
         verificationSent.value = true;
@@ -123,12 +123,11 @@ class RegisterController extends GetxController {
       isLoading.value = true;
 
       try {
-        final success = await _authProvider.register(
-          emailController.text,
-          usernameController.text,
-          passwordController.text,
-          verificationCodeController.text,
-        );
+        final success = await _authController.register(
+            emailController.text,
+            usernameController.text,
+            passwordController.text,
+            verificationCodeController.text);
 
         if (success) {
           Get.snackbar(
@@ -136,9 +135,9 @@ class RegisterController extends GetxController {
               localizations?.registrationSuccessful ??
                   'Registration successful! Please login.');
           Get.offAllNamed(AppRoutes.login);
-        } else if (_authProvider.errorMessage != null) {
+        } else if (_authController.errorMessage != null) {
           Get.snackbar(
-              localizations?.error ?? 'Error', _authProvider.errorMessage!);
+              localizations?.error ?? 'Error', _authController.errorMessage!);
         }
       } catch (e, stackTrace) {
         AppLogger().e('注册错误: $e', stackTrace: stackTrace);

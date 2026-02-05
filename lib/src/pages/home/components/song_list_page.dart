@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:vibe_music_app/generated/app_localizations.dart';
-import 'package:vibe_music_app/src/providers/auth_provider.dart';
-import 'package:vibe_music_app/src/providers/music_controller.dart';
+import 'package:vibe_music_app/src/controllers/auth_controller.dart';
+import 'package:vibe_music_app/src/controllers/music_controller.dart';
 import 'package:vibe_music_app/src/models/song_model.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:vibe_music_app/src/components/pull_to_refresh.dart';
@@ -198,19 +198,37 @@ class _SongListPageState extends State<SongListPage>
   }
 
   /// 加载歌曲数据
-  Future<void> _loadSongs() async {
+  Future<void> _loadSongs({bool forceRefresh = false}) async {
     final musicController = Get.find<MusicController>();
-    try {
-      final songs = await musicController.loadRecommendedSongs();
-      // 预加载歌曲封面图片
-      if (mounted) {
-        ImagePreloadService().preloadSongCovers(songs, context);
+    int retryCount = 0;
+    const maxRetries = 3;
+
+    while (retryCount < maxRetries) {
+      try {
+        final songs = await musicController.loadRecommendedSongs(
+            forceRefresh: forceRefresh || retryCount > 0);
+        // 预加载歌曲封面图片
+        if (mounted) {
+          ImagePreloadService().preloadSongCovers(songs, context);
+        }
+        setState(() {
+          _futureSongs = Future.value(songs);
+        });
+        return; // 加载成功，退出循环
+      } catch (error) {
+        retryCount++;
+        AppLogger().e('加载歌曲数据失败 (尝试 $retryCount/$maxRetries): $error');
+
+        // 如果是最后一次尝试，设置为空列表
+        if (retryCount >= maxRetries) {
+          setState(() {
+            _futureSongs = Future.value([]);
+          });
+        }
+
+        // 等待一段时间后重试
+        await Future.delayed(Duration(seconds: 1));
       }
-      setState(() {
-        _futureSongs = Future.value(songs);
-      });
-    } catch (error) {
-      AppLogger().e('加载歌曲数据失败: $error');
     }
   }
 
@@ -473,6 +491,7 @@ class _SongListPageState extends State<SongListPage>
     final screenWidth = MediaQuery.of(context).size.width;
     final isSmallScreen = screenWidth < 375; // 针对小屏设备进行特殊处理
     int crossAxisCount;
+    final localizations = AppLocalizations.of(context)!;
 
     // 根据屏幕宽度动态调整列数
     if (screenWidth < 600) {
@@ -494,7 +513,7 @@ class _SongListPageState extends State<SongListPage>
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                '推荐歌单',
+                localizations.recommendedPlaylists,
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
@@ -511,7 +530,7 @@ class _SongListPageState extends State<SongListPage>
                   );
                 },
                 child: Text(
-                  '查看更多 >',
+                  '${localizations.viewMore} >',
                   style: TextStyle(
                     color: Theme.of(context).colorScheme.primary,
                     fontSize: 14,
@@ -722,6 +741,7 @@ class _SongListPageState extends State<SongListPage>
 
   /// 构建热门歌曲
   Widget _buildPopularSongs(bool isSmallScreen) {
+    final localizations = AppLocalizations.of(context)!;
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Column(
@@ -731,7 +751,7 @@ class _SongListPageState extends State<SongListPage>
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                '热门歌曲',
+                localizations.hotSongs,
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
@@ -748,7 +768,7 @@ class _SongListPageState extends State<SongListPage>
                   );
                 },
                 child: Text(
-                  '查看更多 >',
+                  '${localizations.viewMore} >',
                   style: TextStyle(
                     color: Theme.of(context).colorScheme.primary,
                     fontSize: 14,
@@ -766,10 +786,22 @@ class _SongListPageState extends State<SongListPage>
               }
 
               if (snapshot.hasError) {
-                return Center(child: Text('Error: ${snapshot.error}'));
+                // 加载错误时自动重试
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  _loadSongs(forceRefresh: true);
+                });
+                return const Center(child: CircularProgressIndicator());
               }
 
               final songs = snapshot.data ?? [];
+
+              // 歌曲列表为空时自动重试
+              if (songs.isEmpty) {
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  _loadSongs(forceRefresh: true);
+                });
+                return const Center(child: CircularProgressIndicator());
+              }
 
               return ListView.builder(
                 shrinkWrap: true,
@@ -951,7 +983,7 @@ class _SongListPageState extends State<SongListPage>
                                         ? null
                                         : () async {
                                             final authProvider =
-                                                Get.find<AuthProvider>();
+                                                Get.find<AuthController>();
                                             final localizations =
                                                 AppLocalizations.of(context);
                                             if (!authProvider.isAuthenticated) {

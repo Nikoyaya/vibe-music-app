@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:vibe_music_app/generated/app_localizations.dart';
-import 'package:vibe_music_app/src/providers/auth_provider.dart';
+import 'package:vibe_music_app/src/controllers/auth_controller.dart';
 import 'package:vibe_music_app/src/routes/app_routes.dart';
 import 'package:vibe_music_app/src/utils/app_logger.dart';
 
@@ -76,10 +76,10 @@ class GlobalNotificationService {
   void _handleGoToLogin() {
     try {
       // 清除认证信息
-      if (Get.isRegistered<AuthProvider>()) {
-        final authProvider = Get.find<AuthProvider>();
+      if (Get.isRegistered<AuthController>()) {
+        final authController = Get.find<AuthController>();
         // 调用登出方法清除本地存储
-        authProvider.logout();
+        authController.logout();
       }
 
       // 跳转到登录页面

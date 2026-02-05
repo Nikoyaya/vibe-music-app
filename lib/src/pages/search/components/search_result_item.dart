@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:vibe_music_app/generated/app_localizations.dart';
 import 'package:vibe_music_app/src/models/song_model.dart';
-import 'package:vibe_music_app/src/providers/music_controller.dart';
-import 'package:vibe_music_app/src/providers/auth_provider.dart';
+import 'package:vibe_music_app/src/controllers/music_controller.dart';
+import 'package:vibe_music_app/src/controllers/auth_controller.dart';
 import 'package:vibe_music_app/src/utils/snackbar_manager.dart';
 
 /// 搜索结果项组件
@@ -25,7 +25,7 @@ class SearchResultItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final coverUrl = song.coverUrl;
     final musicController = Get.find<MusicController>();
-    final authProvider = Get.find<AuthProvider>();
+    final authController = Get.find<AuthController>();
     final isFavorited = musicController.isSongFavorited(song);
 
     return ListTile(
@@ -45,7 +45,7 @@ class SearchResultItem extends StatelessWidget {
             ),
             onPressed: () async {
               final localizations = AppLocalizations.of(context);
-              if (!authProvider.isAuthenticated) {
+              if (!authController.isAuthenticated) {
                 SnackbarManager().showSnackbar(
                   title: localizations?.tip ?? '提示',
                   message: localizations?.pleaseLogin ?? '请先登录',

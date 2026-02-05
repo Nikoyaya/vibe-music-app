@@ -118,5 +118,8 @@
   "closePlayback": "关闭播放",
   "confirmClosePlayback": "确定要关闭当前播放吗？",
   "loginExpired": "登录失效，请重新登录",
-  "goToLogin": "去登录"
+  "goToLogin": "去登录",
+  "recommendedPlaylists": "推荐歌单",
+  "viewMore": "查看更多",
+  "hotSongs": "热门歌曲"
 }

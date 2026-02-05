@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../generated/app_localizations.dart';
-import '../providers/language_provider.dart';
+import '../controllers/language_controller.dart';
 
 class LanguageSelector extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final languageProvider = Get.find<LanguageProvider>();
+    final languageController = Get.find<LanguageController>();
     final localizations = AppLocalizations.of(context)!;
 
     return Column(
@@ -25,39 +25,39 @@ class LanguageSelector extends StatelessWidget {
             borderRadius: BorderRadius.circular(8),
             border: Border.all(color: Colors.grey.shade300),
           ),
-          child: Column(
-            children: languageProvider.languageOptions.map((option) {
-              String displayName;
-              switch (option.code) {
-                case 'system':
-                  displayName = localizations.systemLanguage;
-                  break;
-                case 'en':
-                  displayName = localizations.english;
-                  break;
-                case 'zh':
-                  displayName = localizations.chinese;
-                  break;
-                case 'zh_TW':
-                  displayName = localizations.traditionalChinese;
-                  break;
-                default:
-                  displayName = option.code;
-              }
-
-              return RadioListTile<String>(
-                value: option.code,
-                groupValue: languageProvider.languageCode,
-                onChanged: (value) {
-                  if (value != null) {
-                    languageProvider.changeLanguage(value);
+          child: Obx(() => Column(
+                children: languageController.languageOptions.map((option) {
+                  String displayName;
+                  switch (option.code) {
+                    case 'system':
+                      displayName = localizations.systemLanguage;
+                      break;
+                    case 'en':
+                      displayName = localizations.english;
+                      break;
+                    case 'zh':
+                      displayName = localizations.chinese;
+                      break;
+                    case 'zh_TW':
+                      displayName = localizations.traditionalChinese;
+                      break;
+                    default:
+                      displayName = option.code;
                   }
-                },
-                title: Text(displayName),
-                activeColor: Colors.blue,
-              );
-            }).toList(),
-          ),
+
+                  return RadioListTile<String>(
+                    value: option.code,
+                    groupValue: languageController.languageCode.value,
+                    onChanged: (value) {
+                      if (value != null) {
+                        languageController.changeLanguage(value);
+                      }
+                    },
+                    title: Text(displayName),
+                    activeColor: Colors.blue,
+                  );
+                }).toList(),
+              )),
         ),
       ],
     );

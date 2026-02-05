@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:get/get.dart';
-import 'package:vibe_music_app/src/providers/music_controller.dart';
-import 'package:vibe_music_app/src/providers/auth_provider.dart';
+import 'package:vibe_music_app/src/controllers/music_controller.dart';
+import 'package:vibe_music_app/src/controllers/auth_controller.dart';
 import 'package:vibe_music_app/src/models/song_model.dart';
 import 'package:vibe_music_app/src/models/enums.dart';
 import 'package:vibe_music_app/src/routes/app_routes.dart';
@@ -23,7 +23,7 @@ class PlayerController extends GetxController {
 
   // 提供者
   late MusicController _musicController;
-  late AuthProvider _authProvider;
+  late AuthController _authController;
 
   // 流订阅
   late StreamSubscription<AppPlayerState> _playerStateSubscription;
@@ -32,7 +32,7 @@ class PlayerController extends GetxController {
   void onInit() {
     super.onInit();
     _musicController = Get.find<MusicController>();
-    _authProvider = Get.find<AuthProvider>();
+    _authController = Get.find<AuthController>();
     // 添加自己作为MusicController的监听器
     _musicController.addListener(_onMusicProviderChanged);
     // 直接监听播放器状态流，确保UI能及时更新
@@ -89,7 +89,7 @@ class PlayerController extends GetxController {
   Future<void> toggleFavorite() async {
     if (_musicController.currentSong == null) return;
 
-    if (!_authProvider.isAuthenticated) {
+    if (!_authController.isAuthenticated) {
       Get.snackbar(LocalizationService.instance.tip,
           LocalizationService.instance.pleaseLogin);
       Get.toNamed(AppRoutes.login);
@@ -150,7 +150,7 @@ class PlayerController extends GetxController {
 
   /// 处理播放列表中歌曲的收藏状态切换
   Future<void> handlePlaylistFavoriteToggle(Song song) async {
-    if (!_authProvider.isAuthenticated) {
+    if (!_authController.isAuthenticated) {
       Get.snackbar(LocalizationService.instance.tip,
           LocalizationService.instance.pleaseLogin);
       Get.toNamed(AppRoutes.login);

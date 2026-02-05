@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:vibe_music_app/generated/app_localizations.dart';
-import 'package:vibe_music_app/src/providers/music_controller.dart';
+import 'package:vibe_music_app/src/controllers/music_controller.dart';
 import 'package:vibe_music_app/src/models/song_model.dart';
 import 'package:vibe_music_app/src/models/enums.dart';
 import 'package:vibe_music_app/src/utils/glass_morphism/glass_morphism.dart';

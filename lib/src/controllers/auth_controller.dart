@@ -16,9 +16,9 @@ enum AuthStatus {
   loading, // 加载中
 }
 
-/// 认证提供者
+/// 认证控制器
 /// 管理用户认证状态、token和用户信息
-class AuthProvider extends GetxController {
+class AuthController extends GetxController {
   /// 认证状态
   final _status = AuthStatus.unknown.obs;
 
@@ -56,7 +56,7 @@ class AuthProvider extends GetxController {
   bool get isAuthenticated => _status.value == AuthStatus.authenticated;
 
   /// 构造函数
-  AuthProvider() {
+  AuthController() {
     _loadAuthData();
   }
 
@@ -166,6 +166,8 @@ class AuthProvider extends GetxController {
               'tokenExpiry', _tokenExpiry.value!.toIso8601String());
 
           _status.value = AuthStatus.authenticated;
+          // 通知监听器认证状态已变化
+          update();
           return true;
         }
       }
@@ -236,6 +238,8 @@ class AuthProvider extends GetxController {
 
           _status.value = AuthStatus.authenticated;
           AppLogger().d('🎉 登录流程完成，状态更新为已认证');
+          // 通知监听器认证状态已变化
+          update();
           return true;
         } else {
           _errorMessage.value =
@@ -330,6 +334,9 @@ class AuthProvider extends GetxController {
     await SpUtil.remove('token');
     await SpUtil.remove('refreshToken');
     await SpUtil.remove('user');
+
+    // 通知监听器认证状态已变化
+    update();
   }
 
   /// 更新用户信息

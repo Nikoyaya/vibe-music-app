@@ -118,5 +118,8 @@
   "closePlayback": "關閉播放",
   "confirmClosePlayback": "確定要關閉當前播放嗎？",
   "loginExpired": "登入失效，請重新登入",
-  "goToLogin": "去登入"
+  "goToLogin": "去登入",
+  "recommendedPlaylists": "推薦歌單",
+  "viewMore": "查看更多",
+  "hotSongs": "熱門歌曲"
 }

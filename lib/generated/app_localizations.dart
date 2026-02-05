@@ -812,6 +812,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Go to login'**
   String get goToLogin;
+
+  /// No description provided for @recommendedPlaylists.
+  ///
+  /// In en, this message translates to:
+  /// **'Recommended Playlists'**
+  String get recommendedPlaylists;
+
+  /// No description provided for @viewMore.
+  ///
+  /// In en, this message translates to:
+  /// **'View More'**
+  String get viewMore;
+
+  /// No description provided for @hotSongs.
+  ///
+  /// In en, this message translates to:
+  /// **'Hot Songs'**
+  String get hotSongs;
 }
 
 class _AppLocalizationsDelegate

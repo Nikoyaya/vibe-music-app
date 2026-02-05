@@ -1,8 +1,8 @@
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 import 'package:vibe_music_app/generated/app_localizations.dart';
-import 'package:vibe_music_app/src/providers/music_controller.dart';
-import 'package:vibe_music_app/src/providers/auth_provider.dart';
+import 'package:vibe_music_app/src/controllers/music_controller.dart';
+import 'package:vibe_music_app/src/controllers/auth_controller.dart';
 import 'package:vibe_music_app/src/models/song_model.dart';
 import 'package:vibe_music_app/src/utils/app_logger.dart';
 import 'package:vibe_music_app/src/pages/home/widgets/controller.dart';
@@ -24,13 +24,13 @@ class SearchPageController extends GetxController {
 
   // 提供者
   late MusicController _musicController;
-  late AuthProvider _authProvider;
+  late AuthController _authController;
 
   @override
   void onInit() {
     super.onInit();
     _musicController = Get.find<MusicController>();
-    _authProvider = Get.find<AuthProvider>();
+    _authController = Get.find<AuthController>();
 
     // 监听滚动事件，实现下拉加载更多
     scrollController.addListener(() {
@@ -121,7 +121,7 @@ class SearchPageController extends GetxController {
   /// 处理收藏按钮点击
   Future<void> handleFavoriteTap(Song song) async {
     final localizations = AppLocalizations.of(Get.context!);
-    if (!_authProvider.isAuthenticated) {
+    if (!_authController.isAuthenticated) {
       Get.snackbar(
           localizations?.tip ?? '提示', localizations?.pleaseLogin ?? '请先登录');
       return;

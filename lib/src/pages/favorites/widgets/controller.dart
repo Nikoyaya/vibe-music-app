@@ -1,7 +1,7 @@
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
-import 'package:vibe_music_app/src/providers/auth_provider.dart';
-import 'package:vibe_music_app/src/providers/music_controller.dart';
+import 'package:vibe_music_app/src/controllers/auth_controller.dart';
+import 'package:vibe_music_app/src/controllers/music_controller.dart';
 import 'package:vibe_music_app/src/models/song_model.dart';
 import 'package:vibe_music_app/src/routes/app_routes.dart';
 import 'package:vibe_music_app/src/utils/app_logger.dart';
@@ -22,17 +22,17 @@ class FavoritesController extends GetxController {
   final scrollController = ScrollController();
 
   // 提供者
-  late AuthProvider _authProvider;
+  late AuthController _authController;
   late MusicController _musicController;
 
   @override
   void onInit() {
     super.onInit();
-    _authProvider = Get.find<AuthProvider>();
+    _authController = Get.find<AuthController>();
     _musicController = Get.find<MusicController>();
 
     // 初始设置认证状态
-    isAuthenticated.value = _authProvider.isAuthenticated;
+    isAuthenticated.value = _authController.isAuthenticated;
 
     // 添加滚动监听器
     scrollController.addListener(() {
@@ -43,32 +43,20 @@ class FavoritesController extends GetxController {
     });
 
     // 监听认证状态变化
-    _authProvider.addListener(() {
-      isAuthenticated.value = _authProvider.isAuthenticated;
-      if (_authProvider.isAuthenticated) {
+    _authController.addListener(() {
+      isAuthenticated.value = _authController.isAuthenticated;
+      if (_authController.isAuthenticated) {
         loadFavoriteSongs();
       } else {
-        // 未认证时清空数据
         allSongs.clear();
       }
     });
 
     // 监听收藏状态变化
     _musicController.addListener(() async {
-      // 当收藏状态变化时，更新收藏页数据
-      if (_authProvider.isAuthenticated) {
-        // 从MusicController获取最新的收藏歌曲缓存
-        try {
-          final songs =
-              await _musicController.loadUserFavoriteSongs(forceRefresh: false);
-          if (songs.isNotEmpty) {
-            // 去重处理
-            final uniqueSongs = removeDuplicateSongs(songs);
-            allSongs.value = uniqueSongs;
-          }
-        } catch (error) {
-          AppLogger().e('更新收藏歌曲列表失败: $error');
-        }
+      // 当收藏状态变化时，更新当前页面的收藏歌曲
+      if (_authController.isAuthenticated) {
+        loadFavoriteSongs();
       }
     });
 
@@ -84,7 +72,7 @@ class FavoritesController extends GetxController {
 
   /// 加载收藏歌曲
   Future<void> loadFavoriteSongs() async {
-    if (_authProvider.isAuthenticated) {
+    if (_authController.isAuthenticated) {
       currentPage.value = 1;
       allSongs.clear();
       hasMoreSongs.value = true;
@@ -101,7 +89,7 @@ class FavoritesController extends GetxController {
 
   /// 获取收藏歌曲数据
   Future<void> fetchFavoriteSongs() async {
-    if (!_authProvider.isAuthenticated) return;
+    if (!_authController.isAuthenticated) return;
 
     isLoadingMore.value = true;
 

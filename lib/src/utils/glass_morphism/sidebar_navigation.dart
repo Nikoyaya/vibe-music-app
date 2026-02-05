@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:vibe_music_app/generated/app_localizations.dart';
-import 'package:vibe_music_app/src/providers/auth_provider.dart';
+import 'package:vibe_music_app/src/controllers/auth_controller.dart';
 import 'package:vibe_music_app/src/utils/glass_morphism/glass_morphism.dart';
 
 /// 侧边栏导航组件
@@ -28,7 +28,7 @@ class SidebarNavigation extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final localizations = AppLocalizations.of(context);
-    final authProvider = Get.find<AuthProvider>();
+    final authProvider = Get.find<AuthController>();
 
     return GlassMorphism.glassCard(
       child: Container(
