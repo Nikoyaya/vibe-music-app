@@ -26,8 +26,10 @@ dependencies:
   carousel_slider: ^5.0.0
   logger: ^2.0.2+1
   audio_session: ^0.2.2
+  audio_service: ^0.18.18
   audioplayers: ^6.1.0
   flutter_native_splash: ^2.4.7
+  permission_handler: ^12.0.1
   device_info_plus: ^12.3.0
   sqflite: ^2.4.2
   sqflite_common_ffi: ^2.3.6

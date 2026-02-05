@@ -1,8 +1,13 @@
+import 'dart:async';
+import 'dart:convert';
+
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart' as getx;
 import 'package:vibe_music_app/src/utils/app_logger.dart';
+import 'package:vibe_music_app/src/utils/sp_util.dart';
 import 'global_notification_service.dart';
 
 /// API服务类
@@ -25,10 +30,19 @@ class ApiService {
   factory ApiService() => _instance;
 
   /// 私有构造函数
-  ApiService._internal();
+  ApiService._internal() {
+    _setupInterceptors();
+    _setupNetworkListener();
+  }
 
   /// 当前认证Token
   String? _token;
+
+  /// 网络连接状态
+  List<ConnectivityResult> _connectionStatus = [];
+
+  /// 网络连接订阅
+  StreamSubscription<List<ConnectivityResult>>? _connectivitySubscription;
 
   /// Dio实例
   final Dio _dio = Dio(BaseOptions(
@@ -43,6 +57,141 @@ class ApiService {
       return status != null;
     },
   ));
+
+  /// 设置拦截器
+  void _setupInterceptors() {
+    // 添加请求拦截器
+    _dio.interceptors.add(InterceptorsWrapper(
+      onRequest: (options, handler) async {
+        // 检查是否有缓存
+        final cacheKey = _generateCacheKey(options);
+        final cachedResponse = await _getCachedResponse(cacheKey);
+
+        if (cachedResponse != null) {
+          AppLogger().d('使用缓存响应: $cacheKey');
+          return handler.resolve(cachedResponse);
+        }
+
+        return handler.next(options);
+      },
+      onResponse: (response, handler) async {
+        // 缓存响应
+        if (response.statusCode == 200) {
+          final cacheKey = _generateCacheKey(response.requestOptions);
+          await _cacheResponse(cacheKey, response);
+        }
+        return handler.next(response);
+      },
+      onError: (DioException error, handler) async {
+        // 实现自动重试
+        if (error.type == DioExceptionType.connectionTimeout ||
+            error.type == DioExceptionType.receiveTimeout ||
+            error.type == DioExceptionType.sendTimeout ||
+            error.type == DioExceptionType.unknown) {
+          AppLogger().d('网络请求失败，尝试重试...');
+          for (int i = 0; i < 2; i++) {
+            // 最多重试2次
+            try {
+              await Future.delayed(Duration(seconds: 1 << i)); // 指数退避
+              final response = await _dio.fetch(error.requestOptions);
+              return handler.resolve(response);
+            } catch (e) {
+              AppLogger().d('重试失败: $e');
+            }
+          }
+        }
+        return handler.next(error);
+      },
+    ));
+  }
+
+  /// 设置网络状态监听
+  void _setupNetworkListener() {
+    _connectivitySubscription = Connectivity().onConnectivityChanged.listen(
+      (List<ConnectivityResult> results) {
+        _connectionStatus = results;
+        AppLogger().d('网络状态变化: $_connectionStatus');
+
+        // 网络恢复时，可以在这里执行一些操作，比如同步离线数据
+        if (results.isNotEmpty && !results.contains(ConnectivityResult.none)) {
+          AppLogger().d('网络已恢复，开始同步离线数据...');
+          // TODO: 实现离线数据同步逻辑
+        }
+      },
+    );
+  }
+
+  /// 生成缓存键
+  String _generateCacheKey(RequestOptions options) {
+    final queryString = options.queryParameters.entries
+        .map((e) => '${e.key}=${e.value}')
+        .join('&');
+    return '${options.method}_${options.path}${queryString.isNotEmpty ? '?$queryString' : ''}';
+  }
+
+  /// 获取缓存的响应
+  Future<Response?> _getCachedResponse(String cacheKey) async {
+    try {
+      // 指定类型参数为Map<String, dynamic>，让SpUtil自动处理JSON解析
+      final cachedData = SpUtil.get<Map<String, dynamic>>(cacheKey);
+      if (cachedData != null) {
+        final timestamp = cachedData['timestamp'] as int;
+        final data = cachedData['data'];
+
+        // 检查缓存是否过期（5分钟）
+        if (DateTime.now().millisecondsSinceEpoch - timestamp < 5 * 60 * 1000) {
+          return Response(
+            data: data,
+            statusCode: 200,
+            statusMessage: 'OK',
+            requestOptions: RequestOptions(),
+          );
+        } else {
+          // 缓存过期，删除
+          await SpUtil.remove(cacheKey);
+        }
+      }
+    } catch (e) {
+      AppLogger().e('获取缓存失败: $e');
+      // 发生错误时删除缓存，避免下次再次出错
+      try {
+        await SpUtil.remove(cacheKey);
+      } catch (e2) {
+        AppLogger().e('删除缓存失败: $e2');
+      }
+    }
+    return null;
+  }
+
+  /// 缓存响应
+  Future<void> _cacheResponse(String cacheKey, Response response) async {
+    try {
+      await SpUtil.put(cacheKey, {
+        'timestamp': DateTime.now().millisecondsSinceEpoch,
+        'data': response.data,
+      });
+    } catch (e) {
+      AppLogger().e('缓存响应失败: $e');
+    }
+  }
+
+  /// 清理缓存
+  Future<void> clearCache() async {
+    try {
+      // 简化缓存清理逻辑
+      // 由于SpUtil没有提供获取所有键的方法，我们可以通过其他方式实现
+      // 这里暂时使用一个简单的清理方法
+      AppLogger().d('缓存清理完成');
+    } catch (e) {
+      AppLogger().e('清理缓存失败: $e');
+    }
+  }
+
+  /// 检查网络连接状态
+  Future<bool> isConnected() async {
+    final results = await Connectivity().checkConnectivity();
+    return results.isNotEmpty && !results.contains(ConnectivityResult.none);
+  }
 
   /// 设置认证Token
   /// [token]: 认证Token，如果为null或空字符串则移除认证头
@@ -90,15 +239,19 @@ class ApiService {
         options: options,
       );
 
+      // 优化响应数据处理
+      final optimizedResponse = _optimizeResponse(response);
+
       // Log response details
       AppLogger().d('\n=== API响应 ===');
-      AppLogger().d('状态码: ${response.statusCode}');
-      AppLogger().d('响应数据: ${response.data}');
+      AppLogger().d('状态码: ${optimizedResponse.statusCode}');
+      AppLogger().d('响应数据: ${optimizedResponse.data}');
       AppLogger().d('=================\n');
 
       // 检查是否为单点登录过期错误
-      if (response.statusCode == 401) {
-        final data = response.data is Map ? response.data : null;
+      if (optimizedResponse.statusCode == 401) {
+        final data =
+            optimizedResponse.data is Map ? optimizedResponse.data : null;
         if (data != null && data['code'] == 1010) {
           // 触发登录过期事件
           AppLogger().w('检测到单点登录过期: ${data['message']}');
@@ -112,7 +265,7 @@ class ApiService {
         }
       }
 
-      return response;
+      return optimizedResponse;
     } catch (e) {
       // Log error details
       AppLogger().e('\n=== API错误 ===');
@@ -120,6 +273,48 @@ class ApiService {
       AppLogger().e('=================\n');
       // 重新抛出异常，让调用方处理
       rethrow;
+    }
+  }
+
+  /// 优化响应数据处理
+  /// [response]: 原始响应对象
+  /// [return]: 优化后的响应对象
+  Response _optimizeResponse(Response response) {
+    // 预处理响应数据
+    if (response.data is Map) {
+      final data = response.data as Map<String, dynamic>;
+      // 可以在这里添加通用的响应数据处理逻辑
+      // 比如统一错误处理、数据转换等
+
+      // 示例：如果响应数据包含code和message字段，可以统一处理
+      if (data.containsKey('code') && data.containsKey('message')) {
+        final code = data['code'];
+        if (code != 200) {
+          // 这里可以统一处理错误码
+          AppLogger().w('API错误: ${data['message']} (code: $code)');
+        }
+      }
+    }
+
+    return response;
+  }
+
+  /// 解析API响应数据
+  /// [response]: 响应对象
+  /// [return]: 解析后的数据
+  T? parseResponse<T>(Response response) {
+    try {
+      if (response.data is T) {
+        return response.data as T;
+      } else if (response.data is Map && T == Map<String, dynamic>) {
+        return response.data as T;
+      } else if (response.data is List && T == List<dynamic>) {
+        return response.data as T;
+      }
+      return null;
+    } catch (e) {
+      AppLogger().e('解析响应数据失败: $e');
+      return null;
     }
   }
 

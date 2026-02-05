@@ -113,11 +113,32 @@ class _SongListPageState extends State<SongListPage>
     ),
   ];
 
+  /// 滚动控制器，用于实现加载更多功能
+  final ScrollController _scrollController = ScrollController();
+
   @override
   void initState() {
     super.initState();
     // 在initState中只加载一次歌曲数据
     _loadSongs();
+    // 监听滚动事件，实现加载更多
+    _scrollController.addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  /// 滚动事件处理，实现加载更多
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+            _scrollController.position.maxScrollExtent - 100 &&
+        !_isLoadingMore &&
+        !_hasReachedEnd) {
+      _loadMoreSongs();
+    }
   }
 
   @override
@@ -188,14 +209,28 @@ class _SongListPageState extends State<SongListPage>
   void _preloadImages() {
     // 预加载轮播图图片
     if (_carouselItems.isNotEmpty) {
+      // 直接执行预加载操作
       ImagePreloadService().preloadCarouselImages(_carouselItems, context);
     }
     // 预加载推荐歌单图片
     if (_recommendedPlaylists.isNotEmpty) {
+      // 直接执行预加载操作
       ImagePreloadService()
           .preloadPlaylistImages(_recommendedPlaylists, context);
     }
   }
+
+  /// 当前页码
+  int _currentPage = 1;
+
+  /// 每页歌曲数量
+  int _pageSize = 20;
+
+  /// 是否正在加载更多数据
+  bool _isLoadingMore = false;
+
+  /// 是否已经加载完所有数据
+  bool _hasReachedEnd = false;
 
   /// 加载歌曲数据
   Future<void> _loadSongs({bool forceRefresh = false}) async {
@@ -203,16 +238,26 @@ class _SongListPageState extends State<SongListPage>
     int retryCount = 0;
     const maxRetries = 3;
 
+    if (forceRefresh) {
+      _currentPage = 1;
+      _hasReachedEnd = false;
+    }
+
     while (retryCount < maxRetries) {
       try {
         final songs = await musicController.loadRecommendedSongs(
             forceRefresh: forceRefresh || retryCount > 0);
+
         // 预加载歌曲封面图片
         if (mounted) {
           ImagePreloadService().preloadSongCovers(songs, context);
         }
+
         setState(() {
           _futureSongs = Future.value(songs);
+          if (songs.length < _pageSize) {
+            _hasReachedEnd = true;
+          }
         });
         return; // 加载成功，退出循环
       } catch (error) {
@@ -232,25 +277,45 @@ class _SongListPageState extends State<SongListPage>
     }
   }
 
+  /// 加载更多歌曲数据
+  Future<void> _loadMoreSongs() async {
+    if (_isLoadingMore || _hasReachedEnd) return;
+
+    setState(() {
+      _isLoadingMore = true;
+    });
+
+    try {
+      _currentPage++;
+      final musicController = Get.find<MusicController>();
+      final moreSongs = await musicController.loadRecommendedSongs();
+
+      // 预加载歌曲封面图片
+      if (mounted && moreSongs.isNotEmpty) {
+        ImagePreloadService().preloadSongCovers(moreSongs, context);
+      }
+
+      setState(() {
+        _isLoadingMore = false;
+        if (moreSongs.length < _pageSize) {
+          _hasReachedEnd = true;
+        }
+      });
+    } catch (error) {
+      AppLogger().e('加载更多歌曲数据失败: $error');
+      setState(() {
+        _isLoadingMore = false;
+        _currentPage--;
+      });
+    }
+  }
+
   /// 处理下拉刷新
   Future<void> _handleRefresh() async {
     // 重新加载歌曲数据，强制刷新
-    final musicController = Get.find<MusicController>();
-    try {
-      final songs =
-          await musicController.loadRecommendedSongs(forceRefresh: true);
-      // 预加载歌曲封面图片
-      if (mounted) {
-        ImagePreloadService().preloadSongCovers(songs, context);
-      }
-      setState(() {
-        _futureSongs = Future.value(songs);
-      });
-      // 等待数据加载完成
-      await _futureSongs;
-    } catch (error) {
-      AppLogger().e('刷新歌曲数据失败: $error');
-    }
+    await _loadSongs(forceRefresh: true);
+    // 等待数据加载完成
+    await _futureSongs;
   }
 
   /// 构建桌面端头部
@@ -361,15 +426,14 @@ class _SongListPageState extends State<SongListPage>
                             fit: StackFit.expand,
                             children: [
                               // 轮播图图片
-                              CachedNetworkImage(
-                                imageUrl: item.imageUrl,
+                              ImageLoader.buildCachedNetworkImage(
+                                item.imageUrl,
                                 fit: BoxFit.cover,
                                 width: 1000,
                                 height: 500,
-                                memCacheWidth: 800,
-                                memCacheHeight: 400,
-                                maxWidthDiskCache: 800,
-                                maxHeightDiskCache: 400,
+                                cacheWidth: 800,
+                                cacheHeight: 400,
+                                qualityLevel: ImageQualityLevel.high,
                                 placeholder: (context, url) => Container(
                                   color: Theme.of(context)
                                       .colorScheme
@@ -584,15 +648,14 @@ class _SongListPageState extends State<SongListPage>
                             ),
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(12.0),
-                              child: CachedNetworkImage(
-                                imageUrl: playlist.imageUrl,
+                              child: ImageLoader.buildCachedNetworkImage(
+                                playlist.imageUrl,
+                                fit: BoxFit.cover,
                                 width: double.infinity,
                                 height: 120,
-                                fit: BoxFit.cover,
-                                memCacheWidth: 300,
-                                memCacheHeight: 300,
-                                maxWidthDiskCache: 300,
-                                maxHeightDiskCache: 300,
+                                cacheWidth: 300,
+                                cacheHeight: 300,
+                                qualityLevel: ImageQualityLevel.medium,
                                 errorWidget: (context, url, error) => Container(
                                   width: double.infinity,
                                   height: 120,
@@ -710,15 +773,14 @@ class _SongListPageState extends State<SongListPage>
     );
 
     if (coverUrl != null) {
-      return CachedNetworkImage(
-        imageUrl: coverUrl,
+      return ImageLoader.buildCachedNetworkImage(
+        coverUrl,
+        fit: BoxFit.cover,
         width: size,
         height: size,
-        fit: BoxFit.cover,
-        memCacheWidth: 120,
-        memCacheHeight: 120,
-        maxWidthDiskCache: 120,
-        maxHeightDiskCache: 120,
+        cacheWidth: 120,
+        cacheHeight: 120,
+        qualityLevel: ImageQualityLevel.low,
         placeholder: (context, url) => placeholder,
         errorWidget: (context, url, error) => errorWidget,
       );
@@ -804,11 +866,21 @@ class _SongListPageState extends State<SongListPage>
               }
 
               return ListView.builder(
+                controller: _scrollController,
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
-                itemCount: songs.length,
+                itemCount: songs.length + (_isLoadingMore ? 1 : 0),
                 padding: EdgeInsets.zero,
                 itemBuilder: (context, index) {
+                  // 加载更多指示器
+                  if (index == songs.length) {
+                    return Container(
+                      padding: const EdgeInsets.symmetric(vertical: 20),
+                      alignment: Alignment.center,
+                      child: const CircularProgressIndicator(),
+                    );
+                  }
+
                   final song = songs[index];
                   final coverUrl = song.coverUrl;
                   final isDesktop = ScreenSize.isDesktop(context);

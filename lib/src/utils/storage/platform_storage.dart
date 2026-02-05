@@ -46,7 +46,7 @@ class PlatformStorage {
   /// 获取字符串数据
   Future<String?> getString(String key) async {
     try {
-      return SpUtil.get(key) as String?;
+      return SpUtil.get<String>(key);
     } catch (e) {
       AppLogger().e('获取字符串数据失败: $e');
       return null;
@@ -56,7 +56,7 @@ class PlatformStorage {
   /// 获取复杂对象
   Future<T?> getObject<T>(String key) async {
     try {
-      return SpUtil.get(key) as T?;
+      return SpUtil.get<T>(key);
     } catch (e) {
       AppLogger().e('获取对象失败: $e');
       return null;
