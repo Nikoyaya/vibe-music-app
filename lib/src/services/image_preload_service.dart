@@ -442,37 +442,24 @@ class ImageLoader {
     final service = ImagePreloadService();
     final cacheSize = service._getCacheSizeByQuality(qualityLevel);
 
-    // 检查图片是否已经预加载
-    final isPreloaded = service.isImagePreloaded(url);
-
     return CachedNetworkImage(
       key: key,
       imageUrl: url,
       fit: fit,
       width: width,
       height: height,
-      // 如果图片已经预加载，显示一个透明容器
-      // 如果图片没有预加载，显示一个默认的占位符
-      placeholder: isPreloaded
-          ? (context, url) => Container(
+      // 使用统一的占位符，让CachedNetworkImage自己处理加载状态
+      placeholder: placeholder ??
+          (context, url) => Container(
                 width: width,
                 height: height,
                 decoration: BoxDecoration(
                   color: Theme.of(context).colorScheme.surfaceContainerHighest,
                 ),
-              )
-          : placeholder ??
-              (context, url) => Container(
-                    width: width,
-                    height: height,
-                    decoration: BoxDecoration(
-                      color:
-                          Theme.of(context).colorScheme.surfaceContainerHighest,
-                    ),
-                    child: const Center(
-                      child: CircularProgressIndicator(),
-                    ),
-                  ),
+                child: const Center(
+                  child: CircularProgressIndicator(),
+                ),
+              ),
       errorWidget: errorWidget ??
           (context, url, error) => Container(
                 width: width,
