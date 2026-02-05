@@ -119,6 +119,9 @@ class MusicController extends GetxController {
         await _playlistManager.setCurrentSong(song);
       }
 
+      // 立即更新UI，确保显示正确的歌曲信息
+      update();
+
       // 播放歌曲
       await _audioPlayerService.playSong(song);
 
@@ -126,7 +129,6 @@ class MusicController extends GetxController {
       await _playlistManager.savePlayHistory(song);
 
       AppLogger().d('✅ 歌曲播放成功: ${song.songName}');
-      update();
     } catch (e, stackTrace) {
       AppLogger().e('播放歌曲 ${song.songName} 失败: $e');
       AppLogger().e('堆栈跟踪: $stackTrace');
