@@ -23,6 +23,9 @@ class PlayerPlaylist extends StatelessWidget {
   /// 删除歌曲回调
   final Function(int) onRemoveSong;
 
+  /// 清空播放列表回调
+  final Function()? onClearPlaylist;
+
   const PlayerPlaylist({
     Key? key,
     required this.playlist,
@@ -31,6 +34,7 @@ class PlayerPlaylist extends StatelessWidget {
     required this.onToggleFavorite,
     required this.isSongFavorited,
     required this.onRemoveSong,
+    this.onClearPlaylist,
   }) : super(key: key);
 
   @override
@@ -79,13 +83,23 @@ class PlayerPlaylist extends StatelessWidget {
                       color: Theme.of(context).colorScheme.onSurface,
                     ),
                   ),
-                  Text(
-                    AppLocalizations.of(context)?.songsCount(playlist.length) ??
-                        '${playlist.length} songs',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
+                  Row(
+                    children: [
+                      Text(
+                        AppLocalizations.of(context)
+                                ?.songsCount(playlist.length) ??
+                            '${playlist.length} songs',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      if (onClearPlaylist != null && playlist.isNotEmpty)
+                        IconButton(
+                          icon: Icon(Icons.delete_sweep),
+                          onPressed: onClearPlaylist,
+                        ),
+                    ],
                   ),
                 ],
               ),

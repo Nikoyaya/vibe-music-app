@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:vibe_music_app/generated/app_localizations.dart';
 import 'package:vibe_music_app/src/controllers/auth_controller.dart';
 import 'package:vibe_music_app/src/controllers/music_controller.dart';
@@ -164,6 +164,15 @@ class _SongListPageState extends State<SongListPage>
             ),
           ),
 
+          // Debug模式专用按钮
+          if (kDebugMode)
+            SliverPadding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              sliver: SliverToBoxAdapter(
+                child: _buildDebugButton(),
+              ),
+            ),
+
           // 内容部分
           SliverList(
             delegate: SliverChildBuilderDelegate(
@@ -196,6 +205,104 @@ class _SongListPageState extends State<SongListPage>
         ],
       ),
     );
+  }
+
+  /// 构建Debug模式专用按钮
+  Widget _buildDebugButton() {
+    return Container(
+      width: double.infinity,
+      child: ElevatedButton(
+        onPressed: _debugLoadHotSongs,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.red,
+          textStyle: TextStyle(
+            fontWeight: FontWeight.bold,
+          ),
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+        ),
+        child: Text(
+          'DEBUG: 加载200首热门歌曲到播放列表',
+          style: TextStyle(color: Colors.white),
+        ),
+      ),
+    );
+  }
+
+  /// Debug模式下加载热门歌曲并添加到播放列表
+  Future<void> _debugLoadHotSongs() async {
+    try {
+      final musicController = Get.find<MusicController>();
+
+      // 显示加载中提示
+      Get.snackbar(
+        '加载中',
+        '正在分批加载200首热门歌曲...',
+        backgroundColor: Colors.blue,
+        colorText: Colors.white,
+        duration: Duration(seconds: 6), // 延长持续时间，确保加载过程中不消失
+      );
+
+      int totalSongs = 0;
+      int batchSize = 50;
+      int totalBatches = (200 / batchSize).ceil();
+
+      for (int batch = 1; batch <= totalBatches; batch++) {
+        // 计算当前批次的大小
+        int currentBatchSize =
+            batch == totalBatches ? 200 % batchSize : batchSize;
+        if (currentBatchSize == 0) currentBatchSize = batchSize;
+
+        // 调用API加载当前批次的歌曲
+        final songs = await musicController.loadSongs(
+          page: batch,
+          size: currentBatchSize,
+        );
+
+        if (songs.isEmpty) {
+          break;
+        }
+
+        // 分批添加到播放列表，每添加几首就给UI一个喘息的机会
+        int addedCount = 0;
+        for (int i = 0; i < songs.length; i++) {
+          final song = songs[i];
+          if (!musicController.playlist
+              .any((item) => item.songUrl == song.songUrl)) {
+            await musicController.addToPlaylist(song);
+            addedCount++;
+          }
+
+          // 每添加10首歌曲，就给UI一个更新的机会
+          if ((i + 1) % 10 == 0) {
+            await Future.delayed(Duration(milliseconds: 50));
+          }
+        }
+
+        totalSongs += addedCount;
+
+        // 批次之间添加短暂延迟，确保UI流畅
+        await Future.delayed(Duration(milliseconds: 100));
+      }
+
+      // 显示成功提示
+      Get.snackbar(
+        '加载成功',
+        '已成功加载 $totalSongs 首热门歌曲到播放列表',
+        backgroundColor: Colors.green,
+        colorText: Colors.white,
+      );
+    } catch (error) {
+      AppLogger().e('Debug加载热门歌曲失败: $error');
+      Get.snackbar(
+        '加载失败',
+        '加载热门歌曲时出错',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    }
   }
 
   @override

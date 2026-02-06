@@ -78,7 +78,8 @@ class SidebarNavigation extends StatelessWidget {
 
             // 用户信息
             Obx(() {
-              final isAuthenticated = authProvider.isAuthenticated;
+              final isAuthenticated =
+                  authProvider.status == AuthStatus.authenticated;
               final user = authProvider.user;
               return Container(
                 padding: const EdgeInsets.all(16),

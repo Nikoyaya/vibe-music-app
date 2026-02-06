@@ -185,6 +185,13 @@ class PlayerController extends GetxController {
     _updateObservableVariables();
   }
 
+  /// 清空播放列表
+  void clearPlaylist() {
+    _musicController.clearPlaylist();
+    // 更新本地状态
+    _updateObservableVariables();
+  }
+
   /// 获取当前播放状态
   bool get isPlaying {
     return _isPlaying.value;

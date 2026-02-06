@@ -8,13 +8,16 @@ import 'package:vibe_music_app/src/pages/player/components/player_progress_bar.d
 import 'package:vibe_music_app/src/pages/player/components/player_controls.dart';
 import 'package:vibe_music_app/src/pages/player/components/player_volume_controls.dart';
 import 'package:vibe_music_app/src/pages/player/components/player_playlist.dart';
+import 'package:vibe_music_app/src/utils/glass_morphism/responsive_layout.dart';
 
 class PlayerView extends GetView<PlayerController> {
   const PlayerView({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    final isDesktop = ScreenSize.isDesktop(context);
+
+    final mainContent = Scaffold(
       appBar: AppBar(
         title: Text(AppLocalizations.of(context)?.nowPlaying ?? '正在播放'),
         actions: [
@@ -117,30 +120,6 @@ class PlayerView extends GetView<PlayerController> {
               ),
             ),
           ),
-          // 点击外部区域收起播放列表的遮罩层
-          Obx(() =>
-              controller.isExpanded.value && controller.playlist.isNotEmpty
-                  ? Positioned.fill(
-                      child: GestureDetector(
-                        onTap: controller.togglePlaylistExpanded,
-                        child: Container(
-                          color: Colors.transparent,
-                        ),
-                      ),
-                    )
-                  : const SizedBox()),
-          // 播放列表（可展开）
-          Obx(() =>
-              controller.isExpanded.value && controller.playlist.isNotEmpty
-                  ? PlayerPlaylist(
-                      playlist: controller.playlist,
-                      currentIndex: controller.currentIndex,
-                      onSongTap: controller.playSongAtIndex,
-                      onToggleFavorite: controller.handlePlaylistFavoriteToggle,
-                      isSongFavorited: controller.isSongFavorited,
-                      onRemoveSong: controller.removeFromPlaylist,
-                    )
-                  : const SizedBox()),
           // 音量指示器 - 使用StreamBuilder监听音量变化
           Obx(() => controller.showVolumeIndicator.value
               ? StreamBuilder<double>(
@@ -192,5 +171,264 @@ class PlayerView extends GetView<PlayerController> {
         ],
       ),
     );
+
+    // 桌面端使用右侧滑动面板
+    if (isDesktop) {
+      return Stack(
+        children: [
+          mainContent,
+          // 右侧播放列表面板
+          _buildDesktopPlaylistPanel(context),
+        ],
+      );
+    }
+
+    // 移动端使用底部弹出面板
+    return Stack(
+      children: [
+        mainContent,
+        // 点击外部区域收起播放列表的遮罩层
+        Obx(() => controller.isExpanded.value && controller.playlist.isNotEmpty
+            ? Positioned.fill(
+                child: GestureDetector(
+                  onTap: controller.togglePlaylistExpanded,
+                  child: Container(
+                    color: Colors.transparent,
+                  ),
+                ),
+              )
+            : const SizedBox()),
+        // 播放列表（可展开）
+        Obx(() => controller.isExpanded.value && controller.playlist.isNotEmpty
+            ? PlayerPlaylist(
+                playlist: controller.playlist,
+                currentIndex: controller.currentIndex,
+                onSongTap: controller.playSongAtIndex,
+                onToggleFavorite: controller.handlePlaylistFavoriteToggle,
+                isSongFavorited: controller.isSongFavorited,
+                onRemoveSong: controller.removeFromPlaylist,
+                onClearPlaylist: controller.clearPlaylist,
+              )
+            : const SizedBox()),
+      ],
+    );
+  }
+
+  /// 构建桌面端右侧播放列表面板
+  Widget _buildDesktopPlaylistPanel(BuildContext context) {
+    return Obx(() => AnimatedPositioned(
+          right: controller.isExpanded.value ? 0 : -400,
+          top: 0,
+          bottom: 0,
+          width: 400,
+          duration: Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+          child: Container(
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surface,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withAlpha(100),
+                  blurRadius: 20,
+                  offset: Offset(-10, 0),
+                ),
+              ],
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(16),
+                bottomLeft: Radius.circular(16),
+              ),
+            ),
+            child: Column(
+              children: [
+                // 面板标题栏
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                  decoration: BoxDecoration(
+                    border: Border(
+                      bottom: BorderSide(
+                        color: Theme.of(context).colorScheme.outlineVariant,
+                        width: 1,
+                      ),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        '播放列表',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(context).colorScheme.onSurface,
+                        ),
+                      ),
+                      Row(
+                        children: [
+                          // 清空播放列表按钮
+                          IconButton(
+                            icon: Icon(Icons.delete_sweep),
+                            onPressed: controller.clearPlaylist,
+                          ),
+                          IconButton(
+                            icon: Icon(Icons.close),
+                            onPressed: controller.togglePlaylistExpanded,
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                // 播放列表内容
+                Expanded(
+                  child: _buildDesktopPlaylistContent(context),
+                ),
+              ],
+            ),
+          ),
+        ));
+  }
+
+  /// 构建桌面端播放列表内容
+  Widget _buildDesktopPlaylistContent(BuildContext context) {
+    return Obx(() => Container(
+          child: ListView.separated(
+            itemCount: controller.playlist.length,
+            separatorBuilder: (context, index) => Divider(
+              height: 1,
+              thickness: 1,
+              color: Theme.of(context).colorScheme.outlineVariant,
+              indent: 80,
+              endIndent: 16,
+            ),
+            itemBuilder: (context, index) {
+              final song = controller.playlist[index];
+              final isCurrent = index == controller.currentIndex;
+              return AnimatedContainer(
+                duration: Duration(milliseconds: 200),
+                color: isCurrent
+                    ? Theme.of(context).colorScheme.primary.withAlpha(20)
+                    : Colors.transparent,
+                child: ListTile(
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                  leading: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // 歌曲序号或播放图标
+                      Container(
+                        width: 32,
+                        height: 32,
+                        alignment: Alignment.center,
+                        child: isCurrent
+                            ? Container(
+                                width: 32,
+                                height: 32,
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context).colorScheme.primary,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(Icons.play_arrow,
+                                    color: Colors.white, size: 16),
+                              )
+                            : Text(
+                                '${index + 1}',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onSurfaceVariant,
+                                ),
+                              ),
+                      ),
+                      const SizedBox(width: 12),
+                      // 歌曲封面
+                      Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(8),
+                          color: Theme.of(context).colorScheme.surfaceVariant,
+                        ),
+                        child: song.coverUrl != null
+                            ? ClipRRect(
+                                borderRadius: BorderRadius.circular(8),
+                                child: Image.network(
+                                  song.coverUrl!,
+                                  fit: BoxFit.cover,
+                                  width: 40,
+                                  height: 40,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return Container(
+                                      width: 40,
+                                      height: 40,
+                                      decoration: BoxDecoration(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .surfaceVariant,
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Icon(Icons.music_note, size: 20),
+                                    );
+                                  },
+                                ),
+                              )
+                            : Icon(Icons.music_note, size: 20),
+                      ),
+                    ],
+                  ),
+                  title: Text(
+                    song.songName ?? '未知歌曲',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight:
+                          isCurrent ? FontWeight.bold : FontWeight.normal,
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  subtitle: Text(
+                    song.artistName ?? '未知艺术家',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // 收藏按钮
+                      IconButton(
+                        icon: Icon(
+                          controller.isSongFavorited(song)
+                              ? Icons.favorite
+                              : Icons.favorite_border,
+                          color: controller.isSongFavorited(song)
+                              ? Theme.of(context).colorScheme.primary
+                              : null,
+                        ),
+                        onPressed: () {
+                          controller.handlePlaylistFavoriteToggle(song);
+                        },
+                      ),
+                      // 移除按钮
+                      IconButton(
+                        icon: Icon(Icons.remove_circle_outline),
+                        onPressed: () {
+                          controller.removeFromPlaylist(index);
+                        },
+                      ),
+                    ],
+                  ),
+                  onTap: () {
+                    controller.playSongAtIndex(index);
+                  },
+                ),
+              );
+            },
+          ),
+        ));
   }
 }
