@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:vibe_music_app/generated/app_localizations.dart';
@@ -7,6 +8,7 @@ import 'package:vibe_music_app/src/controllers/auth_controller.dart';
 import 'package:vibe_music_app/src/components/language_selector.dart';
 import 'package:vibe_music_app/src/routes/app_routes.dart';
 import 'package:vibe_music_app/src/utils/app_logger.dart';
+import 'package:vibe_music_app/src/utils/sp_util.dart';
 
 /// 个人中心页面
 class ProfilePage extends StatefulWidget {
@@ -126,6 +128,79 @@ class _ProfilePageState extends State<ProfilePage> {
             const SizedBox(height: 32),
             LanguageSelector(),
             const SizedBox(height: 32),
+            // 在debug模式下显示清空SP数据按钮（无论登录状态如何）
+            if (kDebugMode) ...[
+              ElevatedButton.icon(
+                onPressed: () async {
+                  // 显示确认对话框
+                  final confirmed = await showDialog<bool>(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          title: const Text('确认清空'),
+                          content: const Text('确定要清空所有本地存储数据吗？此操作不可恢复。'),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context, false),
+                              child: const Text('取消'),
+                            ),
+                            TextButton(
+                              onPressed: () => Navigator.pop(context, true),
+                              child: const Text('确定'),
+                            ),
+                          ],
+                        ),
+                      ) ??
+                      false;
+
+                  if (confirmed) {
+                    try {
+                      final success = await SpUtil.clear();
+                      if (success) {
+                        Get.snackbar(
+                          '成功',
+                          '所有本地存储数据已清空',
+                          backgroundColor: Colors.green,
+                          colorText: Colors.white,
+                          icon: Icon(Icons.check_circle, color: Colors.white),
+                          duration: Duration(seconds: 2),
+                        );
+                        // 清空后退出登录
+                        await authController.logout();
+                        if (context.mounted) {
+                          Navigator.of(context).pushReplacementNamed('/login');
+                        }
+                      } else {
+                        Get.snackbar(
+                          '错误',
+                          '清空数据失败',
+                          backgroundColor: Colors.red,
+                          colorText: Colors.white,
+                          icon: Icon(Icons.error, color: Colors.white),
+                          duration: Duration(seconds: 2),
+                        );
+                      }
+                    } catch (e) {
+                      AppLogger().e('清空SP数据失败: $e');
+                      Get.snackbar(
+                        '错误',
+                        '清空数据时发生错误',
+                        backgroundColor: Colors.red,
+                        colorText: Colors.white,
+                        icon: Icon(Icons.error, color: Colors.white),
+                        duration: Duration(seconds: 2),
+                      );
+                    }
+                  }
+                },
+                icon: const Icon(Icons.delete_sweep),
+                label: const Text('清空所有SP数据'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.purpleAccent,
+                  foregroundColor: Colors.white,
+                ),
+              ),
+              const SizedBox(height: 32),
+            ],
           ],
         ),
       ),

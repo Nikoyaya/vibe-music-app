@@ -8,6 +8,7 @@ import 'package:audioplayers/audioplayers.dart' as audioplayers;
 import 'package:vibe_music_app/src/models/song_model.dart';
 import 'package:vibe_music_app/src/models/enums.dart';
 import 'package:vibe_music_app/src/utils/app_logger.dart';
+import 'package:vibe_music_app/src/utils/sp_util.dart';
 
 /// 音频播放器服务
 /// 负责处理音频播放相关的所有功能
@@ -92,6 +93,23 @@ class AudioPlayerService {
       } else {
         // 桌面端平台，初始化 audioplayers 播放器
         await _initDesktopAudioPlayer();
+      }
+
+      // 加载保存的音量设置
+      try {
+        final savedVolume = SpUtil.get<double>('volume');
+        if (savedVolume != null) {
+          _volume = savedVolume;
+          // 设置播放器音量
+          if (!isDesktop && _audioPlayer != null) {
+            _audioPlayer!.setVolume(_volume);
+          } else if (isDesktop && _desktopAudioPlayer != null) {
+            await _desktopAudioPlayer!.setVolume(_volume);
+          }
+          _volumeStreamController.add(_volume);
+        }
+      } catch (e) {
+        AppLogger().e('加载音量设置失败: $e');
       }
 
       AppLogger().d('✅ 音频播放器初始化完成');
@@ -454,6 +472,8 @@ class AudioPlayerService {
         }
       }
       _volumeStreamController.add(volume);
+      // 保存音量设置到缓存
+      await SpUtil.put('volume', volume);
     } catch (e) {
       AppLogger().e('设置音量失败: $e');
     }

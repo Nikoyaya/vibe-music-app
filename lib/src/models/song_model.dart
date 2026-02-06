@@ -244,7 +244,7 @@ class Song with _$Song {
   /// 返回一个包含歌曲所有属性的 JSON 映射
   Map<String, dynamic> toJson() {
     return {
-      'id': id,
+      'songId': id,
       'songName': songName,
       'artistName': artistName,
       'albumName': albumName,

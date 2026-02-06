@@ -28,6 +28,9 @@ class PlayerController extends GetxController {
   // 流订阅
   late StreamSubscription<AppPlayerState> _playerStateSubscription;
 
+  // 收藏加载状态
+  final favoriteLoadingStates = <int, bool>{};
+
   @override
   void onInit() {
     super.onInit();
@@ -65,8 +68,19 @@ class PlayerController extends GetxController {
 
   /// 更新可观察变量
   void _updateObservableVariables() {
-    _currentSong.value = _musicController.currentSong;
-    _isPlaying.value = _musicController.playerState == AppPlayerState.playing;
+    // 当播放列表为空时，确保_currentSong被设置为null
+    if (_musicController.playlist.isEmpty) {
+      _currentSong.value = null;
+      _isPlaying.value = false;
+      _playlist.value = [];
+      _currentIndex.value = 0;
+    } else {
+      _currentSong.value = _musicController.currentSong;
+      _isPlaying.value = _musicController.playerState == AppPlayerState.playing;
+      // 创建播放列表的副本，确保UI检测到变化
+      _playlist.value = [..._musicController.playlist];
+      _currentIndex.value = _musicController.currentIndex;
+    }
     _isShuffle.value = _musicController.isShuffle;
     switch (_musicController.repeatMode) {
       case RepeatMode.one:
@@ -80,9 +94,15 @@ class PlayerController extends GetxController {
         break;
     }
     _volume.value = _musicController.volume;
-    // 创建播放列表的副本，确保UI检测到变化
+  }
+
+  /// 强制刷新播放列表UI
+  /// 当收藏状态变化时调用，确保UI正确显示收藏图标
+  void refreshPlaylistUI() {
+    // 通过重新赋值播放列表来强制UI刷新
     _playlist.value = [..._musicController.playlist];
-    _currentIndex.value = _musicController.currentIndex;
+    // 通知GetX刷新UI
+    update();
   }
 
   /// 切换收藏状态
@@ -97,6 +117,21 @@ class PlayerController extends GetxController {
     }
 
     final song = _musicController.currentSong!;
+
+    // 检查歌曲是否有id
+    if (song.id == null) {
+      Get.snackbar(LocalizationService.instance.tip, '歌曲信息不完整，无法收藏');
+      return;
+    }
+
+    // 检查是否正在加载
+    final isLoading = favoriteLoadingStates[song.id!] ?? false;
+    if (isLoading) return;
+
+    // 设置加载状态
+    favoriteLoadingStates[song.id!] = true;
+    update();
+
     bool success;
 
     if (_musicController.isSongFavorited(song)) {
@@ -104,14 +139,24 @@ class PlayerController extends GetxController {
       if (success) {
         Get.snackbar(LocalizationService.instance.success,
             LocalizationService.instance.removedFromFavorites);
+        // 强制刷新UI，确保收藏状态正确显示
+        refreshPlaylistUI();
       }
     } else {
       success = await _musicController.addToFavorites(song);
       if (success) {
         Get.snackbar(LocalizationService.instance.success,
-            LocalizationService.instance.addedToFavorites);
+            LocalizationService.instance.addedToFavorites,
+            duration: const Duration(seconds: 1));
+        // 强制刷新UI，确保收藏状态正确显示
+        refreshPlaylistUI();
       }
     }
+
+    // 重置加载状态
+    favoriteLoadingStates[song.id!] = false;
+    // 更新UI
+    update(['playerCover', 'playerSongInfo', 'favoriteButton']);
   }
 
   /// 切换播放列表展开状态
@@ -157,20 +202,44 @@ class PlayerController extends GetxController {
       return;
     }
 
+    // 检查歌曲是否有id
+    if (song.id == null) {
+      Get.snackbar(LocalizationService.instance.tip, '歌曲信息不完整，无法收藏');
+      return;
+    }
+
+    // 检查是否正在加载
+    final isLoading = favoriteLoadingStates[song.id!] ?? false;
+    if (isLoading) return;
+
+    // 设置加载状态
+    favoriteLoadingStates[song.id!] = true;
+    update();
+
     bool success;
     if (_musicController.isSongFavorited(song)) {
       success = await _musicController.removeFromFavorites(song);
       if (success) {
         Get.snackbar(LocalizationService.instance.success,
             LocalizationService.instance.removedFromFavorites);
+        // 强制刷新UI，确保收藏状态正确显示
+        refreshPlaylistUI();
       }
     } else {
       success = await _musicController.addToFavorites(song);
       if (success) {
         Get.snackbar(LocalizationService.instance.success,
-            LocalizationService.instance.addedToFavorites);
+            LocalizationService.instance.addedToFavorites,
+            duration: const Duration(seconds: 1));
+        // 强制刷新UI，确保收藏状态正确显示
+        refreshPlaylistUI();
       }
     }
+
+    // 重置加载状态
+    favoriteLoadingStates[song.id!] = false;
+    // 更新UI
+    update(['playerCover', 'playerSongInfo', 'favoriteButton']);
   }
 
   /// 检查歌曲是否已收藏
@@ -190,6 +259,10 @@ class PlayerController extends GetxController {
     _musicController.clearPlaylist();
     // 更新本地状态
     _updateObservableVariables();
+    // 通知所有GetBuilder更新UI，特别是指定了id的组件
+    update();
+    // 确保更新特定的UI组件
+    update(['playerCover', 'playerSongInfo', 'playerControls']);
   }
 
   /// 获取当前播放状态

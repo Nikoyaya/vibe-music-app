@@ -67,6 +67,14 @@ class MusicController extends GetxController {
       // 恢复播放状态
       await _restorePlayState();
 
+      // 添加播放器状态监听，处理自动播放下一首
+      _audioPlayerService.playerStateStream.listen((state) {
+        if (state == AppPlayerState.completed) {
+          // 当歌曲播放完成时，自动播放下一首
+          _playNextSongAutomatically();
+        }
+      });
+
       AppLogger().d('✅ MusicController 初始化完成');
     } catch (e) {
       AppLogger().e('❌ MusicController 初始化失败: $e');
@@ -216,6 +224,26 @@ class MusicController extends GetxController {
     }
   }
 
+  /// 自动播放下一首歌曲
+  /// 当歌曲播放完成时调用
+  Future<void> _playNextSongAutomatically() async {
+    try {
+      // 获取当前重复模式
+      final repeatMode = _playlistManager.repeatMode;
+
+      // 如果是单曲循环，不做处理（AudioPlayerService已经处理）
+      if (repeatMode == RepeatMode.one) {
+        return;
+      }
+
+      // 播放下一首歌曲
+      await next();
+      AppLogger().d('🎵 自动播放下一首歌曲');
+    } catch (e) {
+      AppLogger().e('自动播放下一首歌曲失败: $e');
+    }
+  }
+
   /// 切换随机播放模式
   void toggleShuffle() {
     _playlistManager.toggleShuffle();
@@ -270,7 +298,9 @@ class MusicController extends GetxController {
   Future<void> clearPlaylist() async {
     try {
       await _playlistManager.clearPlaylist();
-      AppLogger().d('🗑️ 清空播放列表');
+      // 停止音频播放
+      await _audioPlayerService.stop();
+      AppLogger().d('🗑️ 清空播放列表并停止播放');
       update();
     } catch (e) {
       AppLogger().e('清空播放列表失败: $e');

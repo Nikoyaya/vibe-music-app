@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:vibe_music_app/generated/app_localizations.dart';
+import 'package:vibe_music_app/src/controllers/music_controller.dart';
 import 'package:vibe_music_app/src/pages/player/widgets/controller.dart';
 import 'package:vibe_music_app/src/pages/player/components/player_cover_art.dart';
 import 'package:vibe_music_app/src/pages/player/components/player_song_info.dart';
@@ -21,19 +22,40 @@ class PlayerView extends GetView<PlayerController> {
       appBar: AppBar(
         title: Text(AppLocalizations.of(context)?.nowPlaying ?? '正在播放'),
         actions: [
-          Obx(() => IconButton(
-                icon: Icon(
-                  controller.currentSong != null &&
-                          controller.isSongFavorited(controller.currentSong!)
-                      ? Icons.favorite
-                      : Icons.favorite_border,
-                  color: controller.currentSong != null &&
-                          controller.isSongFavorited(controller.currentSong!)
-                      ? Theme.of(context).colorScheme.primary
-                      : null,
-                ),
-                onPressed: controller.toggleFavorite,
-              )),
+          GetBuilder<PlayerController>(
+            init: Get.find<PlayerController>(),
+            id: 'favoriteButton',
+            builder: (controller) {
+              final musicController = Get.find<MusicController>();
+              final currentSong = musicController.currentSong;
+              final isFavorited = currentSong != null &&
+                  musicController.isSongFavorited(currentSong);
+              final isLoading = currentSong?.id != null
+                  ? controller.favoriteLoadingStates[currentSong!.id!] ?? false
+                  : false;
+              return IconButton(
+                onPressed: isLoading ? null : controller.toggleFavorite,
+                icon: isLoading
+                    ? SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            Theme.of(context).colorScheme.primary,
+                          ),
+                        ),
+                      )
+                    : Icon(
+                        isFavorited ? Icons.favorite : Icons.favorite_border,
+                        size: 24,
+                        color: isFavorited
+                            ? Colors.red
+                            : Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+              );
+            },
+          ),
           IconButton(
             icon: Icon(Icons.queue_music),
             onPressed: controller.togglePlaylistExpanded,
@@ -401,17 +423,33 @@ class PlayerView extends GetView<PlayerController> {
                     children: [
                       // 收藏按钮
                       IconButton(
-                        icon: Icon(
-                          controller.isSongFavorited(song)
-                              ? Icons.favorite
-                              : Icons.favorite_border,
-                          color: controller.isSongFavorited(song)
-                              ? Theme.of(context).colorScheme.primary
-                              : null,
-                        ),
                         onPressed: () {
                           controller.handlePlaylistFavoriteToggle(song);
                         },
+                        icon: song.id != null &&
+                                (controller.favoriteLoadingStates[song.id!] ??
+                                    false)
+                            ? SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    Theme.of(context).colorScheme.primary,
+                                  ),
+                                ),
+                              )
+                            : Icon(
+                                controller.isSongFavorited(song)
+                                    ? Icons.favorite
+                                    : Icons.favorite_border,
+                                size: 20,
+                                color: controller.isSongFavorited(song)
+                                    ? Colors.red
+                                    : Theme.of(context)
+                                        .colorScheme
+                                        .onSurfaceVariant,
+                              ),
                       ),
                       // 移除按钮
                       IconButton(
