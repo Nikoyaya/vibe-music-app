@@ -8,6 +8,7 @@ import 'package:flutter/foundation.dart';
 import 'package:get/get.dart' as getx;
 import 'package:vibe_music_app/src/utils/app_logger.dart';
 import 'package:vibe_music_app/src/utils/sp_util.dart';
+import 'package:vibe_music_app/src/utils/encryption_util.dart';
 import 'global_notification_service.dart';
 
 /// API服务类
@@ -339,18 +340,24 @@ class ApiService {
   /// [email]: 邮箱地址
   /// [password]: 密码
   Future<Response> login(String email, String password) async {
+    // 使用RSA加密密码
+    final encryptedPassword = EncryptionUtil.rsaEncrypt(password);
+
     return await _request('POST', '/user/login', body: {
       'email': email,
-      'password': password,
+      'password': encryptedPassword,
     });
   }
 
   Future<Response> register(String email, String username, String password,
       String verificationCode) async {
+    // 使用RSA加密密码
+    final encryptedPassword = EncryptionUtil.rsaEncrypt(password);
+
     return await _request('POST', '/user/register', body: {
       'email': email,
       'username': username,
-      'password': password,
+      'password': encryptedPassword,
       'verificationCode': verificationCode,
     });
   }

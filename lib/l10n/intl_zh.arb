@@ -91,6 +91,7 @@
   "dontHaveAccount": "没有账号？注册",
   "usernameFormat": "用户名必须是4-16个字符，字母、数字、下划线或连字符",
   "passwordLength": "密码至少6个字符",
+  "passwordFormat": "请输入8-18 位数字、字母、符号的任意两种组合",
   "phoneFormat": "请输入有效的手机号",
   "emailFormat": "请输入有效的邮箱",
   "usernameRequired": "请输入用户名",

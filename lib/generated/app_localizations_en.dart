@@ -289,6 +289,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get passwordLength => 'Password must be at least 6 characters';
 
   @override
+  String get passwordFormat =>
+      'Password must be 8-18 characters, contain at least one letter and one number, and can include special characters';
+
+  @override
   String get phoneFormat => 'Please enter a valid phone number';
 
   @override

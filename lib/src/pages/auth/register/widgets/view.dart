@@ -467,10 +467,13 @@ class _RegisterViewState extends State<RegisterView> {
                                           ?.enterPassword ??
                                       'Please enter password';
                                 }
-                                if (value.length < 6) {
+                                // 密码强度校验
+                                final passwordRegex = RegExp(
+                                    r"^(?![0-9]+$)(?![a-zA-Z]+$)[0-9A-Za-z\\W]{8,18}$");
+                                if (!passwordRegex.hasMatch(value)) {
                                   return AppLocalizations.of(context)
-                                          ?.passwordLength ??
-                                      'Password must be at least 6 characters';
+                                          ?.passwordFormat ??
+                                      'Password must be 8-18 characters, contain at least one letter and one number, and can include special characters';
                                 }
                                 return null;
                               },
@@ -520,6 +523,20 @@ class _RegisterViewState extends State<RegisterView> {
                                   return AppLocalizations.of(context)
                                           ?.enterConfirmPassword ??
                                       'Please confirm password';
+                                }
+                                if (value !=
+                                    controller.passwordController.text) {
+                                  return AppLocalizations.of(context)
+                                          ?.confirmPasswordMatch ??
+                                      'Passwords do not match';
+                                }
+                                // 密码强度校验
+                                final passwordRegex = RegExp(
+                                    r"^(?![0-9]+$)(?![a-zA-Z]+$)[0-9A-Za-z\\W]{8,18}$");
+                                if (!passwordRegex.hasMatch(value)) {
+                                  return AppLocalizations.of(context)
+                                          ?.passwordFormat ??
+                                      'Password must be 8-18 characters, contain at least one letter and one number, and can include special characters';
                                 }
                                 return null;
                               },

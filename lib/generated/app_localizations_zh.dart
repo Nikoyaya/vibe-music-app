@@ -288,6 +288,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get passwordLength => '密码至少6个字符';
 
   @override
+  String get passwordFormat => '请输入8-18 位数字、字母、符号的任意两种组合';
+
+  @override
   String get phoneFormat => '请输入有效的手机号';
 
   @override
@@ -665,6 +668,9 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get passwordLength => '密碼至少6個字符';
+
+  @override
+  String get passwordFormat => '請輸入8-18 位數字、字母、符號的任意兩種組合';
 
   @override
   String get phoneFormat => '請輸入有效的手機號';

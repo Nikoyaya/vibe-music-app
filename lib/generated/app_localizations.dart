@@ -645,6 +645,12 @@ abstract class AppLocalizations {
   /// **'Password must be at least 6 characters'**
   String get passwordLength;
 
+  /// No description provided for @passwordFormat.
+  ///
+  /// In en, this message translates to:
+  /// **'Password must be 8-18 characters, contain at least one letter and one number, and can include special characters'**
+  String get passwordFormat;
+
   /// No description provided for @phoneFormat.
   ///
   /// In en, this message translates to:

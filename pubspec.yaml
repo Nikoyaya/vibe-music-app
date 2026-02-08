@@ -38,6 +38,8 @@ dependencies:
   floor: ^1.5.0
   connectivity_plus: ^6.0.3
   bitsdojo_window: ^0.1.6
+  pointycastle: ^3.9.1
+  encrypt: ^5.0.3
 
 dev_dependencies:
   flutter_test:

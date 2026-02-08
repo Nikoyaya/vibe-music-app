@@ -292,6 +292,14 @@ class _LoginViewState extends State<LoginView> {
                                           ?.enterPassword ??
                                       'Please enter password';
                                 }
+                                // 密码强度校验
+                                final passwordRegex = RegExp(
+                                    r"^(?![0-9]+$)(?![a-zA-Z]+$)[0-9A-Za-z\\W]{8,18}$");
+                                if (!passwordRegex.hasMatch(value)) {
+                                  return AppLocalizations.of(context)
+                                          ?.passwordFormat ??
+                                      'Password must be 8-18 characters, contain at least one letter and one number, and can include special characters';
+                                }
                                 return null;
                               },
                             ),

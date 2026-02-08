@@ -91,6 +91,7 @@
   "dontHaveAccount": "Don't have an account? Register",
   "usernameFormat": "Username must be 4-16 characters, letters, numbers, underscores or hyphens",
   "passwordLength": "Password must be at least 6 characters",
+  "passwordFormat": "Password must be 8-18 characters, contain at least one letter and one number, and can include special characters",
   "phoneFormat": "Please enter a valid phone number",
   "emailFormat": "Please enter a valid email",
   "usernameRequired": "Please enter username",

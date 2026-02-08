@@ -91,6 +91,7 @@
   "dontHaveAccount": "沒有帳號？註冊",
   "usernameFormat": "使用者名稱必須是4-16個字符，字母、數字、下劃線或連字符",
   "passwordLength": "密碼至少6個字符",
+  "passwordFormat": "請輸入8-18 位數字、字母、符號的任意兩種組合",
   "phoneFormat": "請輸入有效的手機號",
   "emailFormat": "請輸入有效的郵箱",
   "usernameRequired": "請輸入使用者名稱",
