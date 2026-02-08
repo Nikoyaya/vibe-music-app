@@ -202,6 +202,14 @@ class _SongListPageState extends State<SongListPage>
               childCount: 1,
             ),
           ),
+
+          // 底部额外空间，确保页面可以滑动到底部时继续滑动106像素
+          SliverPadding(
+            padding: const EdgeInsets.only(bottom: 106),
+            sliver: SliverToBoxAdapter(
+              child: const SizedBox(),
+            ),
+          ),
         ],
       ),
     );

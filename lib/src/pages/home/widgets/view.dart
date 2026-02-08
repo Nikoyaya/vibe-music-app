@@ -29,14 +29,7 @@ class HomeView extends GetView<HomeController> {
       body: Stack(
         children: [
           // 显示当前选中的页面
-          Obx(() => Padding(
-                padding: EdgeInsets.only(
-                  bottom: controller.currentPage.value != 1
-                      ? 103
-                      : 0, // 为CurrentlyPlayingBar留出空间
-                ),
-                child: _getCurrentPage(),
-              )),
+          Obx(() => _getCurrentPage()),
           // 正在播放音乐的小悬浮组件（在播放页时隐藏）
           Obx(() => controller.currentPage.value != 1
               ? const Positioned(
@@ -108,14 +101,7 @@ class HomeView extends GetView<HomeController> {
             child: Stack(
               children: [
                 // 显示当前选中的页面
-                Obx(() => Padding(
-                      padding: EdgeInsets.only(
-                        bottom: controller.currentPage.value != 1
-                            ? 103
-                            : 0, // 为CurrentlyPlayingBar留出空间
-                      ),
-                      child: _getCurrentPage(),
-                    )),
+                Obx(() => _getCurrentPage()),
                 // 正在播放音乐的小悬浮组件（在播放页时隐藏）
                 Obx(() => controller.currentPage.value != 1
                     ? const Positioned(
@@ -175,10 +161,7 @@ class HomeView extends GetView<HomeController> {
                 // 显示当前选中的页面
                 Obx(() => Padding(
                       padding: EdgeInsets.only(
-                          top: controller.currentPage.value == 0 ? 70 : 0,
-                          bottom: controller.currentPage.value != 1
-                              ? 103
-                              : 0), // 为CurrentlyPlayingBar留出空间
+                          top: controller.currentPage.value == 0 ? 70 : 0),
                       child: _getCurrentPage(),
                     )),
                 // 正在播放音乐的小悬浮组件（在播放页时隐藏）

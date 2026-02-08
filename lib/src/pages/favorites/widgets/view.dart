@@ -33,6 +33,7 @@ class FavoritesView extends GetView<FavoritesController> {
 
           return ListView.builder(
             controller: controller.scrollController,
+            padding: EdgeInsets.only(bottom: 106), // 直接在ListView的padding中添加底部空间
             itemCount: controller.allSongs.length +
                 (controller.isLoadingMore.value ? 1 : 0),
             itemBuilder: (context, index) {

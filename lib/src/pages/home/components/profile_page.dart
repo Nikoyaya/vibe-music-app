@@ -201,6 +201,8 @@ class _ProfilePageState extends State<ProfilePage> {
               ),
               const SizedBox(height: 32),
             ],
+            // 底部额外空间，确保页面可以滑动到底部时继续滑动106像素
+            const SizedBox(height: 106),
           ],
         ),
       ),

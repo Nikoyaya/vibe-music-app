@@ -282,15 +282,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dontHaveAccount => 'Don\'t have an account? Register';
 
   @override
-  String get usernameFormat =>
-      'Username must be 4-16 characters, letters, numbers, underscores or hyphens';
+  String get usernameFormat => 'Username must be 4-16 characters, letters, numbers, underscores or hyphens';
 
   @override
   String get passwordLength => 'Password must be at least 6 characters';
 
   @override
-  String get passwordFormat =>
-      'Password must be 8-18 characters, contain at least one letter and one number, and can include special characters';
+  String get passwordFormat => 'Password must be 8-18 characters, contain at least one letter and one number, and can include special characters';
 
   @override
   String get phoneFormat => 'Please enter a valid phone number';
@@ -370,8 +368,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get closePlayback => 'Close Playback';
 
   @override
-  String get confirmClosePlayback =>
-      'Are you sure you want to close the current playback?';
+  String get confirmClosePlayback => 'Are you sure you want to close the current playback?';
 
   @override
   String get loginExpired => 'Login expired, please log in again';
