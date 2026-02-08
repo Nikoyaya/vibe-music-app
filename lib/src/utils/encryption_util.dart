@@ -1,6 +1,5 @@
 import 'package:encrypt/encrypt.dart' as encrypt;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:vibe_music_app/src/utils/app_logger.dart';
 
 /// 加密工具类
 class EncryptionUtil {
@@ -34,7 +33,7 @@ class EncryptionUtil {
       return encrypted.base64;
     } catch (e) {
       // 加密失败时返回明文（作为降级方案）
-      AppLogger().d('RSA加密失败: $e');
+      print('RSA加密失败: $e');
       return plainText;
     }
   }
