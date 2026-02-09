@@ -362,8 +362,25 @@ class ApiService {
     });
   }
 
-  Future<Response> logout() async {
-    return await _request('POST', '/user/logout');
+  Future<Response> logout(String? refreshToken) async {
+    // 保存当前的Authorization头
+    final originalAuthorization = _dio.options.headers['Authorization'];
+
+    try {
+      // 如果提供了refreshToken，使用它作为Authorization头
+      if (refreshToken != null && refreshToken.isNotEmpty) {
+        _dio.options.headers['Authorization'] = refreshToken;
+      }
+
+      return await _request('POST', '/user/logout');
+    } finally {
+      // 恢复原来的Authorization头
+      if (originalAuthorization != null) {
+        _dio.options.headers['Authorization'] = originalAuthorization;
+      } else {
+        _dio.options.headers.remove('Authorization');
+      }
+    }
   }
 
   Future<Response> refreshToken(String refreshToken) async {

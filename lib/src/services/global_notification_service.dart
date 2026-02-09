@@ -45,14 +45,15 @@ class GlobalNotificationService {
             content: Text(localizations?.loginExpired ??
                 'Login expired, please log in again'),
             actions: [
-              // 确认按钮 - 仅关闭对话框
+              // 确认按钮 - 仅清除认证信息
               TextButton(
                 onPressed: () {
                   Navigator.of(context).pop();
+                  _handleClearAuthInfo();
                 },
                 child: Text(localizations?.ok ?? 'OK'),
               ),
-              // 去登录按钮 - 跳转到登录页面
+              // 去登录按钮 - 清除认证信息并跳转到登录页面
               TextButton(
                 onPressed: () {
                   Navigator.of(context).pop();
@@ -90,6 +91,22 @@ class GlobalNotificationService {
       AppLogger().e('处理去登录操作失败: $e');
       // 即使出错也要跳转到登录页面
       Get.offAllNamed(AppRoutes.login);
+    }
+  }
+
+  /// 处理仅清除认证信息操作
+  void _handleClearAuthInfo() {
+    try {
+      // 清除认证信息
+      if (Get.isRegistered<AuthController>()) {
+        final authController = Get.find<AuthController>();
+        // 调用登出方法清除本地存储
+        authController.logout();
+      }
+
+      AppLogger().d('用户点击了确定按钮，已清除认证信息');
+    } catch (e) {
+      AppLogger().e('处理清除认证信息操作失败: $e');
     }
   }
 

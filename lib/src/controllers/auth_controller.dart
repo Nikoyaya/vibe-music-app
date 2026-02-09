@@ -322,7 +322,8 @@ class AuthController extends GetxController {
   /// 用户登出
   Future<void> logout() async {
     try {
-      await ApiService().logout();
+      // 传递refreshToken到后端
+      await ApiService().logout(_refreshToken.value);
     } catch (_) {}
 
     _token.value = null;
