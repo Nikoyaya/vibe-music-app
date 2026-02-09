@@ -34,11 +34,11 @@ class AppRoutes {
       page: () => const HomePage(),
       transition: Transition.fade,
     ),
-    GetPage(
-      name: player,
-      page: () => const PlayerPage(),
-      transition: Transition.fade,
-    ),
+    // GetPage(
+    //   name: player,
+    //   page: () => const PlayerPage(),
+    //   transition: Transition.fade,
+    // ),
     GetPage(
       name: search,
       page: () => const SearchPage(),
@@ -54,10 +54,10 @@ class AppRoutes {
       page: () => const RegisterPage(),
       transition: Transition.fade,
     ),
-    GetPage(
-      name: favorites,
-      page: () => const FavoritesPage(),
-      transition: Transition.fade,
-    ),
+    // GetPage(
+    //   name: favorites,
+    //   page: () => const FavoritesPage(),
+    //   transition: Transition.fade,
+    // ),
   ];
 }

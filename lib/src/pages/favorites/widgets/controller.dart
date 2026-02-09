@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:vibe_music_app/src/controllers/auth_controller.dart';
 import 'package:vibe_music_app/src/controllers/music_controller.dart';
 import 'package:vibe_music_app/src/models/song_model.dart';
+import 'package:vibe_music_app/src/pages/home/widgets/controller.dart';
 import 'package:vibe_music_app/src/routes/app_routes.dart';
 import 'package:vibe_music_app/src/utils/app_logger.dart';
 import 'package:vibe_music_app/src/utils/snackbar_manager.dart';
@@ -167,7 +168,14 @@ class FavoritesController extends GetxController {
     }
     // 播放选中的歌曲
     await _musicController.playSong(song);
-    Get.toNamed(AppRoutes.player);
+    // 导航到播放器页面（切换到底部导航栏的播放页）
+    try {
+      final homeController = Get.find<HomeController>();
+      homeController.changePage(1);
+    } catch (e) {
+      // 如果找不到HomeController，再使用命名路由
+      Get.toNamed(AppRoutes.player);
+    }
   }
 
   /// 导航到登录页面

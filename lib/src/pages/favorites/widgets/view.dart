@@ -73,10 +73,12 @@ class FavoritesView extends GetView<FavoritesController> {
                       onPressed: () =>
                           controller.handleRemoveFromFavorites(index),
                     ),
-                    Icon(Icons.play_arrow),
+                    IconButton(
+                      icon: Icon(Icons.play_arrow),
+                      onPressed: () => controller.handleSongTap(index),
+                    ),
                   ],
                 ),
-                onTap: () => controller.handleSongTap(index),
               );
             },
           );
