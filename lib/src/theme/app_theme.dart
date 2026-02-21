@@ -152,4 +152,68 @@ class AppTheme {
       ),
     ),
   );
+
+  /// 全局模糊毛玻璃主题（带渐变底色）
+  static final ThemeData glassMorphismTheme = ThemeData(
+    /// 毛玻璃主题颜色方案
+    colorScheme: ColorScheme.dark(
+      primary: const Color(0xFF6366F1), // 靛蓝色
+      secondary: const Color(0xFFEC4899), // 粉红色
+      surface: Colors.black.withOpacity(0.2),
+      error: Colors.red.shade400,
+      onPrimary: Colors.white,
+      onSecondary: Colors.white,
+      onSurface: Colors.white,
+      onError: Colors.white,
+      brightness: Brightness.dark,
+    ),
+    useMaterial3: true,
+    scaffoldBackgroundColor: Colors.black.withOpacity(0.1),
+    cardTheme: CardThemeData(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      elevation: 0,
+      color: Colors.black.withOpacity(0.2),
+      margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
+    ),
+    textTheme: TextTheme(
+      headlineLarge: TextStyle(
+        fontWeight: FontWeight.bold,
+        fontSize: 32,
+        color: Colors.white,
+      ),
+      headlineMedium: TextStyle(
+        fontWeight: FontWeight.bold,
+        fontSize: 20,
+        color: Colors.white,
+      ),
+      titleMedium: TextStyle(
+        fontWeight: FontWeight.bold,
+        fontSize: 18,
+        color: Colors.white,
+      ),
+      bodyMedium: TextStyle(
+        fontSize: 16,
+        color: Colors.white70,
+      ),
+      bodySmall: TextStyle(
+        fontSize: 14,
+        color: Colors.white60,
+      ),
+    ),
+    navigationBarTheme: NavigationBarThemeData(
+      indicatorColor: Colors.white.withOpacity(0.1),
+      labelTextStyle: WidgetStateProperty.all(
+        const TextStyle(
+          color: Colors.white,
+          fontSize: 12,
+          fontWeight: FontWeight.w500,
+        ),
+      ),
+      iconTheme: WidgetStateProperty.all(
+        const IconThemeData(
+          color: Colors.white,
+        ),
+      ),
+    ),
+  );
 }

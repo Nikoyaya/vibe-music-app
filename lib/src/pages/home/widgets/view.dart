@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:vibe_music_app/generated/app_localizations.dart';
+import 'package:vibe_music_app/src/controllers/theme_controller.dart';
 import 'package:vibe_music_app/src/pages/home/widgets/controller.dart';
 import 'package:vibe_music_app/src/routes/app_routes.dart';
 import 'package:vibe_music_app/src/utils/glass_morphism/responsive_layout.dart';
@@ -25,22 +26,55 @@ class HomeView extends GetView<HomeController> {
 
   /// 构建移动端布局
   Widget _buildMobileLayout(BuildContext context) {
+    // 检查是否为毛玻璃主题
+    final themeController = Get.find<ThemeController>();
+    final isGlassMorphism = themeController.isGlassMorphismTheme();
+
     return Scaffold(
-      body: Stack(
-        children: [
-          // 显示当前选中的页面
-          Obx(() => _getCurrentPage()),
-          // 正在播放音乐的小悬浮组件（在播放页时隐藏）
-          Obx(() => controller.currentPage.value != 1
-              ? const Positioned(
-                  bottom: 0,
-                  left: 0,
-                  right: 0,
-                  child: CurrentlyPlayingBar(),
-                )
-              : const SizedBox.shrink()),
-        ],
-      ),
+      body: isGlassMorphism
+          ? Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Color(0xFF6366F1), // 靛蓝色
+                    Color(0xFF8B5CF6), // 紫色
+                    Color(0xFFEC4899), // 粉红色
+                  ],
+                ),
+              ),
+              child: Stack(
+                children: [
+                  // 显示当前选中的页面
+                  Obx(() => _getCurrentPage()),
+                  // 正在播放音乐的小悬浮组件（在播放页时隐藏）
+                  Obx(() => controller.currentPage.value != 1
+                      ? const Positioned(
+                          bottom: 0,
+                          left: 0,
+                          right: 0,
+                          child: CurrentlyPlayingBar(),
+                        )
+                      : const SizedBox.shrink()),
+                ],
+              ),
+            )
+          : Stack(
+              children: [
+                // 显示当前选中的页面
+                Obx(() => _getCurrentPage()),
+                // 正在播放音乐的小悬浮组件（在播放页时隐藏）
+                Obx(() => controller.currentPage.value != 1
+                    ? const Positioned(
+                        bottom: 0,
+                        left: 0,
+                        right: 0,
+                        child: CurrentlyPlayingBar(),
+                      )
+                    : const SizedBox.shrink()),
+              ],
+            ),
       bottomNavigationBar: SafeArea(
         child: Obx(() => Container(
               decoration: BoxDecoration(
@@ -83,101 +117,236 @@ class HomeView extends GetView<HomeController> {
 
   /// 构建平板端布局
   Widget _buildTabletLayout(BuildContext context) {
+    // 检查是否为毛玻璃主题
+    final themeController = Get.find<ThemeController>();
+    final isGlassMorphism = themeController.isGlassMorphismTheme();
+
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.background,
-      body: Row(
-        children: [
-          // 侧边栏导航
-          Container(
-            width: 200,
-            child: Obx(() => SidebarNavigation(
-                  currentIndex: _getSidebarIndex(controller.currentPage.value),
-                  onDestinationSelected: (index) =>
-                      controller.changePage(_getMainPageIndex(index)),
-                )),
-          ),
-          // 主内容区域
-          Expanded(
-            child: Stack(
+      body: isGlassMorphism
+          ? Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Color(0xFF6366F1), // 靛蓝色
+                    Color(0xFF8B5CF6), // 紫色
+                    Color(0xFFEC4899), // 粉红色
+                  ],
+                ),
+              ),
+              child: Row(
+                children: [
+                  // 侧边栏导航
+                  Container(
+                    width: 200,
+                    child: Obx(() => SidebarNavigation(
+                          currentIndex:
+                              _getSidebarIndex(controller.currentPage.value),
+                          onDestinationSelected: (index) =>
+                              controller.changePage(_getMainPageIndex(index)),
+                        )),
+                  ),
+                  // 主内容区域
+                  Expanded(
+                    child: Stack(
+                      children: [
+                        // 显示当前选中的页面
+                        Obx(() => _getCurrentPage()),
+                        // 正在播放音乐的小悬浮组件（在播放页时隐藏）
+                        Obx(() => controller.currentPage.value != 1
+                            ? const Positioned(
+                                bottom: 0,
+                                left: 0,
+                                right: 0,
+                                child: CurrentlyPlayingBar(),
+                              )
+                            : const SizedBox.shrink()),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            )
+          : Row(
               children: [
-                // 显示当前选中的页面
-                Obx(() => _getCurrentPage()),
-                // 正在播放音乐的小悬浮组件（在播放页时隐藏）
-                Obx(() => controller.currentPage.value != 1
-                    ? const Positioned(
-                        bottom: 0,
-                        left: 0,
-                        right: 0,
-                        child: CurrentlyPlayingBar(),
-                      )
-                    : const SizedBox.shrink()),
+                // 侧边栏导航
+                Container(
+                  width: 200,
+                  child: Obx(() => SidebarNavigation(
+                        currentIndex:
+                            _getSidebarIndex(controller.currentPage.value),
+                        onDestinationSelected: (index) =>
+                            controller.changePage(_getMainPageIndex(index)),
+                      )),
+                ),
+                // 主内容区域
+                Expanded(
+                  child: Stack(
+                    children: [
+                      // 显示当前选中的页面
+                      Obx(() => _getCurrentPage()),
+                      // 正在播放音乐的小悬浮组件（在播放页时隐藏）
+                      Obx(() => controller.currentPage.value != 1
+                          ? const Positioned(
+                              bottom: 0,
+                              left: 0,
+                              right: 0,
+                              child: CurrentlyPlayingBar(),
+                            )
+                          : const SizedBox.shrink()),
+                    ],
+                  ),
+                ),
               ],
             ),
-          ),
-        ],
-      ),
     );
   }
 
   /// 构建桌面端布局
   Widget _buildDesktopLayout(BuildContext context) {
+    // 检查是否为毛玻璃主题
+    final themeController = Get.find<ThemeController>();
+    final isGlassMorphism = themeController.isGlassMorphismTheme();
+
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.background,
-      body: Row(
-        children: [
-          // 自适应侧边栏宽度
-          AdaptiveSidebarWidth(
-            child: Obx(() => SidebarNavigation(
-                  currentIndex: _getSidebarIndex(controller.currentPage.value),
-                  onDestinationSelected: (index) =>
-                      controller.changePage(_getMainPageIndex(index)),
-                )),
-          ),
-          // 主内容区域
-          Expanded(
-            child: Stack(
+      body: isGlassMorphism
+          ? Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Color(0xFF6366F1), // 靛蓝色
+                    Color(0xFF8B5CF6), // 紫色
+                    Color(0xFFEC4899), // 粉红色
+                  ],
+                ),
+              ),
+              child: Row(
+                children: [
+                  // 自适应侧边栏宽度
+                  AdaptiveSidebarWidth(
+                    child: Obx(() => SidebarNavigation(
+                          currentIndex:
+                              _getSidebarIndex(controller.currentPage.value),
+                          onDestinationSelected: (index) =>
+                              controller.changePage(_getMainPageIndex(index)),
+                        )),
+                  ),
+                  // 主内容区域
+                  Expanded(
+                    child: Stack(
+                      children: [
+                        // 顶部导航栏（仅在主页显示）
+                        Obx(() => controller.currentPage.value == 0
+                            ? Positioned(
+                                top: 0,
+                                left: 0,
+                                right: 0,
+                                child: TopNavigationBar(
+                                  title: Text(''),
+                                  actions: [
+                                    IconButton(
+                                      icon: Icon(Icons.search,
+                                          color: Colors.white),
+                                      onPressed: () =>
+                                          Get.toNamed(AppRoutes.search),
+                                    ),
+                                    IconButton(
+                                      icon: Icon(Icons.settings,
+                                          color: Colors.white),
+                                      onPressed: controller.navigateToSettings,
+                                    ),
+                                  ],
+                                ),
+                              )
+                            : SizedBox.shrink()),
+                        // 显示当前选中的页面
+                        Obx(() => Padding(
+                              padding: EdgeInsets.only(
+                                  top: controller.currentPage.value == 0
+                                      ? 70
+                                      : 0),
+                              child: _getCurrentPage(),
+                            )),
+                        // 正在播放音乐的小悬浮组件（在播放页时隐藏）
+                        Obx(() => controller.currentPage.value != 1
+                            ? const Positioned(
+                                bottom: 0,
+                                left: 0,
+                                right: 0,
+                                child: CurrentlyPlayingBar(),
+                              )
+                            : const SizedBox.shrink()),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            )
+          : Row(
               children: [
-                // 顶部导航栏（仅在主页显示）
-                Obx(() => controller.currentPage.value == 0
-                    ? Positioned(
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        child: TopNavigationBar(
-                          title: Text(''),
-                          actions: [
-                            IconButton(
-                              icon: Icon(Icons.search, color: Colors.white),
-                              onPressed: () => Get.toNamed(AppRoutes.search),
-                            ),
-                            IconButton(
-                              icon: Icon(Icons.settings, color: Colors.white),
-                              onPressed: controller.navigateToSettings,
-                            ),
-                          ],
-                        ),
-                      )
-                    : SizedBox.shrink()),
-                // 显示当前选中的页面
-                Obx(() => Padding(
-                      padding: EdgeInsets.only(
-                          top: controller.currentPage.value == 0 ? 70 : 0),
-                      child: _getCurrentPage(),
-                    )),
-                // 正在播放音乐的小悬浮组件（在播放页时隐藏）
-                Obx(() => controller.currentPage.value != 1
-                    ? const Positioned(
-                        bottom: 0,
-                        left: 0,
-                        right: 0,
-                        child: CurrentlyPlayingBar(),
-                      )
-                    : const SizedBox.shrink()),
+                // 自适应侧边栏宽度
+                AdaptiveSidebarWidth(
+                  child: Obx(() => SidebarNavigation(
+                        currentIndex:
+                            _getSidebarIndex(controller.currentPage.value),
+                        onDestinationSelected: (index) =>
+                            controller.changePage(_getMainPageIndex(index)),
+                      )),
+                ),
+                // 主内容区域
+                Expanded(
+                  child: Stack(
+                    children: [
+                      // 顶部导航栏（仅在主页显示）
+                      Obx(() => controller.currentPage.value == 0
+                          ? Positioned(
+                              top: 0,
+                              left: 0,
+                              right: 0,
+                              child: TopNavigationBar(
+                                title: Text(''),
+                                actions: [
+                                  IconButton(
+                                    icon:
+                                        Icon(Icons.search, color: Colors.white),
+                                    onPressed: () =>
+                                        Get.toNamed(AppRoutes.search),
+                                  ),
+                                  IconButton(
+                                    icon: Icon(Icons.settings,
+                                        color: Colors.white),
+                                    onPressed: controller.navigateToSettings,
+                                  ),
+                                ],
+                              ),
+                            )
+                          : SizedBox.shrink()),
+                      // 显示当前选中的页面
+                      Obx(() => Padding(
+                            padding: EdgeInsets.only(
+                                top:
+                                    controller.currentPage.value == 0 ? 70 : 0),
+                            child: _getCurrentPage(),
+                          )),
+                      // 正在播放音乐的小悬浮组件（在播放页时隐藏）
+                      Obx(() => controller.currentPage.value != 1
+                          ? const Positioned(
+                              bottom: 0,
+                              left: 0,
+                              right: 0,
+                              child: CurrentlyPlayingBar(),
+                            )
+                          : const SizedBox.shrink()),
+                    ],
+                  ),
+                ),
               ],
             ),
-          ),
-        ],
-      ),
     );
   }
 

@@ -5,7 +5,6 @@ import 'package:image_picker/image_picker.dart';
 import 'package:vibe_music_app/generated/app_localizations.dart';
 import 'package:vibe_music_app/src/controllers/auth_controller.dart';
 
-import 'package:vibe_music_app/src/components/language_selector.dart';
 import 'package:vibe_music_app/src/routes/app_routes.dart';
 import 'package:vibe_music_app/src/utils/app_logger.dart';
 import 'package:vibe_music_app/src/utils/sp_util.dart';
@@ -126,8 +125,23 @@ class _ProfilePageState extends State<ProfilePage> {
               }),
             ),
             const SizedBox(height: 32),
-            LanguageSelector(),
-            const SizedBox(height: 32),
+            // 设置按钮（仅在移动端显示）
+            if (!kIsWeb &&
+                (defaultTargetPlatform == TargetPlatform.android ||
+                    defaultTargetPlatform == TargetPlatform.iOS)) ...[
+              ElevatedButton.icon(
+                onPressed: () {
+                  Get.toNamed(AppRoutes.settings);
+                },
+                icon: const Icon(Icons.settings),
+                label: Text(AppLocalizations.of(context)?.settings ?? '设置'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.purpleAccent,
+                  foregroundColor: Colors.white,
+                ),
+              ),
+              const SizedBox(height: 32),
+            ],
             // 在debug模式下显示清空SP数据按钮（无论登录状态如何）
             if (kDebugMode) ...[
               ElevatedButton.icon(

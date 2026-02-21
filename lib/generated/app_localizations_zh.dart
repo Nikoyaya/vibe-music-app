@@ -114,10 +114,19 @@ class AppLocalizationsZh extends AppLocalizations {
   String get lightMode => '浅色模式';
 
   @override
+  String get glassMorphismMode => '玻璃拟态模式';
+
+  @override
   String get autoMode => '自动模式';
 
   @override
   String get theme => '主题';
+
+  @override
+  String get themePreview => '主题预览';
+
+  @override
+  String get glassMorphismPreview => '玻璃拟态预览';
 
   @override
   String get nowPlaying => '正在播放';
@@ -496,10 +505,19 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get lightMode => '淺色模式';
 
   @override
+  String get glassMorphismMode => '玻璃擬態模式';
+
+  @override
   String get autoMode => '自動模式';
 
   @override
   String get theme => '主題';
+
+  @override
+  String get themePreview => '主題預覽';
+
+  @override
+  String get glassMorphismPreview => '玻璃擬態預覽';
 
   @override
   String get nowPlaying => '正在播放';

@@ -5,6 +5,9 @@ import 'package:vibe_music_app/src/pages/search/search_page.dart';
 import 'package:vibe_music_app/src/pages/auth/login/login_page.dart';
 import 'package:vibe_music_app/src/pages/auth/register/register_page.dart';
 import 'package:vibe_music_app/src/pages/favorites/favorites_page.dart';
+import 'package:vibe_music_app/src/pages/settings/settings_page.dart';
+import 'package:vibe_music_app/src/pages/settings/language_page.dart';
+import 'package:vibe_music_app/src/pages/settings/theme_page.dart';
 
 /// 应用路由管理类
 /// 使用GetX的命名路由系统
@@ -26,6 +29,15 @@ class AppRoutes {
 
   /// 收藏页路由
   static const String favorites = '/favorites';
+
+  /// 设置页路由
+  static const String settings = '/settings';
+
+  /// 语言选择页路由
+  static const String language = '/settings/language';
+
+  /// 主题选择页路由
+  static const String theme = '/settings/theme';
 
   /// 路由映射表
   static final List<GetPage> routes = [
@@ -59,5 +71,20 @@ class AppRoutes {
     //   page: () => const FavoritesPage(),
     //   transition: Transition.fade,
     // ),
+    GetPage(
+      name: settings,
+      page: () => const SettingsPage(),
+      transition: Transition.fade,
+    ),
+    GetPage(
+      name: language,
+      page: () => const LanguagePage(),
+      transition: Transition.fade,
+    ),
+    GetPage(
+      name: theme,
+      page: () => const ThemePage(),
+      transition: Transition.fade,
+    ),
   ];
 }

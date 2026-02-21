@@ -309,6 +309,12 @@ abstract class AppLocalizations {
   /// **'Light Mode'**
   String get lightMode;
 
+  /// No description provided for @glassMorphismMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Glass Morphism Mode'**
+  String get glassMorphismMode;
+
   /// No description provided for @autoMode.
   ///
   /// In en, this message translates to:
@@ -320,6 +326,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Theme'**
   String get theme;
+
+  /// No description provided for @themePreview.
+  ///
+  /// In en, this message translates to:
+  /// **'Theme Preview'**
+  String get themePreview;
+
+  /// No description provided for @glassMorphismPreview.
+  ///
+  /// In en, this message translates to:
+  /// **'Glass Morphism Preview'**
+  String get glassMorphismPreview;
 
   /// No description provided for @nowPlaying.
   ///

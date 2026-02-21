@@ -25,11 +25,6 @@ class HomeController extends GetxController {
 
   /// 导航到设置页面
   void navigateToSettings() {
-    // 实现设置页面导航逻辑
-    final localizations = AppLocalizations.of(Get.context!);
-    Get.snackbar(
-        localizations?.settings ?? 'Settings',
-        localizations?.settingsPageComingSoon ??
-            'Settings page will be implemented soon');
+    Get.toNamed('/settings');
   }
 }

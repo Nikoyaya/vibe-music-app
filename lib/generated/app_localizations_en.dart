@@ -114,10 +114,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lightMode => 'Light Mode';
 
   @override
+  String get glassMorphismMode => 'Glass Morphism Mode';
+
+  @override
   String get autoMode => 'Auto Mode';
 
   @override
   String get theme => 'Theme';
+
+  @override
+  String get themePreview => 'Theme Preview';
+
+  @override
+  String get glassMorphismPreview => 'Glass Morphism Preview';
 
   @override
   String get nowPlaying => 'Now Playing';

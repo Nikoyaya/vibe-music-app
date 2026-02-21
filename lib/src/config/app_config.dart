@@ -3,6 +3,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:get/get.dart';
 import 'package:vibe_music_app/generated/app_localizations.dart';
 import 'package:vibe_music_app/src/controllers/language_controller.dart';
+import 'package:vibe_music_app/src/controllers/theme_controller.dart';
 import 'package:vibe_music_app/src/routes/app_routes.dart';
 import 'package:vibe_music_app/src/services/localization_service.dart';
 import 'package:vibe_music_app/src/theme/app_theme.dart';
@@ -100,19 +101,39 @@ class VibeMusicApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // 在构建 GetMaterialApp 之前先注册 LanguageController
+    // 在构建 GetMaterialApp 之前先注册控制器
     if (!Get.isRegistered<LanguageController>()) {
       Get.put(LanguageController());
+    }
+    if (!Get.isRegistered<ThemeController>()) {
+      Get.put(ThemeController());
     }
 
     // 获取当前语言
     final currentLocale = AppConfig.getCurrentLocale();
 
+    // 获取主题控制器
+    final themeController = Get.find<ThemeController>();
+
+    // 根据主题类型选择正确的主题和主题模式
+    ThemeData lightTheme = AppTheme.lightTheme;
+    ThemeData darkTheme = AppTheme.darkTheme;
+    ThemeMode themeMode = ThemeMode.system;
+
+    if (themeController.themeType.value == ThemeType.light) {
+      themeMode = ThemeMode.light;
+    } else if (themeController.themeType.value == ThemeType.dark) {
+      themeMode = ThemeMode.dark;
+    } else if (themeController.themeType.value == ThemeType.glassMorphism) {
+      darkTheme = AppTheme.glassMorphismTheme;
+      themeMode = ThemeMode.dark; // 毛玻璃主题使用暗色模式
+    }
+
     return GetMaterialApp(
       title: AppConfig.appTitle, // 应用标题
-      theme: AppTheme.lightTheme, // 亮色主题
-      darkTheme: AppTheme.darkTheme, // 暗色主题
-      themeMode: ThemeMode.dark, // 默认使用深色主题
+      theme: lightTheme, // 亮色主题
+      darkTheme: darkTheme, // 暗色主题（包括毛玻璃主题）
+      themeMode: themeMode, // 使用主题控制器管理主题
       initialRoute: AppRoutes.home, // 初始路由为主页
       getPages: AppRoutes.routes, // 应用路由配置
       debugShowCheckedModeBanner: false, // 隐藏调试横幅
